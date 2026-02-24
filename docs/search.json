@@ -1,0 +1,156 @@
+[
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#origen-de-r",
+    "href": "material/00_Introduction/DataProcessingTools.html#origen-de-r",
+    "title": "Data Processing Tools",
+    "section": "Origen de R",
+    "text": "Origen de R\n\nPrimer llançament: Ross Ihaka & Robert Gentleman (University of Auckland 1996)\nImplementa un dialecte del llenguatge S (John Chambers, Rick Becker, Alan Wilks, AT&T Bell Laboratories 1976) (versió comercial S-PLUS)\nActualment, l’equip interinstitudicional “R Core Development Team”\nThe CRAN project (Comprehensive R Archive Network)"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#introducció-a-r",
+    "href": "material/00_Introduction/DataProcessingTools.html#introducció-a-r",
+    "title": "Data Processing Tools",
+    "section": "Introducció a R",
+    "text": "Introducció a R\nR és un paquet estadístic gratuït molt flexible\n\nAdmet el análisis estadístic\nAdmet la gestió de dades de diferents fonts\nAdmet la visualització de la informació\nGeneració de paquets:\n\nAdmet la definició de noves funcions\nAdmet la definició de nous prodeciments (llenguatge de programació S)"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#com-utilitzar-el-r",
+    "href": "material/00_Introduction/DataProcessingTools.html#com-utilitzar-el-r",
+    "title": "Data Processing Tools",
+    "section": "Com utilitzar el R",
+    "text": "Com utilitzar el R\n\nObrir el software:\n\nIcone de l’escriptori\nSeleccionar des de tots els programes\nAmb interfaç addicionals (Rstudio, …)\n\nInteractuar amb R:\n\nIntèrpret d’ordres. Indicador: &gt;\nEscriure codi en la consola (si hi han diferents ordres, colapsar les ordres separats amb ;) i apretar el enter\nEs pot executar códi executant CNTRL + ENTER\nVisualitzar la resposta al moment\n\nPer sortir:\n\nCodi: q()\nMenú: Exit"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#com-anar-a-les-ajudes",
+    "href": "material/00_Introduction/DataProcessingTools.html#com-anar-a-les-ajudes",
+    "title": "Data Processing Tools",
+    "section": "Com anar a les ajudes",
+    "text": "Com anar a les ajudes\n\n?help\nhelp(name_command) or ?name_command\nhelp.search(\"keyword\"): Totes les ordres amb paraula clau\nhelp.stard(): Obre documentació on-line en R\n? 'operator': per a operacions o paraules reservades del llenguatge S\n\n?'if': Retorna l’ajut sobre sentencies condicionals.\n?'&&': Retorna l’ajut sobre conjuncions lógiques.\n\nExisteix la opció Help en el menú"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#obrir-i-recuperar-una-sessió",
+    "href": "material/00_Introduction/DataProcessingTools.html#obrir-i-recuperar-una-sessió",
+    "title": "Data Processing Tools",
+    "section": "Obrir i recuperar una sessió",
+    "text": "Obrir i recuperar una sessió\n\nEs treballa en memoria (del PC)\nq() Cancela tot el que no s’hagi guardat préviament (envia i avisa)\nFormes de guardar:\n\nsave.image()\nCrea un fitxer .RData\nEs pot recuperar en la següent sessió\n\nConsulteu l’ajuda sobre com guardar i fer recuperacions parcials\nutils::sessionInfo() Consultar les característiques de la sessió"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#tipus-de-variables",
+    "href": "material/00_Introduction/DataProcessingTools.html#tipus-de-variables",
+    "title": "Data Processing Tools",
+    "section": "Tipus de variables",
+    "text": "Tipus de variables\n\n\nCreació per defecte amb l’assignació: &lt;- o -&gt;\nValors especials:\n\nNA: per a dades mancants\nInf: Infinit (divisió per 0, …)\nNaN: Error obtingut com a resultat d’aplicar una funció"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#variables-de-tipus-data",
+    "href": "material/00_Introduction/DataProcessingTools.html#variables-de-tipus-data",
+    "title": "Data Processing Tools",
+    "section": "Variables de tipus data",
+    "text": "Variables de tipus data\n\n\nlibrary(tidyverse)\nlibrary(lubridate)\n\n\nÉs un paquet creat amb la finalitat de manipular dates i dades de temps en R.\nEn tots els casos, s’ha de modificar la clase de les dades.\nS’ha d’identificar el format en el que están les dades.\n\n\n# Crea el format data\ndata &lt;- as.Date(dades$data, format = \"%y%m%d\")\n\n# Transforma les dades\nlibrary(lubridate)\ndataLubri &lt;- ymd(dades$data)"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#obtenir-informació",
+    "href": "material/00_Introduction/DataProcessingTools.html#obtenir-informació",
+    "title": "Data Processing Tools",
+    "section": "Obtenir informació",
+    "text": "Obtenir informació\n\nls() o objects(): Mostra tots els objectes de l’entorn de treball\nstr(object) o attributes(): Retorna informació de l’objecte\nEliminar objectes de l’entorn:\n\nrm(object)\nrm(part1, part2, object)"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#com-utilitzar-rstudio",
+    "href": "material/00_Introduction/DataProcessingTools.html#com-utilitzar-rstudio",
+    "title": "Data Processing Tools",
+    "section": "Com utilitzar RStudio",
+    "text": "Com utilitzar RStudio"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#instalació-de-paquets",
+    "href": "material/00_Introduction/DataProcessingTools.html#instalació-de-paquets",
+    "title": "Data Processing Tools",
+    "section": "Instalació de paquets",
+    "text": "Instalació de paquets\n\n# Paquetes base y útiles:\npacks &lt;- c(\"here\", \"glue\", \"fs\", \"readr\", \"dplyr\", \"ggplot2\")\nto_install &lt;- setdiff(packs, rownames(installed.packages()))\nif (length(to_install)) install.packages(to_install, quiet = TRUE)\n\nlibrary(here)    # Rutas relativas desde la raíz del proyecto\nlibrary(glue)    # Strings con llaves {var}\nlibrary(fs)      # Operaciones de sistema \"friendly\"\nlibrary(readr)   # Lectura/escritura rápida\nlibrary(dplyr)   # Manipulación de datos\nlibrary(ggplot2) # Gráficos\n\n# Opciones útiles\noptions(\n  scipen = 999,   # menos notación científica\n  digits = 4\n)\n\n# Mostrar dónde cree {here} que está la raíz del proyecto\nhere()"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#estructura-recomanada-de-carpetes",
+    "href": "material/00_Introduction/DataProcessingTools.html#estructura-recomanada-de-carpetes",
+    "title": "Data Processing Tools",
+    "section": "Estructura recomanada de carpetes",
+    "text": "Estructura recomanada de carpetes\nLa estructura proposada es la següent:\nproject/\n├─ syntax/        # scripts R (funcions, notebooks, etc.)\n├─ input/         # insumos externos (CSV, XLSX, etc.) només LECTURA\n├─ data/          # dades intermitjes: netes/parquet/rds\n├─ output/        # resultats finals (tables/figures/llistats)\n├─ temp/          # temporals per eliminar\n├─ logs/          # logs de ejecució\n├─ README.md\n└─ .here          # marca de l'arrel del projecte p/ {here}\nPer crear l’estructura podem fer el següent:\n\n# Crea l'estructura de carpetes si no existeixen\ndirs &lt;- c(\"syntax\", \"input\", \"data\", \"output\", \"temp\", \"logs\")\ndir_create(path = here(dirs))\ndir_ls(here(), type = \"directory\")"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#usos-de-rutes-relatives",
+    "href": "material/00_Introduction/DataProcessingTools.html#usos-de-rutes-relatives",
+    "title": "Data Processing Tools",
+    "section": "Usos de rutes relatives",
+    "text": "Usos de rutes relatives\nUtilitza here(\"carpeta\", \"sub\", \"archivo.ext\") per a rutas portables:\n\n# Construir rutas de forma segura:\nruta_input  &lt;- here(\"input\", \"ventas_2025.csv\")\nruta_data   &lt;- here(\"data\",  \"ventas_limpio.rds\")\nruta_salida &lt;- here(\"output\",\"resumen_ventas.csv\")\n\nruta_input\nruta_data\nruta_salida\n\n# Con base R: file.path() también es portable\nfile.path(\"input\", \"ventas_2025.csv\")"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#missatges-i-nombre-de-fitxers-dinàmics",
+    "href": "material/00_Introduction/DataProcessingTools.html#missatges-i-nombre-de-fitxers-dinàmics",
+    "title": "Data Processing Tools",
+    "section": "Missatges i nombre de fitxers dinàmics",
+    "text": "Missatges i nombre de fitxers dinàmics\n\nanio &lt;- 2025; mes &lt;- 9\nnombre_csv &lt;- glue(\"ventas_{anio}-{sprintf('%02d', mes)}.csv\")\nhere(\"input\", nombre_csv)\n\nglue() evalua expressions dintre de {}:\n\nclientes &lt;- 1250\nglue(\"Este mes se han registrado {clientes} clientes (Δ = {clientes - 1200}).\")"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#crear-i-búsqueda-de-fitxers",
+    "href": "material/00_Introduction/DataProcessingTools.html#crear-i-búsqueda-de-fitxers",
+    "title": "Data Processing Tools",
+    "section": "Crear i búsqueda de fitxers",
+    "text": "Crear i búsqueda de fitxers\nGuardar fitxers\n\n# Datos de ejemplo:\ndf &lt;- tibble::tibble(\n  id = 1:5,\n  fecha = as.Date(\"2025-09-01\") + 0:4,\n  ventas = c(100, 80, 95, 120, 110)\n)\n\n# Guardar como CSV en output/\nwrite_csv(df, here(\"output\", \"tabla_ejemplo.csv\"))\n\n# Guardar como RDS en data/\nsaveRDS(df, here(\"data\", \"tabla_ejemplo.rds\"))"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#redirigir-sortides-amb-sink",
+    "href": "material/00_Introduction/DataProcessingTools.html#redirigir-sortides-amb-sink",
+    "title": "Data Processing Tools",
+    "section": "Redirigir sortides amb sink()",
+    "text": "Redirigir sortides amb sink()\n\nlog_path &lt;- here(\"logs\", glue(\"log_{format(Sys.time(), '%Y%m%d_%H%M%S')}.txt\"))\n\nsink(log_path, split = TRUE)      # split=TRUE =&gt; también muestra en consola\ncat(\"=== INICIO ===\\n\")\nprint(sessionInfo())\ncat(\"Una línea cualquiera\\n\")\nsink()  # IMPORTANTÍSIMO: cerrar el sink\n\n# Revisa el contenido del log:\nreadLines(log_path, n = 8)\n\n⚠️ Tanca SEMPRE el sink() amb sink() (sense arguments) o utilitza on.exit(sink()) dintre d’una funció per no “bloquejar” la consola."
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#guardar-gràfics",
+    "href": "material/00_Introduction/DataProcessingTools.html#guardar-gràfics",
+    "title": "Data Processing Tools",
+    "section": "Guardar gràfics",
+    "text": "Guardar gràfics\n\npdf(here(\"output\", \"grafico_demo.pdf\"), width = 7, height = 5)\nplot(cars, main = \"Gráfico base R - cars\")\ndev.off()\n\n# PNG con resolución\npng(here(\"output\", \"grafico_demo.png\"), width = 1200, height = 900, res = 150)\nplot(pressure, main = \"Gráfico base R - pressure\")\ndev.off()"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#mini-pipeline-de-exemple",
+    "href": "material/00_Introduction/DataProcessingTools.html#mini-pipeline-de-exemple",
+    "title": "Data Processing Tools",
+    "section": "Mini pipeline de exemple",
+    "text": "Mini pipeline de exemple\nA continuació tens un exemple de un pipeline que: leer → procesar → guardar\n\n# 1) Crear un CSV de ejemplo en input/\ndir_create(here(\"input\"))\ntoy &lt;- tibble::tibble(\n  id = 1:10,\n  fecha = as.Date(\"2025-09-01\") + 0:9,\n  ventas = sample(80:150, 10, replace = TRUE)\n)\nwrite_csv(toy, here(\"input\", \"toy_ventas.csv\"))\n\n# 2) Leer, procesar y registrar\nlog_path &lt;- here(\"logs\", \"mini_pipeline.log\")\nsink(log_path, split = TRUE)\ncat(\"== MINI PIPELINE ==\\n\")\n\nraw &lt;- read_csv(here(\"input\", \"toy_ventas.csv\"), show_col_types = FALSE)\ncat(glue(\"Leídas {nrow(raw)} filas.\\n\"))\n\nproc &lt;- raw |&gt;\n  mutate(\n    semana = format(fecha, \"%Y-%W\"),\n    ventas_norm = scale(ventas)[,1]\n  ) |&gt;\n  group_by(semana) |&gt;\n  summarise(ventas_media = mean(ventas), .groups = \"drop\")\n\ncat(glue(\"Semanas agregadas: {nrow(proc)}\\n\"))"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#mini-pipeline-de-exemple-1",
+    "href": "material/00_Introduction/DataProcessingTools.html#mini-pipeline-de-exemple-1",
+    "title": "Data Processing Tools",
+    "section": "Mini pipeline de exemple",
+    "text": "Mini pipeline de exemple\nA continuació tens un exemple de un pipeline que: leer → procesar → guardar\n\n# 3) Guardar resultados\nwrite_csv(proc, here(\"output\", \"resumen_semanal.csv\"))\nsaveRDS(proc, here(\"data\", \"resumen_semanal.rds\"))\ncat(\"Archivos guardados en output/ y data/\\n\")\nsink()\n\n# 4) Graficar y guardar\np &lt;- ggplot(raw, aes(fecha, ventas)) + geom_line() +\n  labs(title = \"Ventas diarias (toy)\", x = \"Fecha\", y = \"Ventas\")\nggsave(here(\"output\", \"ventas_toy.png\"), plot = p, width = 7, \n       height = 5, dpi = 150)"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#utilitats-helpers-per-als-teus-scripts-de-syntax",
+    "href": "material/00_Introduction/DataProcessingTools.html#utilitats-helpers-per-als-teus-scripts-de-syntax",
+    "title": "Data Processing Tools",
+    "section": "Utilitats (helpers) per als teus scripts de syntax/",
+    "text": "Utilitats (helpers) per als teus scripts de syntax/\n\n# Guardar en syntax/helpers.R y luego source(\"syntax/helpers.R\") si quieres\n\ninit_log &lt;- function(prefix = \"run\") {\n  dir_create(here(\"logs\"))\n  path &lt;- here(\"logs\", \n               glue(\"{prefix}_{format(Sys.time(), '%Y%m%d_%H%M%S')}.log\"))\n  sink(path, split = TRUE)\n  cat(glue(\"[{Sys.time()}] INICIO\\n\"))\n  return(path)\n}\n\nclose_log &lt;- function() {\n  cat(glue(\"[{Sys.time()}] FIN\\n\"))\n  sink()\n}\n\nsafe_dir &lt;- function(...) {\n  # Crea una ruta y la carpeta si no existe\n  path &lt;- here(...)\n  dir_create(dirname(path))\n  return(path)\n}\n\nsave_table &lt;- function(df, ..., name, ext = \"csv\") {\n  # Guarda tabla df en output/ con nombre dinámico\n  base &lt;- glue(\"{name}.{ext}\")\n  path &lt;- safe_dir(\"output\", base)\n  if (ext == \"csv\") readr::write_csv(df, path)\n  if (ext == \"rds\") saveRDS(df, sub(\"\\\\.csv$\", \".rds\", path))\n  invisible(path)\n}"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#pautes-de-versionat-i-neteja",
+    "href": "material/00_Introduction/DataProcessingTools.html#pautes-de-versionat-i-neteja",
+    "title": "Data Processing Tools",
+    "section": "Pautes de versionat i neteja",
+    "text": "Pautes de versionat i neteja\n\nTot el que NO sigui una font, s’ha de ficar sota control (ej: borrar /temp/ al finalitzar)\nUtilitzar git per a versionar scripts i notebooks.\nSeparar la lectura (input/) de resultats (output/) i dades de treball (data/).\n\n\n# Limpieza de temporales\nif (dir_exists(here(\"temp\"))) {\n  file_delete(dir_ls(here(\"temp\"), recurse = TRUE, type = \"file\"))\n}"
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#section",
+    "href": "material/00_Introduction/DataProcessingTools.html#section",
+    "title": "Data Processing Tools",
+    "section": "",
+    "text": "Enviar correus automàtics\n\n\n\nEl paquet blastula facilita la creació i l’enviament de correus electrònics HTML desde R.\nEl missatge pot tenir 3 areas de contingut (cos, capçalera i peu de pàgina) i permet insertar text Markdown, components basats en blocs i inclús fragments d’HTML.\nEl HTML/CSS subjacent està dissenyat per a visualitzar-se correctament en una amplia gamma de clients de correu electrónic i serveis de correu web.\nEl missatge resultant és responde, pel que que es veurà genial tant en pantalles grans com en dispositius mòbils."
+  },
+  {
+    "objectID": "material/00_Introduction/DataProcessingTools.html#section-1",
+    "href": "material/00_Introduction/DataProcessingTools.html#section-1",
+    "title": "Data Processing Tools",
+    "section": "",
+    "text": "Enviar correus automàtics\n\n\n\n\n# Get a nicely formatted date/time string\ndate_time &lt;- add_readable_time()\n\n# Create an image string using an on-disk\n# image file\nimg_file_path &lt;-\n  system.file(\n    \"img\", \"pexels-photo-267151.jpeg\",\n    package = \"blastula\"\n  )\n\nimg_string &lt;- add_image(file = img_file_path)\n\nemail &lt;-\n  compose_email(\n    body = md(glue::glue(\n        \"Hello,\n        \n        This is a *great* picture I found when looking\n        for sun + cloud photos:\n        \n        {img_string}\n        \")),\n    footer = md(glue::glue(\"Email sent on {date_time}.\"))\n  )"
+  }
+]

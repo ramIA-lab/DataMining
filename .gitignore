@@ -1,0 +1,35 @@
+# =========================
+# R / RStudio
+# =========================
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# =========================
+# Quarto source files
+# =========================
+*.qmd
+_quarto.yml
+_quarto/
+.quarto/
+_site/
+
+# =========================
+# SCSS / source styles
+# =========================
+*.scss
+styles.css
+
+# =========================
+# Source material folders (fuera de docs)
+# =========================
+material/
+imagenes/
+
+# =========================
+# macOS / Windows system files
+# =========================
+.DS_Store
+Thumbs.db
