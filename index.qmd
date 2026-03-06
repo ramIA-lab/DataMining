@@ -1,0 +1,83 @@
+---
+title: "Data Mining (DM GEI - FIB)"
+toc: true
+number-sections: true
+---
+
+[Introducció de l'assignatura]()
+
+## Data Sciences Tools
+
+[Data Sciences Tools](material/00_Introduction/DataProcessingTools.html)
+
+## Data preparation
+
+[Preprocessing - EDA](https://ramia-lab.github.io/AdvancedModelling/material/01_AdvancedPreprocessing/laboratorio/01_automaticEDA.R)
+
+[Preprocessing - Outliers detection](https://ramia-lab.github.io/AdvancedModelling/material/01_AdvancedPreprocessing/laboratorio/02_deteccioOutliers.R)
+
+- [Database sesion 1 - Sant Valentin Dates](https://ramia-lab.github.io/AdvancedModelling/material/01_AdvancedPreprocessing/laboratorio/valentine_dataset.csv)
+
+[Preprocessing - Missing Data Treatment](https://ramia-lab.github.io/AdvancedModelling/material/01_AdvancedPreprocessing/laboratorio/03_01_ImputationMethods.R)
+
+[Preprocessing - MIMMI](https://ramia-lab.github.io/AdvancedModelling/material/01_AdvancedPreprocessing/laboratorio/03_02_MIMMI.R)
+
+## Visualization and Dimensionality reduction
+
+[Principal Components Analysis (PCA)]()
+
+[Simple Correspondence Analysis (SCA)](https://ramia-lab.github.io/AdvancedModelling/material/04_CorrespondenceAnalysis/laboratorio/ACS.html)
+
+[Multiple Correspondence Analysis (MCA)]()
+
+[Factorial Analysis with Mixed Data (FAMD)](https://ramia-lab.github.io/AdvancedModelling/material/04_CorrespondenceAnalysis/laboratorio/FAMD.html)
+
+[Principal Coordinates Analysis (PCoA)]()
+
+## Clustering 
+
+[KMeans Method]()
+
+[KMediods Method]()
+
+[Hierarchical Method]()
+
+[Profiling (LP, TERMOMETRO, aTLP)]()
+
+## Predictive Models
+
+[Lineal Regresion]()
+
+[Logistic Regresion]()
+
+## Asociation Rules
+
+[Asociation Rules]()
+
+## Decisions Trees, Bagging and Ensamble Methods
+
+[Decisions Trees]()
+
+[Bagging Methods]()
+
+[Bagging Methods]()
+
+## Discriminant models and Non Parametric Discriminant
+
+[Naives Bayes]()
+
+[k-Nearest Neighbour]()
+
+[Linear Discriminant Analysis (LDA)]()
+
+[Cuadratic Discriminant Analysis (QDA)]()
+
+## Support Vector Machine (SVM)
+
+[Support Vector Machine (SVM)]()
+
+## Neuronal Networks (NN)
+
+[Artificial Neuronal Network (ANN)]()
+
+[Convolutional Neural Network (CNN)]()
