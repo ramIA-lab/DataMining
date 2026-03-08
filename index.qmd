@@ -24,25 +24,23 @@ number-sections: true
 
 ## Visualization and Dimensionality reduction
 
-[Principal Components Analysis (PCA)]()
+[Principal Components Analysis (ACP)](docs/material/03_Visualization/ACP.html)
 
-[Simple Correspondence Analysis (SCA)](https://ramia-lab.github.io/AdvancedModelling/material/04_CorrespondenceAnalysis/laboratorio/ACS.html)
+[Simple Correspondence Analysis (ACS)](material/03_Visualization/ACS.html)
 
-[Multiple Correspondence Analysis (MCA)]()
+[Multiple Correspondence Analysis (ACM)]()
 
-[Factorial Analysis with Mixed Data (FAMD)](https://ramia-lab.github.io/AdvancedModelling/material/04_CorrespondenceAnalysis/laboratorio/FAMD.html)
+[Factorial Analysis with Mixed Data (FAMD)](material/03_Visualization/FAMD.html)
 
+<--
 [Principal Coordinates Analysis (PCoA)]()
+--!>
 
 ## Clustering 
 
-[KMeans Method]()
+[Métodos de clustering](docs/material/04_Clustering/Clustering.html)
 
-[KMediods Method]()
-
-[Hierarchical Method]()
-
-[Profiling (LP, TERMOMETRO, aTLP)]()
+[Profiling](docs/material/04_Clustering/Profiling.html)
 
 ## Predictive Models
 
