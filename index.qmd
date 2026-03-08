@@ -32,10 +32,6 @@ number-sections: true
 
 [Factorial Analysis with Mixed Data (FAMD)](material/03_Visualization/FAMD.html)
 
-<--
-[Principal Coordinates Analysis (PCoA)]()
---!>
-
 ## Clustering 
 
 [Métodos de clustering](docs/material/04_Clustering/Clustering.html)
