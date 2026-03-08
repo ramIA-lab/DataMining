@@ -10,7 +10,7 @@ format:
       data-background-size: "cover"
       data-background-position: "center"
     incremental: true
-    theme: [night, ideai.scss]
+    theme: [night, ../../ideai.scss]
     background-transition: slide
     logo: imagenes/Logo_UPC.svg.png
     css: logo.css
