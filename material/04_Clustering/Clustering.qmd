@@ -365,7 +365,7 @@ distancia <- dist(dataNum, method = "euclidean")
 
 El criterio *single* une grupos a partir de la menor distancia entre elementos de ambos clusters. Suele producir el conocido efecto de encadenamiento.
 
-![](https://www.graphpad.com/guides/prism/latest/statistics/images/hmfile_hash_be70c713.png){fig-align="center"}
+![](single_agg.png){fig-align="center"}
 
 ```{r}
 agrSingle <- hclust(distancia, method = "single")
@@ -375,7 +375,7 @@ agrSingle <- hclust(distancia, method = "single")
 
 El criterio *complete* utiliza la mayor distancia entre elementos de dos grupos. Tiende a formar clusters más compactos.
 
-![](https://www.graphpad.com/guides/prism/latest/statistics/images/hmfile_hash_0b513dbc.png){fig-align="center"}
+![](complete_agg.png){fig-align="center"}
 
 ```{r}
 agrComplete <- hclust(distancia, method = "complete")
@@ -385,7 +385,7 @@ agrComplete <- hclust(distancia, method = "complete")
 
 El enlace promedio toma la distancia media entre todos los pares de observaciones de dos clusters. Es un compromiso habitual entre *single* y *complete*.
 
-![](https://www.graphpad.com/guides/prism/latest/statistics/images/hmfile_hash_92aae9b0.png){fig-align="center"}
+![](average_agg.png){fig-align="center"}
 
 ```{r}
 agrAverage <- hclust(distancia, method = "average")
@@ -403,7 +403,7 @@ agrMcquitty <- hclust(distancia, method = "mcquitty")
 
 El criterio *median* calcula distancias a partir de centroides corregidos y puede verse afectado por inversiones en el dendrograma.
 
-![](https://www.graphpad.com/guides/prism/latest/statistics/images/median.png){fig-align="center"}
+![](median_agg.png){fig-align="center"}
 
 ```{r}
 agrMedian <- hclust(distancia, method = "median")
@@ -413,7 +413,7 @@ agrMedian <- hclust(distancia, method = "median")
 
 En este caso la fusión depende de la distancia entre centroides de clusters. Es intuitivo, aunque no siempre conserva bien la estructura jerárquica.
 
-![](https://www.graphpad.com/guides/prism/latest/statistics/images/centroid.png){fig-align="center"}
+![](centroid_agg.png){fig-align="center"}
 
 ```{r}
 agrCentroid <- hclust(distancia, method = "centroid")
@@ -423,7 +423,7 @@ agrCentroid <- hclust(distancia, method = "centroid")
 
 Ward minimiza el incremento de variabilidad interna en cada fusión. Suele producir grupos compactos y bien separados, por eso es uno de los métodos más utilizados.
 
-![](https://www.graphpad.com/guides/prism/latest/statistics/images/hmfile_hash_94b2c56c.png){fig-align="center"}
+![](ward_agg.png){fig-align="center"}
 
 ```{r}
 agrWard <- hclust(distancia, method = "ward.D2")
