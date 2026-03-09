@@ -1,0 +1,496 @@
+---
+title: "ACM: Multiple Correspondence Analysis"
+author:
+  - "Sergi Ramírez"
+  - "Dante Conti"
+  - "IDEAI - UPC (c)"
+date: "`r Sys.Date()`"
+date-modified: "`r Sys.Date()`"
+toc: true
+# language: es
+number-sections: true
+format: 
+  html: 
+    theme:
+      light: cerulean
+      dark: darkly
+    toc: true
+    number-sections: true
+editor: visual
+execute:
+  echo: true
+  warning: false
+  message: false
+#  freeze: auto
+---
+
+# Introducción
+
+Este documento adapta el script original de **Multiple Correspondence Analysis (ACM)** a formato **Quarto** para uso docente.
+Se ha respetado al máximo la estructura original del script, pero añadiendo comentarios y explicaciones para facilitar su uso en clase, laboratorio o autoaprendizaje.
+
+El objetivo de este material es que el estudiante pueda:
+
+- entender qué es un ACM,
+- ejecutar el análisis paso a paso,
+- interpretar los resultados principales,
+- distinguir entre variables activas, suplementarias e individuos suplementarios.
+
+# Carga de librerías
+
+```{r}
+
+# FactoMineR implementa el análisis de correspondencias múltiples
+# factoextra facilita la visualización e interpretación de los resultados
+# corrplot permite representar matrices de contribución o calidad de representación
+
+list.of.packages <- c(
+ "FactoMineR", "factoextra", "corrplot")
+
+# Detectamos qué paquetes no están instalados.
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
+
+# Instalamos los que falten.
+if (length(new.packages) > 0) {
+  install.packages(new.packages)
+}
+
+# Cargamos todas las librerías en memoria.
+lapply(list.of.packages, require, character.only = TRUE)
+
+# Eliminamos objetos auxiliares del entorno.
+rm(list.of.packages, new.packages)
+```
+
+# Dataset: `poison`
+
+Los datos utilizados corresponden a una encuesta realizada a un grupo de escolares
+que sufrieron una intoxicación alimentaria. Se les preguntó por sus síntomas y por
+los alimentos consumidos.
+
+```{r}
+# Cargamos el conjunto de datos de ejemplo incluido en FactoMineR
+data(poison)
+
+# Dimensión del dataset: número de filas y columnas
+dim(poison)
+
+# Estructura de los datos: tipos de variables
+str(poison)
+
+# Resumen general de las variables
+summary(poison)
+```
+
+# Subsetting de variables para el ACM
+
+En este ejemplo se seleccionan únicamente algunas variables categóricas activas
+para realizar el análisis ACM.
+
+```{r}
+# Seleccionamos los individuos 1:55 y las variables 5:15
+# Estas serán las variables activas del análisis
+poison.active <- poison[1:55, 5:15]
+```
+
+# Inspección previa de frecuencias
+
+Antes de ejecutar un ACM, conviene revisar si existen categorías con frecuencias muy bajas.
+Estas categorías raras pueden distorsionar el análisis y, en algunos casos, debería plantearse su eliminación o agrupación.
+
+```{r}
+# Representamos la frecuencia de cada variable categórica
+for (i in 1:ncol(poison.active)) {
+  plot(
+    poison.active[, i],
+    main = colnames(poison.active)[i],
+    ylab = "Count",
+    col = "steelblue",
+    las = 2
+  )
+}
+```
+
+# Función ACM
+
+A continuación aplicamos el análisis de correspondencias múltiples.
+
+```{r}
+# Consultamos la ayuda de la función ACM
+help(ACM)
+
+# Ajustamos el modelo ACM usando el método Indicator
+# graph = FALSE evita que se dibujen gráficos automáticos al ejecutar el modelo
+res.mca <- MCA(poison.active, method = "Indicator", graph = FALSE)
+
+# Alternativamente podría utilizarse el método Burt
+# res.mca2 <- ACM(poison.active, method = "Burt", graph = FALSE)
+
+# Imprimimos el resumen del resultado
+print(res.mca)
+```
+
+# Resultados del ACM: visualización e interpretación
+
+## Paso 1. Eigenvalues e inercia explicada
+
+Los eigenvalues permiten estudiar cuánta variabilidad explica cada dimensión.
+Esto es fundamental para decidir cuántas dimensiones conservar.
+
+```{r}
+# Extraemos eigenvalues e inercia explicada
+eig.val <- get_eigenvalue(res.mca)
+eig.val
+```
+
+```{r}
+# Scree plot para visualizar la importancia relativa de las dimensiones
+fviz_screeplot(res.mca, addlabels = TRUE, ylim = c(0, 45))
+```
+
+### Criterio de selección de dimensiones
+
+- Para `method = "Indicator"` se suele utilizar:
+  - el método del codo,
+  - o bien conservar dimensiones con eigenvalue > 1/p.
+- Para `method = "Burt"` se suele usar:
+  - el método del codo,
+  - o una inercia acumulada superior al 75%–80%.
+
+En este caso:
+
+- `p = 11`, por tanto el umbral `1/p = 1/11 = 0.0909`.
+- Aunque podrían analizarse más dimensiones, en este script se trabajará con **2 dimensiones**.
+- Desde el punto de vista docente, conviene completar después la interpretación incorporando también la **tercera dimensión**.
+
+## Paso 2. Revisión conjunta de individuos y variables
+
+Este paso resume en una sola representación la posición relativa de individuos y categorías.
+
+```{r}
+# Biplot conjunto de individuos y categorías
+# Se deja comentado para mantener la estructura del script original
+# fviz_mca_biplot(res.mca, repel = TRUE, gtheme = theme_minimal())
+```
+
+# Paso 3. Análisis de variables
+
+Primero extraemos la información asociada a las categorías de las variables.
+
+```{r}
+# Extraemos resultados asociados a las variables del ACM
+var <- get_mca_var(res.mca)
+var
+```
+
+## Pseudo-correlación entre variables y dimensiones
+
+Esta representación ayuda a estudiar la asociación entre categorías y dimensiones principales.
+
+```{r}
+fviz_mca_var(
+  res.mca,
+  choice = "mca.cor",
+  repel = TRUE,
+  ggtheme = theme_minimal()
+)
+```
+
+## Coordenadas de las categorías
+
+La posición de cada categoría en el plano factorial permite interpretar proximidades, oposiciones y asociaciones.
+
+```{r}
+fviz_mca_var(
+  res.mca,
+  repel = TRUE,
+  ggtheme = theme_minimal()
+)
+```
+
+## Calidad de representación de las categorías (`cos2`)
+
+El `cos2` mide qué bien está representada una categoría en las dimensiones visualizadas.
+
+```{r}
+fviz_mca_var(
+  res.mca,
+  col.var = "cos2",
+  gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+  repel = TRUE,
+  ggtheme = theme_minimal()
+)
+```
+
+```{r}
+# Matriz de calidad de representación de las categorías
+corrplot(var$cos2, is.corr = FALSE)
+```
+
+```{r}
+# Visualización específica de cos2 para variables en los ejes 1 y 2
+fviz_cos2(res.mca, choice = "var", axes = 1:2)
+```
+
+### Interpretación docente
+
+Obsérvese que algunas categorías como `Fish_n`, `Fish_y`, `Icecream_n` e `Icecream_y`
+no quedan especialmente bien representadas en las dos primeras dimensiones.
+
+Eso implica que:
+
+- su posición en el plano debe interpretarse con cautela,
+- una solución de mayor dimensionalidad podría ser más adecuada para describirlas correctamente.
+
+## Contribución de las categorías a las dimensiones
+
+Las categorías con mayor contribución son las que más ayudan a definir cada dimensión factorial.
+
+```{r}
+# Categorías que más contribuyen a la dimensión 1
+fviz_contrib(res.mca, choice = "var", axes = 1, top = 15)
+```
+
+```{r}
+# Categorías que más contribuyen a la dimensión 2
+fviz_contrib(res.mca, choice = "var", axes = 2, top = 15)
+```
+
+```{r}
+# Contribución total a las dimensiones 1 y 2
+fviz_contrib(res.mca, choice = "var", axes = 1:2, top = 15)
+```
+
+```{r}
+# Representación del mapa de categorías coloreado por contribución
+fviz_mca_var(
+  res.mca,
+  col.var = "contrib",
+  gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+  repel = TRUE,
+  ggtheme = theme_minimal()
+)
+```
+
+```{r}
+# Matriz de contribuciones
+corrplot(var$contrib, is.corr = FALSE)
+```
+
+### Nota importante
+
+Antes de pasar al análisis de individuos, conviene decidir la **latencia** o número
+de dimensiones que se considerarán relevantes para la interpretación final.
+
+# Paso 4. Análisis de individuos
+
+Ahora estudiamos la representación de los individuos en el espacio factorial.
+
+```{r}
+# Extraemos la información asociada a los individuos
+ind <- get_mca_ind(res.mca)
+ind
+```
+
+## Calidad de representación y contribución de individuos
+
+```{r}
+fviz_mca_ind(
+  res.mca,
+  col.ind = "cos2",
+  gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+  repel = TRUE,
+  ggtheme = theme_minimal()
+)
+```
+
+```{r}
+fviz_mca_ind(
+  res.mca,
+  col.ind = "contrib",
+  gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+  repel = TRUE,
+  ggtheme = theme_minimal()
+)
+```
+
+```{r}
+# Individuos que más contribuyen a las dimensiones 1 y 2
+fviz_contrib(res.mca, choice = "ind", axes = 1:2, top = 20)
+```
+
+## Colorear individuos por grupos
+
+Es posible colorear los individuos utilizando cualquier variable cualitativa original.
+En este ejemplo se usa la variable `"Vomiting"`.
+
+```{r}
+fviz_mca_ind(
+  res.mca,
+  label = "none",
+  habillage = "Vomiting",
+  palette = c("#00AFBB", "#E7B800"),
+  addEllipses = TRUE,
+  ellipse.type = "confidence",
+  ggtheme = theme_minimal()
+)
+```
+
+## Múltiples gráficos de elipses
+
+```{r}
+# Elipses para dos variables cualitativas concretas
+fviz_ellipses(res.mca, c("Vomiting", "Fever"), geom = "point")
+```
+
+```{r}
+# Elipses para varias variables
+fviz_ellipses(res.mca, 1:4, geom = "point")
+```
+
+# Paso 5. Descripción de dimensiones
+
+La función `dimdesc()` permite obtener una descripción estadística e interpretativa
+de cada dimensión.
+
+```{r}
+# Descripción automática de las dimensiones 1 y 2
+res.desc <- dimdesc(res.mca, axes = c(1, 2))
+res.desc
+```
+
+```{r}
+# Descripción detallada de la dimensión 1
+res.desc[[1]]
+```
+
+```{r}
+# Descripción detallada de la dimensión 2
+res.desc[[2]]
+```
+
+# Temas adicionales: variables e individuos suplementarios
+
+En ACM es posible incorporar:
+
+1. **variables cuantitativas suplementarias** (`quanti.sup`),
+2. **variables cualitativas suplementarias** (`quali.sup`),
+3. **individuos suplementarios** (`ind.sup`).
+
+Estas variables e individuos **no se utilizan para construir las dimensiones principales**.
+Sus coordenadas se proyectan a posteriori a partir de la solución obtenida con los elementos activos.
+
+En este ejemplo:
+
+- `quanti.sup = 1:2` corresponde a las variables continuas `age` y `time`,
+- `quali.sup = 3:4` corresponde a variables cualitativas como `Sick` y `Sex`,
+- `ind.sup = 53:55` indica que esos individuos se tratarán como suplementarios.
+
+```{r}
+# Nuevo ACM incluyendo variables suplementarias e individuos suplementarios
+res.mca <- MCA(
+  poison,
+  ind.sup = 53:55,
+  quanti.sup = 1:2,
+  quali.sup = 3:4,
+  graph = FALSE
+)
+```
+
+## Resultados suplementarios
+
+```{r}
+# Categorías de variables cualitativas suplementarias
+res.mca$quali.sup
+```
+
+```{r}
+# Variables cuantitativas suplementarias
+res.mca$quanti
+```
+
+```{r}
+# Individuos suplementarios
+res.mca$ind.sup
+```
+
+## Visualizaciones con elementos suplementarios
+
+```{r}
+fviz_mca_biplot(
+  res.mca,
+  repel = TRUE,
+  ggtheme = theme_minimal()
+)
+```
+
+```{r}
+# Correlación entre variables (activas y suplementarias) y dimensiones
+fviz_mca_var(res.mca, choice = "mca.cor", repel = TRUE)
+```
+
+```{r}
+# Mapa de variables
+fviz_mca_var(
+  res.mca,
+  repel = TRUE,
+  ggtheme = theme_minimal()
+)
+```
+
+```{r}
+# Representación de variables cuantitativas suplementarias
+fviz_mca_var(
+  res.mca,
+  choice = "quanti.sup",
+  ggtheme = theme_minimal()
+)
+```
+
+```{r}
+# Representación de individuos suplementarios
+fviz_mca_ind(
+  res.mca,
+  label = "ind.sup",
+  ggtheme = theme_minimal()
+)
+```
+
+```{r}
+# Top 5 individuos y categorías con mayor contribución
+fviz_mca_biplot(
+  res.mca,
+  select.ind = list(contrib = 5),
+  select.var = list(contrib = 5),
+  ggtheme = theme_minimal()
+)
+```
+
+# Resumen final
+
+```{r}
+# Ejecución final del ACM con gráficos automáticos activados
+res.mca <- MCA(
+  poison,
+  ind.sup = 53:55,
+  quanti.sup = 1:2,
+  quali.sup = 3:4,
+  graph = TRUE
+)
+```
+
+## Comentario final
+
+Una comprobación muy útil consiste en contrastar los resultados obtenidos con:
+
+- el método basado en la **tabla disyuntiva completa** (`Indicator`),
+- y el método basado en la **tabla de Burt**.
+
+En general, ambos enfoques ofrecen resultados **muy similares o equivalentes** desde el punto de vista interpretativo.
+
+# Bibliografía y apoyo teórico
+
+- Greenacre, M. (2017). *Correspondence Analysis in Practice*.
+- Husson, F., Lê, S., & Pagès, J. (2017). *Exploratory Multivariate Analysis by Example Using R*.
+- Documentación oficial de `FactoMineR`.
+- Documentación oficial de `factoextra`.

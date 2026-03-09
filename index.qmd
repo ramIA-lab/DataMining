@@ -12,25 +12,23 @@ number-sections: true
 
 ## Data preparation
 
-[Preprocessing - EDA](https://ramia-lab.github.io/AdvancedModelling/material/01_AdvancedPreprocessing/laboratorio/01_automaticEDA.R)
+[Preprocessing - EDA](material/02_Preprocessing/automaticEDA.html)
 
-[Preprocessing - Outliers detection](https://ramia-lab.github.io/AdvancedModelling/material/01_AdvancedPreprocessing/laboratorio/02_deteccioOutliers.R)
+[Preprocessing - Outliers detection](material/02_Preprocessing/deteccioOutliers.html)
 
-- [Database sesion 1 - Sant Valentin Dates](https://ramia-lab.github.io/AdvancedModelling/material/01_AdvancedPreprocessing/laboratorio/valentine_dataset.csv)
-
-[Preprocessing - Missing Data Treatment](https://ramia-lab.github.io/AdvancedModelling/material/01_AdvancedPreprocessing/laboratorio/03_01_ImputationMethods.R)
+[Preprocessing - Missing Data Treatment](material/02_Preprocessing/ImputationMethods.html)
 
 [Preprocessing - MIMMI](https://ramia-lab.github.io/AdvancedModelling/material/01_AdvancedPreprocessing/laboratorio/03_02_MIMMI.R)
 
 ## Visualization and Dimensionality reduction
 
-[Principal Components Analysis (ACP)](material/03_Visualization/ACP.html)
+[Principal Components Analysis (ACP)](material/03_Visualitzation/ACP.html)
 
-[Simple Correspondence Analysis (ACS)](material/03_Visualization/ACS.html)
+[Simple Correspondence Analysis (ACS)](material/03_Visualitzation/ACS.html)
 
-[Multiple Correspondence Analysis (ACM)]()
+[Multiple Correspondence Analysis (ACM)](material/03_Visualitzation/ACM.html)
 
-[Factorial Analysis with Mixed Data (FAMD)](material/03_Visualization/FAMD.html)
+[Factorial Analysis with Mixed Data (FAMD)](material/03_Visualitzation/FAMD.html)
 
 ## Clustering 
 
@@ -75,3 +73,7 @@ number-sections: true
 [Artificial Neuronal Network (ANN)]()
 
 [Convolutional Neural Network (CNN)]()
+
+# Bases de datos
+
+- [Database - Sant Valentin Dates](https://ramia-lab.github.io/AdvancedModelling/material/01_AdvancedPreprocessing/laboratorio/valentine_dataset.csv)

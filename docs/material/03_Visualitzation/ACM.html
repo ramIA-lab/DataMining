@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Sergi Ramírez">
+<meta name="author" content="Dante Conti">
+<meta name="author" content="IDEAI - UPC (c)">
+<meta name="dcterms.date" content="2026-03-09">
+
+<title>ACM: Multiple Correspondence Analysis – Data Mining</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../imagenes/ideai_logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-29e2c20b02301cfff04dc8050bf30c7e.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-43df0d6f53b733b42d37fa7808e17715.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-83f5ffed4bb819e1a410337fb71ccdff.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1851c9bb8f3f4849af8ba858f06152b9.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Data Mining</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Grau en Informàtica</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<p><img src="../..\imagenes/Logo_UPC.svg.png" class="img-fluid"></p>
+</div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introducción" id="toc-introducción" class="nav-link active" data-scroll-target="#introducción"><span class="header-section-number">1</span> Introducción</a></li>
+  <li><a href="#carga-de-librerías" id="toc-carga-de-librerías" class="nav-link" data-scroll-target="#carga-de-librerías"><span class="header-section-number">2</span> Carga de librerías</a></li>
+  <li><a href="#dataset-poison" id="toc-dataset-poison" class="nav-link" data-scroll-target="#dataset-poison"><span class="header-section-number">3</span> Dataset: <code>poison</code></a></li>
+  <li><a href="#subsetting-de-variables-para-el-acm" id="toc-subsetting-de-variables-para-el-acm" class="nav-link" data-scroll-target="#subsetting-de-variables-para-el-acm"><span class="header-section-number">4</span> Subsetting de variables para el ACM</a></li>
+  <li><a href="#inspección-previa-de-frecuencias" id="toc-inspección-previa-de-frecuencias" class="nav-link" data-scroll-target="#inspección-previa-de-frecuencias"><span class="header-section-number">5</span> Inspección previa de frecuencias</a></li>
+  <li><a href="#función-acm" id="toc-función-acm" class="nav-link" data-scroll-target="#función-acm"><span class="header-section-number">6</span> Función ACM</a></li>
+  <li><a href="#resultados-del-acm-visualización-e-interpretación" id="toc-resultados-del-acm-visualización-e-interpretación" class="nav-link" data-scroll-target="#resultados-del-acm-visualización-e-interpretación"><span class="header-section-number">7</span> Resultados del ACM: visualización e interpretación</a>
+  <ul class="collapse">
+  <li><a href="#paso-1.-eigenvalues-e-inercia-explicada" id="toc-paso-1.-eigenvalues-e-inercia-explicada" class="nav-link" data-scroll-target="#paso-1.-eigenvalues-e-inercia-explicada"><span class="header-section-number">7.1</span> Paso 1. Eigenvalues e inercia explicada</a>
+  <ul class="collapse">
+  <li><a href="#criterio-de-selección-de-dimensiones" id="toc-criterio-de-selección-de-dimensiones" class="nav-link" data-scroll-target="#criterio-de-selección-de-dimensiones"><span class="header-section-number">7.1.1</span> Criterio de selección de dimensiones</a></li>
+  </ul></li>
+  <li><a href="#paso-2.-revisión-conjunta-de-individuos-y-variables" id="toc-paso-2.-revisión-conjunta-de-individuos-y-variables" class="nav-link" data-scroll-target="#paso-2.-revisión-conjunta-de-individuos-y-variables"><span class="header-section-number">7.2</span> Paso 2. Revisión conjunta de individuos y variables</a></li>
+  </ul></li>
+  <li><a href="#paso-3.-análisis-de-variables" id="toc-paso-3.-análisis-de-variables" class="nav-link" data-scroll-target="#paso-3.-análisis-de-variables"><span class="header-section-number">8</span> Paso 3. Análisis de variables</a>
+  <ul class="collapse">
+  <li><a href="#pseudo-correlación-entre-variables-y-dimensiones" id="toc-pseudo-correlación-entre-variables-y-dimensiones" class="nav-link" data-scroll-target="#pseudo-correlación-entre-variables-y-dimensiones"><span class="header-section-number">8.1</span> Pseudo-correlación entre variables y dimensiones</a></li>
+  <li><a href="#coordenadas-de-las-categorías" id="toc-coordenadas-de-las-categorías" class="nav-link" data-scroll-target="#coordenadas-de-las-categorías"><span class="header-section-number">8.2</span> Coordenadas de las categorías</a></li>
+  <li><a href="#calidad-de-representación-de-las-categorías-cos2" id="toc-calidad-de-representación-de-las-categorías-cos2" class="nav-link" data-scroll-target="#calidad-de-representación-de-las-categorías-cos2"><span class="header-section-number">8.3</span> Calidad de representación de las categorías (<code>cos2</code>)</a>
+  <ul class="collapse">
+  <li><a href="#interpretación-docente" id="toc-interpretación-docente" class="nav-link" data-scroll-target="#interpretación-docente"><span class="header-section-number">8.3.1</span> Interpretación docente</a></li>
+  </ul></li>
+  <li><a href="#contribución-de-las-categorías-a-las-dimensiones" id="toc-contribución-de-las-categorías-a-las-dimensiones" class="nav-link" data-scroll-target="#contribución-de-las-categorías-a-las-dimensiones"><span class="header-section-number">8.4</span> Contribución de las categorías a las dimensiones</a>
+  <ul class="collapse">
+  <li><a href="#nota-importante" id="toc-nota-importante" class="nav-link" data-scroll-target="#nota-importante"><span class="header-section-number">8.4.1</span> Nota importante</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#paso-4.-análisis-de-individuos" id="toc-paso-4.-análisis-de-individuos" class="nav-link" data-scroll-target="#paso-4.-análisis-de-individuos"><span class="header-section-number">9</span> Paso 4. Análisis de individuos</a>
+  <ul class="collapse">
+  <li><a href="#calidad-de-representación-y-contribución-de-individuos" id="toc-calidad-de-representación-y-contribución-de-individuos" class="nav-link" data-scroll-target="#calidad-de-representación-y-contribución-de-individuos"><span class="header-section-number">9.1</span> Calidad de representación y contribución de individuos</a></li>
+  <li><a href="#colorear-individuos-por-grupos" id="toc-colorear-individuos-por-grupos" class="nav-link" data-scroll-target="#colorear-individuos-por-grupos"><span class="header-section-number">9.2</span> Colorear individuos por grupos</a></li>
+  <li><a href="#múltiples-gráficos-de-elipses" id="toc-múltiples-gráficos-de-elipses" class="nav-link" data-scroll-target="#múltiples-gráficos-de-elipses"><span class="header-section-number">9.3</span> Múltiples gráficos de elipses</a></li>
+  </ul></li>
+  <li><a href="#paso-5.-descripción-de-dimensiones" id="toc-paso-5.-descripción-de-dimensiones" class="nav-link" data-scroll-target="#paso-5.-descripción-de-dimensiones"><span class="header-section-number">10</span> Paso 5. Descripción de dimensiones</a></li>
+  <li><a href="#temas-adicionales-variables-e-individuos-suplementarios" id="toc-temas-adicionales-variables-e-individuos-suplementarios" class="nav-link" data-scroll-target="#temas-adicionales-variables-e-individuos-suplementarios"><span class="header-section-number">11</span> Temas adicionales: variables e individuos suplementarios</a>
+  <ul class="collapse">
+  <li><a href="#resultados-suplementarios" id="toc-resultados-suplementarios" class="nav-link" data-scroll-target="#resultados-suplementarios"><span class="header-section-number">11.1</span> Resultados suplementarios</a></li>
+  <li><a href="#visualizaciones-con-elementos-suplementarios" id="toc-visualizaciones-con-elementos-suplementarios" class="nav-link" data-scroll-target="#visualizaciones-con-elementos-suplementarios"><span class="header-section-number">11.2</span> Visualizaciones con elementos suplementarios</a></li>
+  </ul></li>
+  <li><a href="#resumen-final" id="toc-resumen-final" class="nav-link" data-scroll-target="#resumen-final"><span class="header-section-number">12</span> Resumen final</a>
+  <ul class="collapse">
+  <li><a href="#comentario-final" id="toc-comentario-final" class="nav-link" data-scroll-target="#comentario-final"><span class="header-section-number">12.1</span> Comentario final</a></li>
+  </ul></li>
+  <li><a href="#bibliografía-y-apoyo-teórico" id="toc-bibliografía-y-apoyo-teórico" class="nav-link" data-scroll-target="#bibliografía-y-apoyo-teórico"><span class="header-section-number">13</span> Bibliografía y apoyo teórico</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">ACM: Multiple Correspondence Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Authors</div>
+    <div class="quarto-title-meta-contents">
+             <p>Sergi Ramírez </p>
+             <p>Dante Conti </p>
+             <p>IDEAI - UPC (c) </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 9, 2026</p>
+    </div>
+  </div>
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">March 9, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introducción" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Introducción</h1>
+<p>Este documento adapta el script original de <strong>Multiple Correspondence Analysis (ACM)</strong> a formato <strong>Quarto</strong> para uso docente. Se ha respetado al máximo la estructura original del script, pero añadiendo comentarios y explicaciones para facilitar su uso en clase, laboratorio o autoaprendizaje.</p>
+<p>El objetivo de este material es que el estudiante pueda:</p>
+<ul>
+<li>entender qué es un ACM,</li>
+<li>ejecutar el análisis paso a paso,</li>
+<li>interpretar los resultados principales,</li>
+<li>distinguir entre variables activas, suplementarias e individuos suplementarios.</li>
+</ul>
+</section>
+<section id="carga-de-librerías" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Carga de librerías</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># FactoMineR implementa el análisis de correspondencias múltiples</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># factoextra facilita la visualización e interpretación de los resultados</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># corrplot permite representar matrices de contribución o calidad de representación</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>list.of.packages <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a> <span class="st">"FactoMineR"</span>, <span class="st">"factoextra"</span>, <span class="st">"corrplot"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Detectamos qué paquetes no están instalados.</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>new.packages <span class="ot">&lt;-</span> list.of.packages[<span class="sc">!</span>(list.of.packages <span class="sc">%in%</span> <span class="fu">installed.packages</span>()[, <span class="st">"Package"</span>])]</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Instalamos los que falten.</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(new.packages) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(new.packages)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargamos todas las librerías en memoria.</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">lapply</span>(list.of.packages, require, <span class="at">character.only =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[[1]]
+[1] TRUE
+
+[[2]]
+[1] TRUE
+
+[[3]]
+[1] TRUE</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminamos objetos auxiliares del entorno.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(list.of.packages, new.packages)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="dataset-poison" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Dataset: <code>poison</code></h1>
+<p>Los datos utilizados corresponden a una encuesta realizada a un grupo de escolares que sufrieron una intoxicación alimentaria. Se les preguntó por sus síntomas y por los alimentos consumidos.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargamos el conjunto de datos de ejemplo incluido en FactoMineR</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(poison)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Dimensión del dataset: número de filas y columnas</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(poison)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 55 15</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Estructura de los datos: tipos de variables</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(poison)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   55 obs. of  15 variables:
+ $ Age       : int  9 5 6 9 7 72 5 10 5 11 ...
+ $ Time      : int  22 0 16 0 14 9 16 8 20 12 ...
+ $ Sick      : Factor w/ 2 levels "Sick_n","Sick_y": 2 1 2 1 2 2 2 2 2 2 ...
+ $ Sex       : Factor w/ 2 levels "F","M": 1 1 1 1 2 2 1 1 2 2 ...
+ $ Nausea    : Factor w/ 2 levels "Nausea_n","Nausea_y": 2 1 1 1 1 1 1 2 2 1 ...
+ $ Vomiting  : Factor w/ 2 levels "Vomit_n","Vomit_y": 1 1 2 1 2 1 2 2 1 2 ...
+ $ Abdominals: Factor w/ 2 levels "Abdo_n","Abdo_y": 2 1 2 1 2 2 2 2 2 1 ...
+ $ Fever     : Factor w/ 2 levels "Fever_n","Fever_y": 2 1 2 1 2 2 2 2 2 2 ...
+ $ Diarrhae  : Factor w/ 2 levels "Diarrhea_n","Diarrhea_y": 2 1 2 1 2 2 2 2 2 2 ...
+ $ Potato    : Factor w/ 2 levels "Potato_n","Potato_y": 2 2 2 2 2 2 2 2 2 2 ...
+ $ Fish      : Factor w/ 2 levels "Fish_n","Fish_y": 2 2 2 2 2 1 2 2 2 2 ...
+ $ Mayo      : Factor w/ 2 levels "Mayo_n","Mayo_y": 2 2 2 1 2 2 2 2 2 2 ...
+ $ Courgette : Factor w/ 2 levels "Courg_n","Courg_y": 2 2 2 2 2 2 2 2 2 2 ...
+ $ Cheese    : Factor w/ 2 levels "Cheese_n","Cheese_y": 2 1 2 2 2 2 2 2 2 2 ...
+ $ Icecream  : Factor w/ 2 levels "Icecream_n","Icecream_y": 2 2 2 2 2 2 2 2 2 2 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Resumen general de las variables</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(poison)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      Age             Time           Sick    Sex         Nausea      Vomiting 
+ Min.   : 4.00   Min.   : 0.00   Sick_n:17   F:28   Nausea_n:43   Vomit_n:33  
+ 1st Qu.: 6.00   1st Qu.: 0.00   Sick_y:38   M:27   Nausea_y:12   Vomit_y:22  
+ Median : 8.00   Median :12.00                                                
+ Mean   :16.93   Mean   :10.16                                                
+ 3rd Qu.:10.00   3rd Qu.:16.50                                                
+ Max.   :88.00   Max.   :22.00                                                
+  Abdominals     Fever          Diarrhae       Potato       Fish        Mayo   
+ Abdo_n:18   Fever_n:20   Diarrhea_n:20   Potato_n: 3   Fish_n: 1   Mayo_n:10  
+ Abdo_y:37   Fever_y:35   Diarrhea_y:35   Potato_y:52   Fish_y:54   Mayo_y:45  
+                                                                               
+                                                                               
+                                                                               
+                                                                               
+   Courgette       Cheese         Icecream 
+ Courg_n: 5   Cheese_n: 7   Icecream_n: 4  
+ Courg_y:50   Cheese_y:48   Icecream_y:51  
+                                           
+                                           
+                                           
+                                           </code></pre>
+</div>
+</div>
+</section>
+<section id="subsetting-de-variables-para-el-acm" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Subsetting de variables para el ACM</h1>
+<p>En este ejemplo se seleccionan únicamente algunas variables categóricas activas para realizar el análisis ACM.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Seleccionamos los individuos 1:55 y las variables 5:15</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Estas serán las variables activas del análisis</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>poison.active <span class="ot">&lt;-</span> poison[<span class="dv">1</span><span class="sc">:</span><span class="dv">55</span>, <span class="dv">5</span><span class="sc">:</span><span class="dv">15</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="inspección-previa-de-frecuencias" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Inspección previa de frecuencias</h1>
+<p>Antes de ejecutar un ACM, conviene revisar si existen categorías con frecuencias muy bajas. Estas categorías raras pueden distorsionar el análisis y, en algunos casos, debería plantearse su eliminación o agrupación.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Representamos la frecuencia de cada variable categórica</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(poison.active)) {</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    poison.active[, i],</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">main =</span> <span class="fu">colnames</span>(poison.active)[i],</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">ylab =</span> <span class="st">"Count"</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="st">"steelblue"</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">las =</span> <span class="dv">2</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-4-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-4-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-4-4.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-4-5.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-4-6.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-4-7.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-4-8.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-4-9.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-4-10.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-4-11.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="función-acm" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Función ACM</h1>
+<p>A continuación aplicamos el análisis de correspondencias múltiples.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Consultamos la ayuda de la función ACM</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">help</span>(ACM)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>No documentation for 'ACM' in specified packages and libraries:
+you could try '??ACM'</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ajustamos el modelo ACM usando el método Indicator</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># graph = FALSE evita que se dibujen gráficos automáticos al ejecutar el modelo</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>res.mca <span class="ot">&lt;-</span> <span class="fu">MCA</span>(poison.active, <span class="at">method =</span> <span class="st">"Indicator"</span>, <span class="at">graph =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Alternativamente podría utilizarse el método Burt</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co"># res.mca2 &lt;- ACM(poison.active, method = "Burt", graph = FALSE)</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Imprimimos el resumen del resultado</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(res.mca)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>**Results of the Multiple Correspondence Analysis (MCA)**
+The analysis was performed on 55 individuals, described by 11 variables
+*The results are available in the following objects:
+
+   name              description                       
+1  "$eig"            "eigenvalues"                     
+2  "$var"            "results for the variables"       
+3  "$var$coord"      "coord. of the categories"        
+4  "$var$cos2"       "cos2 for the categories"         
+5  "$var$contrib"    "contributions of the categories" 
+6  "$var$v.test"     "v-test for the categories"       
+7  "$var$eta2"       "coord. of variables"             
+8  "$ind"            "results for the individuals"     
+9  "$ind$coord"      "coord. for the individuals"      
+10 "$ind$cos2"       "cos2 for the individuals"        
+11 "$ind$contrib"    "contributions of the individuals"
+12 "$call"           "intermediate results"            
+13 "$call$marge.col" "weights of columns"              
+14 "$call$marge.li"  "weights of rows"                 </code></pre>
+</div>
+</div>
+</section>
+<section id="resultados-del-acm-visualización-e-interpretación" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Resultados del ACM: visualización e interpretación</h1>
+<section id="paso-1.-eigenvalues-e-inercia-explicada" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="paso-1.-eigenvalues-e-inercia-explicada"><span class="header-section-number">7.1</span> Paso 1. Eigenvalues e inercia explicada</h2>
+<p>Los eigenvalues permiten estudiar cuánta variabilidad explica cada dimensión. Esto es fundamental para decidir cuántas dimensiones conservar.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraemos eigenvalues e inercia explicada</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>eig.val <span class="ot">&lt;-</span> <span class="fu">get_eigenvalue</span>(res.mca)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>eig.val</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       eigenvalue variance.percent cumulative.variance.percent
+Dim.1  0.33523140        33.523140                    33.52314
+Dim.2  0.12913979        12.913979                    46.43712
+Dim.3  0.10734849        10.734849                    57.17197
+Dim.4  0.09587950         9.587950                    66.75992
+Dim.5  0.07883277         7.883277                    74.64319
+Dim.6  0.07108981         7.108981                    81.75217
+Dim.7  0.06016580         6.016580                    87.76876
+Dim.8  0.05577301         5.577301                    93.34606
+Dim.9  0.04120578         4.120578                    97.46663
+Dim.10 0.01304158         1.304158                    98.77079
+Dim.11 0.01229208         1.229208                   100.00000</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Scree plot para visualizar la importancia relativa de las dimensiones</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_screeplot</span>(res.mca, <span class="at">addlabels =</span> <span class="cn">TRUE</span>, <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">45</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="criterio-de-selección-de-dimensiones" class="level3" data-number="7.1.1">
+<h3 data-number="7.1.1" class="anchored" data-anchor-id="criterio-de-selección-de-dimensiones"><span class="header-section-number">7.1.1</span> Criterio de selección de dimensiones</h3>
+<ul>
+<li>Para <code>method = "Indicator"</code> se suele utilizar:
+<ul>
+<li>el método del codo,</li>
+<li>o bien conservar dimensiones con eigenvalue &gt; 1/p.</li>
+</ul></li>
+<li>Para <code>method = "Burt"</code> se suele usar:
+<ul>
+<li>el método del codo,</li>
+<li>o una inercia acumulada superior al 75%–80%.</li>
+</ul></li>
+</ul>
+<p>En este caso:</p>
+<ul>
+<li><code>p = 11</code>, por tanto el umbral <code>1/p = 1/11 = 0.0909</code>.</li>
+<li>Aunque podrían analizarse más dimensiones, en este script se trabajará con <strong>2 dimensiones</strong>.</li>
+<li>Desde el punto de vista docente, conviene completar después la interpretación incorporando también la <strong>tercera dimensión</strong>.</li>
+</ul>
+</section>
+</section>
+<section id="paso-2.-revisión-conjunta-de-individuos-y-variables" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="paso-2.-revisión-conjunta-de-individuos-y-variables"><span class="header-section-number">7.2</span> Paso 2. Revisión conjunta de individuos y variables</h2>
+<p>Este paso resume en una sola representación la posición relativa de individuos y categorías.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Biplot conjunto de individuos y categorías</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Se deja comentado para mantener la estructura del script original</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># fviz_mca_biplot(res.mca, repel = TRUE, gtheme = theme_minimal())</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="paso-3.-análisis-de-variables" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Paso 3. Análisis de variables</h1>
+<p>Primero extraemos la información asociada a las categorías de las variables.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraemos resultados asociados a las variables del ACM</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>var <span class="ot">&lt;-</span> <span class="fu">get_mca_var</span>(res.mca)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>var</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Multiple Correspondence Analysis Results for variables
+ ===================================================
+  Name       Description                  
+1 "$coord"   "Coordinates for categories" 
+2 "$cos2"    "Cos2 for categories"        
+3 "$contrib" "contributions of categories"</code></pre>
+</div>
+</div>
+<section id="pseudo-correlación-entre-variables-y-dimensiones" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="pseudo-correlación-entre-variables-y-dimensiones"><span class="header-section-number">8.1</span> Pseudo-correlación entre variables y dimensiones</h2>
+<p>Esta representación ayuda a estudiar la asociación entre categorías y dimensiones principales.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">choice =</span> <span class="st">"mca.cor"</span>,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="coordenadas-de-las-categorías" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="coordenadas-de-las-categorías"><span class="header-section-number">8.2</span> Coordenadas de las categorías</h2>
+<p>La posición de cada categoría en el plano factorial permite interpretar proximidades, oposiciones y asociaciones.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="calidad-de-representación-de-las-categorías-cos2" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="calidad-de-representación-de-las-categorías-cos2"><span class="header-section-number">8.3</span> Calidad de representación de las categorías (<code>cos2</code>)</h2>
+<p>El <code>cos2</code> mide qué bien está representada una categoría en las dimensiones visualizadas.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.var =</span> <span class="st">"cos2"</span>,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"#00AFBB"</span>, <span class="st">"#E7B800"</span>, <span class="st">"#FC4E07"</span>),</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Matriz de calidad de representación de las categorías</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">corrplot</span>(var<span class="sc">$</span>cos2, <span class="at">is.corr =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualización específica de cos2 para variables en los ejes 1 y 2</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_cos2</span>(res.mca, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="interpretación-docente" class="level3" data-number="8.3.1">
+<h3 data-number="8.3.1" class="anchored" data-anchor-id="interpretación-docente"><span class="header-section-number">8.3.1</span> Interpretación docente</h3>
+<p>Obsérvese que algunas categorías como <code>Fish_n</code>, <code>Fish_y</code>, <code>Icecream_n</code> e <code>Icecream_y</code> no quedan especialmente bien representadas en las dos primeras dimensiones.</p>
+<p>Eso implica que:</p>
+<ul>
+<li>su posición en el plano debe interpretarse con cautela,</li>
+<li>una solución de mayor dimensionalidad podría ser más adecuada para describirlas correctamente.</li>
+</ul>
+</section>
+</section>
+<section id="contribución-de-las-categorías-a-las-dimensiones" class="level2" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="contribución-de-las-categorías-a-las-dimensiones"><span class="header-section-number">8.4</span> Contribución de las categorías a las dimensiones</h2>
+<p>Las categorías con mayor contribución son las que más ayudan a definir cada dimensión factorial.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Categorías que más contribuyen a la dimensión 1</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res.mca, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">1</span>, <span class="at">top =</span> <span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Categorías que más contribuyen a la dimensión 2</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res.mca, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">2</span>, <span class="at">top =</span> <span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Contribución total a las dimensiones 1 y 2</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res.mca, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">top =</span> <span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Representación del mapa de categorías coloreado por contribución</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.var =</span> <span class="st">"contrib"</span>,</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"#00AFBB"</span>, <span class="st">"#E7B800"</span>, <span class="st">"#FC4E07"</span>),</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Matriz de contribuciones</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">corrplot</span>(var<span class="sc">$</span>contrib, <span class="at">is.corr =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="nota-importante" class="level3" data-number="8.4.1">
+<h3 data-number="8.4.1" class="anchored" data-anchor-id="nota-importante"><span class="header-section-number">8.4.1</span> Nota importante</h3>
+<p>Antes de pasar al análisis de individuos, conviene decidir la <strong>latencia</strong> o número de dimensiones que se considerarán relevantes para la interpretación final.</p>
+</section>
+</section>
+</section>
+<section id="paso-4.-análisis-de-individuos" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> Paso 4. Análisis de individuos</h1>
+<p>Ahora estudiamos la representación de los individuos en el espacio factorial.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraemos la información asociada a los individuos</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>ind <span class="ot">&lt;-</span> <span class="fu">get_mca_ind</span>(res.mca)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>ind</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Multiple Correspondence Analysis Results for individuals
+ ===================================================
+  Name       Description                       
+1 "$coord"   "Coordinates for the individuals" 
+2 "$cos2"    "Cos2 for the individuals"        
+3 "$contrib" "contributions of the individuals"</code></pre>
+</div>
+</div>
+<section id="calidad-de-representación-y-contribución-de-individuos" class="level2" data-number="9.1">
+<h2 data-number="9.1" class="anchored" data-anchor-id="calidad-de-representación-y-contribución-de-individuos"><span class="header-section-number">9.1</span> Calidad de representación y contribución de individuos</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_ind</span>(</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.ind =</span> <span class="st">"cos2"</span>,</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"#00AFBB"</span>, <span class="st">"#E7B800"</span>, <span class="st">"#FC4E07"</span>),</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_ind</span>(</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.ind =</span> <span class="st">"contrib"</span>,</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"#00AFBB"</span>, <span class="st">"#E7B800"</span>, <span class="st">"#FC4E07"</span>),</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Individuos que más contribuyen a las dimensiones 1 y 2</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res.mca, <span class="at">choice =</span> <span class="st">"ind"</span>, <span class="at">axes =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">top =</span> <span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="colorear-individuos-por-grupos" class="level2" data-number="9.2">
+<h2 data-number="9.2" class="anchored" data-anchor-id="colorear-individuos-por-grupos"><span class="header-section-number">9.2</span> Colorear individuos por grupos</h2>
+<p>Es posible colorear los individuos utilizando cualquier variable cualitativa original. En este ejemplo se usa la variable <code>"Vomiting"</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_ind</span>(</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"none"</span>,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">habillage =</span> <span class="st">"Vomiting"</span>,</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">palette =</span> <span class="fu">c</span>(<span class="st">"#00AFBB"</span>, <span class="st">"#E7B800"</span>),</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">addEllipses =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">ellipse.type =</span> <span class="st">"confidence"</span>,</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="múltiples-gráficos-de-elipses" class="level2" data-number="9.3">
+<h2 data-number="9.3" class="anchored" data-anchor-id="múltiples-gráficos-de-elipses"><span class="header-section-number">9.3</span> Múltiples gráficos de elipses</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Elipses para dos variables cualitativas concretas</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_ellipses</span>(res.mca, <span class="fu">c</span>(<span class="st">"Vomiting"</span>, <span class="st">"Fever"</span>), <span class="at">geom =</span> <span class="st">"point"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Elipses para varias variables</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_ellipses</span>(res.mca, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="at">geom =</span> <span class="st">"point"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="paso-5.-descripción-de-dimensiones" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Paso 5. Descripción de dimensiones</h1>
+<p>La función <code>dimdesc()</code> permite obtener una descripción estadística e interpretativa de cada dimensión.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Descripción automática de las dimensiones 1 y 2</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>res.desc <span class="ot">&lt;-</span> <span class="fu">dimdesc</span>(res.mca, <span class="at">axes =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>res.desc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$`Dim 1`
+
+Link between the variable and the categorical variable (1-way anova)
+=============================================
+                  R2      p.value
+Abdominals 0.8451157 4.055640e-23
+Diarrhae   0.7994680 3.910776e-20
+Fever      0.7846788 2.600566e-19
+Mayo       0.3829749 4.756234e-07
+Vomiting   0.3442016 2.510738e-06
+Nausea     0.2562007 8.062777e-05
+Cheese     0.1944181 7.534834e-04
+
+Link between variable and the categories of the categorical variables
+================================================================
+                      Estimate      p.value
+Abdominals=Abdo_n    0.5671866 4.055640e-23
+Diarrhae=Diarrhea_n  0.5380920 3.910776e-20
+Fever=Fever_n        0.5330918 2.600566e-19
+Mayo=Mayo_n          0.4644981 4.756234e-07
+Vomiting=Vomit_n     0.3466915 2.510738e-06
+Nausea=Nausea_n      0.3547892 8.062777e-05
+Cheese=Cheese_n      0.3830043 7.534834e-04
+Cheese=Cheese_y     -0.3830043 7.534834e-04
+Nausea=Nausea_y     -0.3547892 8.062777e-05
+Vomiting=Vomit_y    -0.3466915 2.510738e-06
+Mayo=Mayo_y         -0.4644981 4.756234e-07
+Fever=Fever_y       -0.5330918 2.600566e-19
+Diarrhae=Diarrhea_y -0.5380920 3.910776e-20
+Abdominals=Abdo_y   -0.5671866 4.055640e-23
+
+$`Dim 2`
+
+Link between the variable and the categorical variable (1-way anova)
+=============================================
+                 R2      p.value
+Courgette 0.4464145 2.500166e-08
+Potato    0.3957543 2.690662e-07
+Vomiting  0.2511604 9.728027e-05
+Icecream  0.1409011 4.743927e-03
+
+Link between variable and the categories of the categorical variables
+================================================================
+                      Estimate      p.value
+Courgette=Courg_n    0.4176013 2.500166e-08
+Potato=Potato_y      0.4977523 2.690662e-07
+Vomiting=Vomit_y     0.1838104 9.728027e-05
+Icecream=Icecream_n  0.2597197 4.743927e-03
+Icecream=Icecream_y -0.2597197 4.743927e-03
+Vomiting=Vomit_n    -0.1838104 9.728027e-05
+Potato=Potato_n     -0.4977523 2.690662e-07
+Courgette=Courg_y   -0.4176013 2.500166e-08</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Descripción detallada de la dimensión 1</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>res.desc[[<span class="dv">1</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Link between the variable and the categorical variable (1-way anova)
+=============================================
+                  R2      p.value
+Abdominals 0.8451157 4.055640e-23
+Diarrhae   0.7994680 3.910776e-20
+Fever      0.7846788 2.600566e-19
+Mayo       0.3829749 4.756234e-07
+Vomiting   0.3442016 2.510738e-06
+Nausea     0.2562007 8.062777e-05
+Cheese     0.1944181 7.534834e-04
+
+Link between variable and the categories of the categorical variables
+================================================================
+                      Estimate      p.value
+Abdominals=Abdo_n    0.5671866 4.055640e-23
+Diarrhae=Diarrhea_n  0.5380920 3.910776e-20
+Fever=Fever_n        0.5330918 2.600566e-19
+Mayo=Mayo_n          0.4644981 4.756234e-07
+Vomiting=Vomit_n     0.3466915 2.510738e-06
+Nausea=Nausea_n      0.3547892 8.062777e-05
+Cheese=Cheese_n      0.3830043 7.534834e-04
+Cheese=Cheese_y     -0.3830043 7.534834e-04
+Nausea=Nausea_y     -0.3547892 8.062777e-05
+Vomiting=Vomit_y    -0.3466915 2.510738e-06
+Mayo=Mayo_y         -0.4644981 4.756234e-07
+Fever=Fever_y       -0.5330918 2.600566e-19
+Diarrhae=Diarrhea_y -0.5380920 3.910776e-20
+Abdominals=Abdo_y   -0.5671866 4.055640e-23</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Descripción detallada de la dimensión 2</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>res.desc[[<span class="dv">2</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Link between the variable and the categorical variable (1-way anova)
+=============================================
+                 R2      p.value
+Courgette 0.4464145 2.500166e-08
+Potato    0.3957543 2.690662e-07
+Vomiting  0.2511604 9.728027e-05
+Icecream  0.1409011 4.743927e-03
+
+Link between variable and the categories of the categorical variables
+================================================================
+                      Estimate      p.value
+Courgette=Courg_n    0.4176013 2.500166e-08
+Potato=Potato_y      0.4977523 2.690662e-07
+Vomiting=Vomit_y     0.1838104 9.728027e-05
+Icecream=Icecream_n  0.2597197 4.743927e-03
+Icecream=Icecream_y -0.2597197 4.743927e-03
+Vomiting=Vomit_n    -0.1838104 9.728027e-05
+Potato=Potato_n     -0.4977523 2.690662e-07
+Courgette=Courg_y   -0.4176013 2.500166e-08</code></pre>
+</div>
+</div>
+</section>
+<section id="temas-adicionales-variables-e-individuos-suplementarios" class="level1" data-number="11">
+<h1 data-number="11"><span class="header-section-number">11</span> Temas adicionales: variables e individuos suplementarios</h1>
+<p>En ACM es posible incorporar:</p>
+<ol type="1">
+<li><strong>variables cuantitativas suplementarias</strong> (<code>quanti.sup</code>),</li>
+<li><strong>variables cualitativas suplementarias</strong> (<code>quali.sup</code>),</li>
+<li><strong>individuos suplementarios</strong> (<code>ind.sup</code>).</li>
+</ol>
+<p>Estas variables e individuos <strong>no se utilizan para construir las dimensiones principales</strong>. Sus coordenadas se proyectan a posteriori a partir de la solución obtenida con los elementos activos.</p>
+<p>En este ejemplo:</p>
+<ul>
+<li><code>quanti.sup = 1:2</code> corresponde a las variables continuas <code>age</code> y <code>time</code>,</li>
+<li><code>quali.sup = 3:4</code> corresponde a variables cualitativas como <code>Sick</code> y <code>Sex</code>,</li>
+<li><code>ind.sup = 53:55</code> indica que esos individuos se tratarán como suplementarios.</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Nuevo ACM incluyendo variables suplementarias e individuos suplementarios</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>res.mca <span class="ot">&lt;-</span> <span class="fu">MCA</span>(</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  poison,</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ind.sup =</span> <span class="dv">53</span><span class="sc">:</span><span class="dv">55</span>,</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">quanti.sup =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>,</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">quali.sup =</span> <span class="dv">3</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">graph =</span> <span class="cn">FALSE</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="resultados-suplementarios" class="level2" data-number="11.1">
+<h2 data-number="11.1" class="anchored" data-anchor-id="resultados-suplementarios"><span class="header-section-number">11.1</span> Resultados suplementarios</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Categorías de variables cualitativas suplementarias</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>res.mca<span class="sc">$</span>quali.sup</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$coord
+             Dim 1         Dim 2       Dim 3        Dim 4       Dim 5
+Sick_n  1.41809140  0.0020394048  0.13199139 -0.016036841 -0.08354663
+Sick_y -0.63026284 -0.0009064021 -0.05866284  0.007127485  0.03713184
+F      -0.03108147  0.1123143957  0.05033124 -0.055927173 -0.06832928
+M       0.03356798 -0.1212995474 -0.05435774  0.060401347  0.07379562
+
+$cos2
+             Dim 1        Dim 2       Dim 3        Dim 4       Dim 5
+Sick_n 0.893770319 1.848521e-06 0.007742990 0.0001143023 0.003102240
+Sick_y 0.893770319 1.848521e-06 0.007742990 0.0001143023 0.003102240
+F      0.001043342 1.362369e-02 0.002735892 0.0033780765 0.005042401
+M      0.001043342 1.362369e-02 0.002735892 0.0033780765 0.005042401
+
+$v.test
+            Dim 1        Dim 2      Dim 3       Dim 4      Dim 5
+Sick_n  6.7514655  0.009709509  0.6284047 -0.07635063 -0.3977615
+Sick_y -6.7514655 -0.009709509 -0.6284047  0.07635063  0.3977615
+F      -0.2306739  0.833551410  0.3735378 -0.41506855 -0.5071119
+M       0.2306739 -0.833551410 -0.3735378  0.41506855  0.5071119
+
+$eta2
+           Dim 1        Dim 2       Dim 3        Dim 4       Dim 5
+Sick 0.893770319 1.848521e-06 0.007742990 0.0001143023 0.003102240
+Sex  0.001043342 1.362369e-02 0.002735892 0.0033780765 0.005042401</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Variables cuantitativas suplementarias</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>res.mca<span class="sc">$</span>quanti</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$coord
+            Dim 1       Dim 2       Dim 3       Dim 4       Dim 5
+Age   0.003934896 -0.00741340 -0.26494536  0.20015501  0.02928483
+Time -0.838158507 -0.08330586 -0.08718851 -0.08421599 -0.02316931</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Individuos suplementarios</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>res.mca<span class="sc">$</span>ind.sup</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$coord
+        Dim 1     Dim 2      Dim 3      Dim 4      Dim 5
+53  1.0835684 0.5172478  0.5794063  0.5390903  0.4553650
+54 -0.1249473 0.1417271 -0.1765234 -0.1526587 -0.2779565
+55 -0.4315948 0.1270468 -0.2071580 -0.1186804 -0.1891760
+
+$cos2
+        Dim 1      Dim 2      Dim 3      Dim 4      Dim 5
+53 0.36304957 0.08272764 0.10380536 0.08986204 0.06411692
+54 0.03157652 0.04062716 0.06302535 0.04713607 0.15626590
+55 0.50232519 0.04352713 0.11572730 0.03798314 0.09650827</code></pre>
+</div>
+</div>
+</section>
+<section id="visualizaciones-con-elementos-suplementarios" class="level2" data-number="11.2">
+<h2 data-number="11.2" class="anchored" data-anchor-id="visualizaciones-con-elementos-suplementarios"><span class="header-section-number">11.2</span> Visualizaciones con elementos suplementarios</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_biplot</span>(</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-34-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Correlación entre variables (activas y suplementarias) y dimensiones</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(res.mca, <span class="at">choice =</span> <span class="st">"mca.cor"</span>, <span class="at">repel =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-35-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mapa de variables</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Representación de variables cuantitativas suplementarias</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">choice =</span> <span class="st">"quanti.sup"</span>,</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-37-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Representación de individuos suplementarios</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_ind</span>(</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"ind.sup"</span>,</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-38-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Top 5 individuos y categorías con mayor contribución</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_biplot</span>(</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">select.ind =</span> <span class="fu">list</span>(<span class="at">contrib =</span> <span class="dv">5</span>),</span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">select.var =</span> <span class="fu">list</span>(<span class="at">contrib =</span> <span class="dv">5</span>),</span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-39-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="resumen-final" class="level1" data-number="12">
+<h1 data-number="12"><span class="header-section-number">12</span> Resumen final</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejecución final del ACM con gráficos automáticos activados</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>res.mca <span class="ot">&lt;-</span> <span class="fu">MCA</span>(</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>  poison,</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ind.sup =</span> <span class="dv">53</span><span class="sc">:</span><span class="dv">55</span>,</span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">quanti.sup =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>,</span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">quali.sup =</span> <span class="dv">3</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">graph =</span> <span class="cn">TRUE</span></span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-40-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-40-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-40-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ACM_files/figure-html/unnamed-chunk-40-4.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="comentario-final" class="level2" data-number="12.1">
+<h2 data-number="12.1" class="anchored" data-anchor-id="comentario-final"><span class="header-section-number">12.1</span> Comentario final</h2>
+<p>Una comprobación muy útil consiste en contrastar los resultados obtenidos con:</p>
+<ul>
+<li>el método basado en la <strong>tabla disyuntiva completa</strong> (<code>Indicator</code>),</li>
+<li>y el método basado en la <strong>tabla de Burt</strong>.</li>
+</ul>
+<p>En general, ambos enfoques ofrecen resultados <strong>muy similares o equivalentes</strong> desde el punto de vista interpretativo.</p>
+</section>
+</section>
+<section id="bibliografía-y-apoyo-teórico" class="level1" data-number="13">
+<h1 data-number="13"><span class="header-section-number">13</span> Bibliografía y apoyo teórico</h1>
+<ul>
+<li>Greenacre, M. (2017). <em>Correspondence Analysis in Practice</em>.</li>
+<li>Husson, F., Lê, S., &amp; Pagès, J. (2017). <em>Exploratory Multivariate Analysis by Example Using R</em>.</li>
+<li>Documentación oficial de <code>FactoMineR</code>.</li>
+<li>Documentación oficial de <code>factoextra</code>.</li>
+</ul>
+
+
+</section>
+
+<p>Aquesta web està creada por Dante Conti y Sergi Ramírez, (c) 2026</p></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+    let newTheme = '';
+    if(darkModeDefault) {
+      newTheme = isAlternate ? baseTheme : alternateTheme;
+    } else {
+      newTheme = isAlternate ? alternateTheme : baseTheme;
+    }
+    const changeGiscusTheme = () => {
+      // From: https://github.com/giscus/giscus/issues/336
+      const sendMessage = (message) => {
+        const iframe = document.querySelector('iframe.giscus-frame');
+        if (!iframe) return;
+        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+      }
+      sendMessage({
+        setConfig: {
+          theme: newTheme
+        }
+      });
+    }
+    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+    if (isGiscussLoaded) {
+      changeGiscusTheme();
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  const darkModeDefault = false;
+  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+    toggleGiscusIfUsed(toAlternate, darkModeDefault);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
