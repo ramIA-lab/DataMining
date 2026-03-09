@@ -6,6 +6,8 @@ number-sections: true
 
 [Introducció de l'assignatura]()
 
+# Topics
+
 ## Data Sciences Tools
 
 [Data Sciences Tools](material/00_Introduction/DataProcessingTools.html)
@@ -32,7 +34,7 @@ number-sections: true
 
 ## Clustering 
 
-[Métodos de clustering](material/04_Clustering/Clustering.html)
+[Métodos de Clustering](material/04_Clustering/Clustering.html)
 
 [Profiling](material/04_Clustering/Profiling.html)
 

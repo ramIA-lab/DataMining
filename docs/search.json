@@ -10,71 +10,71 @@
     "objectID": "index.html#data-sciences-tools",
     "href": "index.html#data-sciences-tools",
     "title": "Data Mining (DM GEI - FIB)",
-    "section": "0.1 Data Sciences Tools",
-    "text": "0.1 Data Sciences Tools\nData Sciences Tools"
+    "section": "1.1 Data Sciences Tools",
+    "text": "1.1 Data Sciences Tools\nData Sciences Tools"
   },
   {
     "objectID": "index.html#data-preparation",
     "href": "index.html#data-preparation",
     "title": "Data Mining (DM GEI - FIB)",
-    "section": "0.2 Data preparation",
-    "text": "0.2 Data preparation\nPreprocessing - EDA\nPreprocessing - Outliers detection\nPreprocessing - Missing Data Treatment\nPreprocessing - MIMMI"
+    "section": "1.2 Data preparation",
+    "text": "1.2 Data preparation\nPreprocessing - EDA\nPreprocessing - Outliers detection\nPreprocessing - Missing Data Treatment\nPreprocessing - MIMMI"
   },
   {
     "objectID": "index.html#visualization-and-dimensionality-reduction",
     "href": "index.html#visualization-and-dimensionality-reduction",
     "title": "Data Mining (DM GEI - FIB)",
-    "section": "0.3 Visualization and Dimensionality reduction",
-    "text": "0.3 Visualization and Dimensionality reduction\nPrincipal Components Analysis (ACP)\nSimple Correspondence Analysis (ACS)\nMultiple Correspondence Analysis (ACM)\nFactorial Analysis with Mixed Data (FAMD)"
+    "section": "1.3 Visualization and Dimensionality reduction",
+    "text": "1.3 Visualization and Dimensionality reduction\nPrincipal Components Analysis (ACP)\nSimple Correspondence Analysis (ACS)\nMultiple Correspondence Analysis (ACM)\nFactorial Analysis with Mixed Data (FAMD)"
   },
   {
     "objectID": "index.html#clustering",
     "href": "index.html#clustering",
     "title": "Data Mining (DM GEI - FIB)",
-    "section": "0.4 Clustering",
-    "text": "0.4 Clustering\nMétodos de clustering\nProfiling"
+    "section": "1.4 Clustering",
+    "text": "1.4 Clustering\nMétodos de Clustering\nProfiling"
   },
   {
     "objectID": "index.html#predictive-models",
     "href": "index.html#predictive-models",
     "title": "Data Mining (DM GEI - FIB)",
-    "section": "0.5 Predictive Models",
-    "text": "0.5 Predictive Models\nLineal Regresion\nLogistic Regresion"
+    "section": "1.5 Predictive Models",
+    "text": "1.5 Predictive Models\nLineal Regresion\nLogistic Regresion"
   },
   {
     "objectID": "index.html#asociation-rules",
     "href": "index.html#asociation-rules",
     "title": "Data Mining (DM GEI - FIB)",
-    "section": "0.6 Asociation Rules",
-    "text": "0.6 Asociation Rules\nAsociation Rules"
+    "section": "1.6 Asociation Rules",
+    "text": "1.6 Asociation Rules\nAsociation Rules"
   },
   {
     "objectID": "index.html#decisions-trees-bagging-and-ensamble-methods",
     "href": "index.html#decisions-trees-bagging-and-ensamble-methods",
     "title": "Data Mining (DM GEI - FIB)",
-    "section": "0.7 Decisions Trees, Bagging and Ensamble Methods",
-    "text": "0.7 Decisions Trees, Bagging and Ensamble Methods\nDecisions Trees\nBagging Methods\nBagging Methods"
+    "section": "1.7 Decisions Trees, Bagging and Ensamble Methods",
+    "text": "1.7 Decisions Trees, Bagging and Ensamble Methods\nDecisions Trees\nBagging Methods\nBagging Methods"
   },
   {
     "objectID": "index.html#discriminant-models-and-non-parametric-discriminant",
     "href": "index.html#discriminant-models-and-non-parametric-discriminant",
     "title": "Data Mining (DM GEI - FIB)",
-    "section": "0.8 Discriminant models and Non Parametric Discriminant",
-    "text": "0.8 Discriminant models and Non Parametric Discriminant\nNaives Bayes\nk-Nearest Neighbour\nLinear Discriminant Analysis (LDA)\nCuadratic Discriminant Analysis (QDA)"
+    "section": "1.8 Discriminant models and Non Parametric Discriminant",
+    "text": "1.8 Discriminant models and Non Parametric Discriminant\nNaives Bayes\nk-Nearest Neighbour\nLinear Discriminant Analysis (LDA)\nCuadratic Discriminant Analysis (QDA)"
   },
   {
     "objectID": "index.html#support-vector-machine-svm",
     "href": "index.html#support-vector-machine-svm",
     "title": "Data Mining (DM GEI - FIB)",
-    "section": "0.9 Support Vector Machine (SVM)",
-    "text": "0.9 Support Vector Machine (SVM)\nSupport Vector Machine (SVM)"
+    "section": "1.9 Support Vector Machine (SVM)",
+    "text": "1.9 Support Vector Machine (SVM)\nSupport Vector Machine (SVM)"
   },
   {
     "objectID": "index.html#neuronal-networks-nn",
     "href": "index.html#neuronal-networks-nn",
     "title": "Data Mining (DM GEI - FIB)",
-    "section": "0.10 Neuronal Networks (NN)",
-    "text": "0.10 Neuronal Networks (NN)\nArtificial Neuronal Network (ANN)\nConvolutional Neural Network (CNN)"
+    "section": "1.10 Neuronal Networks (NN)",
+    "text": "1.10 Neuronal Networks (NN)\nArtificial Neuronal Network (ANN)\nConvolutional Neural Network (CNN)"
   },
   {
     "objectID": "material/04_Clustering/Profiling.html",
