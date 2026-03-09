@@ -24,7 +24,7 @@ number-sections: true
 
 ## Visualization and Dimensionality reduction
 
-[Principal Components Analysis (ACP)](docs/material/03_Visualization/ACP.html)
+[Principal Components Analysis (ACP)](material/03_Visualization/ACP.html)
 
 [Simple Correspondence Analysis (ACS)](material/03_Visualization/ACS.html)
 
@@ -34,9 +34,9 @@ number-sections: true
 
 ## Clustering 
 
-[Métodos de clustering](docs/material/04_Clustering/Clustering.html)
+[Métodos de clustering](material/04_Clustering/Clustering.html)
 
-[Profiling](docs/material/04_Clustering/Profiling.html)
+[Profiling](material/04_Clustering/Profiling.html)
 
 ## Predictive Models
 
