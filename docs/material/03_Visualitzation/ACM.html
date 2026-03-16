@@ -9,7 +9,7 @@
 <meta name="author" content="Sergi Ramírez">
 <meta name="author" content="Dante Conti">
 <meta name="author" content="IDEAI - UPC (c)">
-<meta name="dcterms.date" content="2026-03-09">
+<meta name="dcterms.date" content="2026-03-16">
 
 <title>ACM: Multiple Correspondence Analysis – Data Mining</title>
 <style>
@@ -204,7 +204,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">ACM: Multiple Correspondence Analysis</h1>
+<div class="quarto-title-block"><div><h1 class="title">ACM: Multiple Correspondence Analysis</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
 </div>
 
 
@@ -223,14 +223,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">March 9, 2026</p>
+      <p class="date">March 16, 2026</p>
     </div>
   </div>
   
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">March 9, 2026</p>
+      <p class="date-modified">March 16, 2026</p>
     </div>
   </div>
     
@@ -1200,6 +1200,8 @@ $cos2
 </ul>
 
 
+<!-- -->
+
 </section>
 
 <p>Aquesta web està creada por Dante Conti y Sergi Ramírez, (c) 2026</p></main> <!-- /main -->
@@ -1434,6 +1436,57 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       container: window.document.getElementById('quarto-embedded-source-code-modal')
     });
     clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
@@ -1763,7 +1816,494 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
 });
-</script>
+</script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb60" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "ACM: Multiple Correspondence Analysis"</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a><span class="co">  - "Sergi Ramírez"</span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a><span class="co">  - "Dante Conti"</span></span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a><span class="co">  - "IDEAI - UPC (c)"</span></span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "`r Sys.Date()`"</span></span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a><span class="an">date-modified:</span><span class="co"> "`r Sys.Date()`"</span></span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a><span class="an">toc:</span><span class="co"> true</span></span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a><span class="co"># language: es</span></span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a><span class="an">number-sections:</span><span class="co"> true</span></span>
+<span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span><span class="co"> </span></span>
+<span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a><span class="co">  html: </span></span>
+<span id="cb60-14"><a href="#cb60-14" aria-hidden="true" tabindex="-1"></a><span class="co">    theme:</span></span>
+<span id="cb60-15"><a href="#cb60-15" aria-hidden="true" tabindex="-1"></a><span class="co">      light: cerulean</span></span>
+<span id="cb60-16"><a href="#cb60-16" aria-hidden="true" tabindex="-1"></a><span class="co">      dark: darkly</span></span>
+<span id="cb60-17"><a href="#cb60-17" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
+<span id="cb60-18"><a href="#cb60-18" aria-hidden="true" tabindex="-1"></a><span class="co">    number-sections: true</span></span>
+<span id="cb60-19"><a href="#cb60-19" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true</span></span>
+<span id="cb60-20"><a href="#cb60-20" aria-hidden="true" tabindex="-1"></a><span class="an">editor:</span><span class="co"> visual</span></span>
+<span id="cb60-21"><a href="#cb60-21" aria-hidden="true" tabindex="-1"></a><span class="an">execute:</span></span>
+<span id="cb60-22"><a href="#cb60-22" aria-hidden="true" tabindex="-1"></a><span class="co">  echo: true</span></span>
+<span id="cb60-23"><a href="#cb60-23" aria-hidden="true" tabindex="-1"></a><span class="co">  warning: false</span></span>
+<span id="cb60-24"><a href="#cb60-24" aria-hidden="true" tabindex="-1"></a><span class="co">  message: false</span></span>
+<span id="cb60-25"><a href="#cb60-25" aria-hidden="true" tabindex="-1"></a><span class="co">#  freeze: auto</span></span>
+<span id="cb60-26"><a href="#cb60-26" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb60-27"><a href="#cb60-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-28"><a href="#cb60-28" aria-hidden="true" tabindex="-1"></a><span class="fu"># Introducción</span></span>
+<span id="cb60-29"><a href="#cb60-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-30"><a href="#cb60-30" aria-hidden="true" tabindex="-1"></a>Este documento adapta el script original de **Multiple Correspondence Analysis (ACM)** a formato **Quarto** para uso docente. Se ha respetado al máximo la estructura original del script, pero añadiendo comentarios y explicaciones para facilitar su uso en clase, laboratorio o autoaprendizaje.</span>
+<span id="cb60-31"><a href="#cb60-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-32"><a href="#cb60-32" aria-hidden="true" tabindex="-1"></a>El objetivo de este material es que el estudiante pueda:</span>
+<span id="cb60-33"><a href="#cb60-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-34"><a href="#cb60-34" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>entender qué es un ACM,</span>
+<span id="cb60-35"><a href="#cb60-35" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>ejecutar el análisis paso a paso,</span>
+<span id="cb60-36"><a href="#cb60-36" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>interpretar los resultados principales,</span>
+<span id="cb60-37"><a href="#cb60-37" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>distinguir entre variables activas, suplementarias e individuos suplementarios.</span>
+<span id="cb60-38"><a href="#cb60-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-39"><a href="#cb60-39" aria-hidden="true" tabindex="-1"></a><span class="fu"># Carga de librerías</span></span>
+<span id="cb60-40"><a href="#cb60-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-43"><a href="#cb60-43" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-44"><a href="#cb60-44" aria-hidden="true" tabindex="-1"></a><span class="co"># FactoMineR implementa el análisis de correspondencias múltiples</span></span>
+<span id="cb60-45"><a href="#cb60-45" aria-hidden="true" tabindex="-1"></a><span class="co"># factoextra facilita la visualización e interpretación de los resultados</span></span>
+<span id="cb60-46"><a href="#cb60-46" aria-hidden="true" tabindex="-1"></a><span class="co"># corrplot permite representar matrices de contribución o calidad de representación</span></span>
+<span id="cb60-47"><a href="#cb60-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-48"><a href="#cb60-48" aria-hidden="true" tabindex="-1"></a>list.of.packages <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb60-49"><a href="#cb60-49" aria-hidden="true" tabindex="-1"></a> <span class="st">"FactoMineR"</span>, <span class="st">"factoextra"</span>, <span class="st">"corrplot"</span>)</span>
+<span id="cb60-50"><a href="#cb60-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-51"><a href="#cb60-51" aria-hidden="true" tabindex="-1"></a><span class="co"># Detectamos qué paquetes no están instalados.</span></span>
+<span id="cb60-52"><a href="#cb60-52" aria-hidden="true" tabindex="-1"></a>new.packages <span class="ot">&lt;-</span> list.of.packages[<span class="sc">!</span>(list.of.packages <span class="sc">%in%</span> <span class="fu">installed.packages</span>()[, <span class="st">"Package"</span>])]</span>
+<span id="cb60-53"><a href="#cb60-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-54"><a href="#cb60-54" aria-hidden="true" tabindex="-1"></a><span class="co"># Instalamos los que falten.</span></span>
+<span id="cb60-55"><a href="#cb60-55" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(new.packages) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb60-56"><a href="#cb60-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(new.packages)</span>
+<span id="cb60-57"><a href="#cb60-57" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb60-58"><a href="#cb60-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-59"><a href="#cb60-59" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargamos todas las librerías en memoria.</span></span>
+<span id="cb60-60"><a href="#cb60-60" aria-hidden="true" tabindex="-1"></a><span class="fu">lapply</span>(list.of.packages, require, <span class="at">character.only =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb60-61"><a href="#cb60-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-62"><a href="#cb60-62" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminamos objetos auxiliares del entorno.</span></span>
+<span id="cb60-63"><a href="#cb60-63" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(list.of.packages, new.packages)</span>
+<span id="cb60-64"><a href="#cb60-64" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-65"><a href="#cb60-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-66"><a href="#cb60-66" aria-hidden="true" tabindex="-1"></a><span class="fu"># Dataset: `poison`</span></span>
+<span id="cb60-67"><a href="#cb60-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-68"><a href="#cb60-68" aria-hidden="true" tabindex="-1"></a>Los datos utilizados corresponden a una encuesta realizada a un grupo de escolares que sufrieron una intoxicación alimentaria. Se les preguntó por sus síntomas y por los alimentos consumidos.</span>
+<span id="cb60-69"><a href="#cb60-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-72"><a href="#cb60-72" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-73"><a href="#cb60-73" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargamos el conjunto de datos de ejemplo incluido en FactoMineR</span></span>
+<span id="cb60-74"><a href="#cb60-74" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(poison)</span>
+<span id="cb60-75"><a href="#cb60-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-76"><a href="#cb60-76" aria-hidden="true" tabindex="-1"></a><span class="co"># Dimensión del dataset: número de filas y columnas</span></span>
+<span id="cb60-77"><a href="#cb60-77" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(poison)</span>
+<span id="cb60-78"><a href="#cb60-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-79"><a href="#cb60-79" aria-hidden="true" tabindex="-1"></a><span class="co"># Estructura de los datos: tipos de variables</span></span>
+<span id="cb60-80"><a href="#cb60-80" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(poison)</span>
+<span id="cb60-81"><a href="#cb60-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-82"><a href="#cb60-82" aria-hidden="true" tabindex="-1"></a><span class="co"># Resumen general de las variables</span></span>
+<span id="cb60-83"><a href="#cb60-83" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(poison)</span>
+<span id="cb60-84"><a href="#cb60-84" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-85"><a href="#cb60-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-86"><a href="#cb60-86" aria-hidden="true" tabindex="-1"></a><span class="fu"># Subsetting de variables para el ACM</span></span>
+<span id="cb60-87"><a href="#cb60-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-88"><a href="#cb60-88" aria-hidden="true" tabindex="-1"></a>En este ejemplo se seleccionan únicamente algunas variables categóricas activas para realizar el análisis ACM.</span>
+<span id="cb60-89"><a href="#cb60-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-92"><a href="#cb60-92" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-93"><a href="#cb60-93" aria-hidden="true" tabindex="-1"></a><span class="co"># Seleccionamos los individuos 1:55 y las variables 5:15</span></span>
+<span id="cb60-94"><a href="#cb60-94" aria-hidden="true" tabindex="-1"></a><span class="co"># Estas serán las variables activas del análisis</span></span>
+<span id="cb60-95"><a href="#cb60-95" aria-hidden="true" tabindex="-1"></a>poison.active <span class="ot">&lt;-</span> poison[<span class="dv">1</span><span class="sc">:</span><span class="dv">55</span>, <span class="dv">5</span><span class="sc">:</span><span class="dv">15</span>]</span>
+<span id="cb60-96"><a href="#cb60-96" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-97"><a href="#cb60-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-98"><a href="#cb60-98" aria-hidden="true" tabindex="-1"></a><span class="fu"># Inspección previa de frecuencias</span></span>
+<span id="cb60-99"><a href="#cb60-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-100"><a href="#cb60-100" aria-hidden="true" tabindex="-1"></a>Antes de ejecutar un ACM, conviene revisar si existen categorías con frecuencias muy bajas. Estas categorías raras pueden distorsionar el análisis y, en algunos casos, debería plantearse su eliminación o agrupación.</span>
+<span id="cb60-101"><a href="#cb60-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-104"><a href="#cb60-104" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-105"><a href="#cb60-105" aria-hidden="true" tabindex="-1"></a><span class="co"># Representamos la frecuencia de cada variable categórica</span></span>
+<span id="cb60-106"><a href="#cb60-106" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(poison.active)) {</span>
+<span id="cb60-107"><a href="#cb60-107" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot</span>(</span>
+<span id="cb60-108"><a href="#cb60-108" aria-hidden="true" tabindex="-1"></a>    poison.active[, i],</span>
+<span id="cb60-109"><a href="#cb60-109" aria-hidden="true" tabindex="-1"></a>    <span class="at">main =</span> <span class="fu">colnames</span>(poison.active)[i],</span>
+<span id="cb60-110"><a href="#cb60-110" aria-hidden="true" tabindex="-1"></a>    <span class="at">ylab =</span> <span class="st">"Count"</span>,</span>
+<span id="cb60-111"><a href="#cb60-111" aria-hidden="true" tabindex="-1"></a>    <span class="at">col =</span> <span class="st">"steelblue"</span>,</span>
+<span id="cb60-112"><a href="#cb60-112" aria-hidden="true" tabindex="-1"></a>    <span class="at">las =</span> <span class="dv">2</span></span>
+<span id="cb60-113"><a href="#cb60-113" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb60-114"><a href="#cb60-114" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb60-115"><a href="#cb60-115" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-116"><a href="#cb60-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-117"><a href="#cb60-117" aria-hidden="true" tabindex="-1"></a><span class="fu"># Función ACM</span></span>
+<span id="cb60-118"><a href="#cb60-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-119"><a href="#cb60-119" aria-hidden="true" tabindex="-1"></a>A continuación aplicamos el análisis de correspondencias múltiples.</span>
+<span id="cb60-120"><a href="#cb60-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-123"><a href="#cb60-123" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-124"><a href="#cb60-124" aria-hidden="true" tabindex="-1"></a><span class="co"># Consultamos la ayuda de la función ACM</span></span>
+<span id="cb60-125"><a href="#cb60-125" aria-hidden="true" tabindex="-1"></a><span class="fu">help</span>(ACM)</span>
+<span id="cb60-126"><a href="#cb60-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-127"><a href="#cb60-127" aria-hidden="true" tabindex="-1"></a><span class="co"># Ajustamos el modelo ACM usando el método Indicator</span></span>
+<span id="cb60-128"><a href="#cb60-128" aria-hidden="true" tabindex="-1"></a><span class="co"># graph = FALSE evita que se dibujen gráficos automáticos al ejecutar el modelo</span></span>
+<span id="cb60-129"><a href="#cb60-129" aria-hidden="true" tabindex="-1"></a>res.mca <span class="ot">&lt;-</span> <span class="fu">MCA</span>(poison.active, <span class="at">method =</span> <span class="st">"Indicator"</span>, <span class="at">graph =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb60-130"><a href="#cb60-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-131"><a href="#cb60-131" aria-hidden="true" tabindex="-1"></a><span class="co"># Alternativamente podría utilizarse el método Burt</span></span>
+<span id="cb60-132"><a href="#cb60-132" aria-hidden="true" tabindex="-1"></a><span class="co"># res.mca2 &lt;- ACM(poison.active, method = "Burt", graph = FALSE)</span></span>
+<span id="cb60-133"><a href="#cb60-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-134"><a href="#cb60-134" aria-hidden="true" tabindex="-1"></a><span class="co"># Imprimimos el resumen del resultado</span></span>
+<span id="cb60-135"><a href="#cb60-135" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(res.mca)</span>
+<span id="cb60-136"><a href="#cb60-136" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-137"><a href="#cb60-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-138"><a href="#cb60-138" aria-hidden="true" tabindex="-1"></a><span class="fu"># Resultados del ACM: visualización e interpretación</span></span>
+<span id="cb60-139"><a href="#cb60-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-140"><a href="#cb60-140" aria-hidden="true" tabindex="-1"></a><span class="fu">## Paso 1. Eigenvalues e inercia explicada</span></span>
+<span id="cb60-141"><a href="#cb60-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-142"><a href="#cb60-142" aria-hidden="true" tabindex="-1"></a>Los eigenvalues permiten estudiar cuánta variabilidad explica cada dimensión. Esto es fundamental para decidir cuántas dimensiones conservar.</span>
+<span id="cb60-143"><a href="#cb60-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-146"><a href="#cb60-146" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-147"><a href="#cb60-147" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraemos eigenvalues e inercia explicada</span></span>
+<span id="cb60-148"><a href="#cb60-148" aria-hidden="true" tabindex="-1"></a>eig.val <span class="ot">&lt;-</span> <span class="fu">get_eigenvalue</span>(res.mca)</span>
+<span id="cb60-149"><a href="#cb60-149" aria-hidden="true" tabindex="-1"></a>eig.val</span>
+<span id="cb60-150"><a href="#cb60-150" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-151"><a href="#cb60-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-154"><a href="#cb60-154" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-155"><a href="#cb60-155" aria-hidden="true" tabindex="-1"></a><span class="co"># Scree plot para visualizar la importancia relativa de las dimensiones</span></span>
+<span id="cb60-156"><a href="#cb60-156" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_screeplot</span>(res.mca, <span class="at">addlabels =</span> <span class="cn">TRUE</span>, <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">45</span>))</span>
+<span id="cb60-157"><a href="#cb60-157" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-158"><a href="#cb60-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-159"><a href="#cb60-159" aria-hidden="true" tabindex="-1"></a><span class="fu">### Criterio de selección de dimensiones</span></span>
+<span id="cb60-160"><a href="#cb60-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-161"><a href="#cb60-161" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Para <span class="in">`method = "Indicator"`</span> se suele utilizar:</span>
+<span id="cb60-162"><a href="#cb60-162" aria-hidden="true" tabindex="-1"></a><span class="ss">    -   </span>el método del codo,</span>
+<span id="cb60-163"><a href="#cb60-163" aria-hidden="true" tabindex="-1"></a><span class="ss">    -   </span>o bien conservar dimensiones con eigenvalue <span class="sc">\&gt;</span> 1/p.</span>
+<span id="cb60-164"><a href="#cb60-164" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Para <span class="in">`method = "Burt"`</span> se suele usar:</span>
+<span id="cb60-165"><a href="#cb60-165" aria-hidden="true" tabindex="-1"></a><span class="ss">    -   </span>el método del codo,</span>
+<span id="cb60-166"><a href="#cb60-166" aria-hidden="true" tabindex="-1"></a><span class="ss">    -   </span>o una inercia acumulada superior al 75%–80%.</span>
+<span id="cb60-167"><a href="#cb60-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-168"><a href="#cb60-168" aria-hidden="true" tabindex="-1"></a>En este caso:</span>
+<span id="cb60-169"><a href="#cb60-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-170"><a href="#cb60-170" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span><span class="in">`p = 11`</span>, por tanto el umbral <span class="in">`1/p = 1/11 = 0.0909`</span>.</span>
+<span id="cb60-171"><a href="#cb60-171" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Aunque podrían analizarse más dimensiones, en este script se trabajará con **2 dimensiones**.</span>
+<span id="cb60-172"><a href="#cb60-172" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Desde el punto de vista docente, conviene completar después la interpretación incorporando también la **tercera dimensión**.</span>
+<span id="cb60-173"><a href="#cb60-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-174"><a href="#cb60-174" aria-hidden="true" tabindex="-1"></a><span class="fu">## Paso 2. Revisión conjunta de individuos y variables</span></span>
+<span id="cb60-175"><a href="#cb60-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-176"><a href="#cb60-176" aria-hidden="true" tabindex="-1"></a>Este paso resume en una sola representación la posición relativa de individuos y categorías.</span>
+<span id="cb60-177"><a href="#cb60-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-180"><a href="#cb60-180" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-181"><a href="#cb60-181" aria-hidden="true" tabindex="-1"></a><span class="co"># Biplot conjunto de individuos y categorías</span></span>
+<span id="cb60-182"><a href="#cb60-182" aria-hidden="true" tabindex="-1"></a><span class="co"># Se deja comentado para mantener la estructura del script original</span></span>
+<span id="cb60-183"><a href="#cb60-183" aria-hidden="true" tabindex="-1"></a><span class="co"># fviz_mca_biplot(res.mca, repel = TRUE, gtheme = theme_minimal())</span></span>
+<span id="cb60-184"><a href="#cb60-184" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-185"><a href="#cb60-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-186"><a href="#cb60-186" aria-hidden="true" tabindex="-1"></a><span class="fu"># Paso 3. Análisis de variables</span></span>
+<span id="cb60-187"><a href="#cb60-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-188"><a href="#cb60-188" aria-hidden="true" tabindex="-1"></a>Primero extraemos la información asociada a las categorías de las variables.</span>
+<span id="cb60-189"><a href="#cb60-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-192"><a href="#cb60-192" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-193"><a href="#cb60-193" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraemos resultados asociados a las variables del ACM</span></span>
+<span id="cb60-194"><a href="#cb60-194" aria-hidden="true" tabindex="-1"></a>var <span class="ot">&lt;-</span> <span class="fu">get_mca_var</span>(res.mca)</span>
+<span id="cb60-195"><a href="#cb60-195" aria-hidden="true" tabindex="-1"></a>var</span>
+<span id="cb60-196"><a href="#cb60-196" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-197"><a href="#cb60-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-198"><a href="#cb60-198" aria-hidden="true" tabindex="-1"></a><span class="fu">## Pseudo-correlación entre variables y dimensiones</span></span>
+<span id="cb60-199"><a href="#cb60-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-200"><a href="#cb60-200" aria-hidden="true" tabindex="-1"></a>Esta representación ayuda a estudiar la asociación entre categorías y dimensiones principales.</span>
+<span id="cb60-201"><a href="#cb60-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-204"><a href="#cb60-204" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-205"><a href="#cb60-205" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(</span>
+<span id="cb60-206"><a href="#cb60-206" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb60-207"><a href="#cb60-207" aria-hidden="true" tabindex="-1"></a>  <span class="at">choice =</span> <span class="st">"mca.cor"</span>,</span>
+<span id="cb60-208"><a href="#cb60-208" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb60-209"><a href="#cb60-209" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb60-210"><a href="#cb60-210" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-211"><a href="#cb60-211" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-212"><a href="#cb60-212" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-213"><a href="#cb60-213" aria-hidden="true" tabindex="-1"></a><span class="fu">## Coordenadas de las categorías</span></span>
+<span id="cb60-214"><a href="#cb60-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-215"><a href="#cb60-215" aria-hidden="true" tabindex="-1"></a>La posición de cada categoría en el plano factorial permite interpretar proximidades, oposiciones y asociaciones.</span>
+<span id="cb60-216"><a href="#cb60-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-219"><a href="#cb60-219" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-220"><a href="#cb60-220" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(</span>
+<span id="cb60-221"><a href="#cb60-221" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb60-222"><a href="#cb60-222" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb60-223"><a href="#cb60-223" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb60-224"><a href="#cb60-224" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-225"><a href="#cb60-225" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-226"><a href="#cb60-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-227"><a href="#cb60-227" aria-hidden="true" tabindex="-1"></a><span class="fu">## Calidad de representación de las categorías (`cos2`)</span></span>
+<span id="cb60-228"><a href="#cb60-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-229"><a href="#cb60-229" aria-hidden="true" tabindex="-1"></a>El <span class="in">`cos2`</span> mide qué bien está representada una categoría en las dimensiones visualizadas.</span>
+<span id="cb60-230"><a href="#cb60-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-233"><a href="#cb60-233" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-234"><a href="#cb60-234" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(</span>
+<span id="cb60-235"><a href="#cb60-235" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb60-236"><a href="#cb60-236" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.var =</span> <span class="st">"cos2"</span>,</span>
+<span id="cb60-237"><a href="#cb60-237" aria-hidden="true" tabindex="-1"></a>  <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"#00AFBB"</span>, <span class="st">"#E7B800"</span>, <span class="st">"#FC4E07"</span>),</span>
+<span id="cb60-238"><a href="#cb60-238" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb60-239"><a href="#cb60-239" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb60-240"><a href="#cb60-240" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-241"><a href="#cb60-241" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-242"><a href="#cb60-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-245"><a href="#cb60-245" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-246"><a href="#cb60-246" aria-hidden="true" tabindex="-1"></a><span class="co"># Matriz de calidad de representación de las categorías</span></span>
+<span id="cb60-247"><a href="#cb60-247" aria-hidden="true" tabindex="-1"></a><span class="fu">corrplot</span>(var<span class="sc">$</span>cos2, <span class="at">is.corr =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb60-248"><a href="#cb60-248" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-249"><a href="#cb60-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-252"><a href="#cb60-252" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-253"><a href="#cb60-253" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualización específica de cos2 para variables en los ejes 1 y 2</span></span>
+<span id="cb60-254"><a href="#cb60-254" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_cos2</span>(res.mca, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>)</span>
+<span id="cb60-255"><a href="#cb60-255" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-256"><a href="#cb60-256" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-257"><a href="#cb60-257" aria-hidden="true" tabindex="-1"></a><span class="fu">### Interpretación docente</span></span>
+<span id="cb60-258"><a href="#cb60-258" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-259"><a href="#cb60-259" aria-hidden="true" tabindex="-1"></a>Obsérvese que algunas categorías como <span class="in">`Fish_n`</span>, <span class="in">`Fish_y`</span>, <span class="in">`Icecream_n`</span> e <span class="in">`Icecream_y`</span> no quedan especialmente bien representadas en las dos primeras dimensiones.</span>
+<span id="cb60-260"><a href="#cb60-260" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-261"><a href="#cb60-261" aria-hidden="true" tabindex="-1"></a>Eso implica que:</span>
+<span id="cb60-262"><a href="#cb60-262" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-263"><a href="#cb60-263" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>su posición en el plano debe interpretarse con cautela,</span>
+<span id="cb60-264"><a href="#cb60-264" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>una solución de mayor dimensionalidad podría ser más adecuada para describirlas correctamente.</span>
+<span id="cb60-265"><a href="#cb60-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-266"><a href="#cb60-266" aria-hidden="true" tabindex="-1"></a><span class="fu">## Contribución de las categorías a las dimensiones</span></span>
+<span id="cb60-267"><a href="#cb60-267" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-268"><a href="#cb60-268" aria-hidden="true" tabindex="-1"></a>Las categorías con mayor contribución son las que más ayudan a definir cada dimensión factorial.</span>
+<span id="cb60-269"><a href="#cb60-269" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-272"><a href="#cb60-272" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-273"><a href="#cb60-273" aria-hidden="true" tabindex="-1"></a><span class="co"># Categorías que más contribuyen a la dimensión 1</span></span>
+<span id="cb60-274"><a href="#cb60-274" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res.mca, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">1</span>, <span class="at">top =</span> <span class="dv">15</span>)</span>
+<span id="cb60-275"><a href="#cb60-275" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-276"><a href="#cb60-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-279"><a href="#cb60-279" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-280"><a href="#cb60-280" aria-hidden="true" tabindex="-1"></a><span class="co"># Categorías que más contribuyen a la dimensión 2</span></span>
+<span id="cb60-281"><a href="#cb60-281" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res.mca, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">2</span>, <span class="at">top =</span> <span class="dv">15</span>)</span>
+<span id="cb60-282"><a href="#cb60-282" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-283"><a href="#cb60-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-286"><a href="#cb60-286" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-287"><a href="#cb60-287" aria-hidden="true" tabindex="-1"></a><span class="co"># Contribución total a las dimensiones 1 y 2</span></span>
+<span id="cb60-288"><a href="#cb60-288" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res.mca, <span class="at">choice =</span> <span class="st">"var"</span>, <span class="at">axes =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">top =</span> <span class="dv">15</span>)</span>
+<span id="cb60-289"><a href="#cb60-289" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-290"><a href="#cb60-290" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-293"><a href="#cb60-293" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-294"><a href="#cb60-294" aria-hidden="true" tabindex="-1"></a><span class="co"># Representación del mapa de categorías coloreado por contribución</span></span>
+<span id="cb60-295"><a href="#cb60-295" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(</span>
+<span id="cb60-296"><a href="#cb60-296" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb60-297"><a href="#cb60-297" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.var =</span> <span class="st">"contrib"</span>,</span>
+<span id="cb60-298"><a href="#cb60-298" aria-hidden="true" tabindex="-1"></a>  <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"#00AFBB"</span>, <span class="st">"#E7B800"</span>, <span class="st">"#FC4E07"</span>),</span>
+<span id="cb60-299"><a href="#cb60-299" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb60-300"><a href="#cb60-300" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb60-301"><a href="#cb60-301" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-302"><a href="#cb60-302" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-303"><a href="#cb60-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-306"><a href="#cb60-306" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-307"><a href="#cb60-307" aria-hidden="true" tabindex="-1"></a><span class="co"># Matriz de contribuciones</span></span>
+<span id="cb60-308"><a href="#cb60-308" aria-hidden="true" tabindex="-1"></a><span class="fu">corrplot</span>(var<span class="sc">$</span>contrib, <span class="at">is.corr =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb60-309"><a href="#cb60-309" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-310"><a href="#cb60-310" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-311"><a href="#cb60-311" aria-hidden="true" tabindex="-1"></a><span class="fu">### Nota importante</span></span>
+<span id="cb60-312"><a href="#cb60-312" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-313"><a href="#cb60-313" aria-hidden="true" tabindex="-1"></a>Antes de pasar al análisis de individuos, conviene decidir la **latencia** o número de dimensiones que se considerarán relevantes para la interpretación final.</span>
+<span id="cb60-314"><a href="#cb60-314" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-315"><a href="#cb60-315" aria-hidden="true" tabindex="-1"></a><span class="fu"># Paso 4. Análisis de individuos</span></span>
+<span id="cb60-316"><a href="#cb60-316" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-317"><a href="#cb60-317" aria-hidden="true" tabindex="-1"></a>Ahora estudiamos la representación de los individuos en el espacio factorial.</span>
+<span id="cb60-318"><a href="#cb60-318" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-321"><a href="#cb60-321" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-322"><a href="#cb60-322" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraemos la información asociada a los individuos</span></span>
+<span id="cb60-323"><a href="#cb60-323" aria-hidden="true" tabindex="-1"></a>ind <span class="ot">&lt;-</span> <span class="fu">get_mca_ind</span>(res.mca)</span>
+<span id="cb60-324"><a href="#cb60-324" aria-hidden="true" tabindex="-1"></a>ind</span>
+<span id="cb60-325"><a href="#cb60-325" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-326"><a href="#cb60-326" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-327"><a href="#cb60-327" aria-hidden="true" tabindex="-1"></a><span class="fu">## Calidad de representación y contribución de individuos</span></span>
+<span id="cb60-328"><a href="#cb60-328" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-331"><a href="#cb60-331" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-332"><a href="#cb60-332" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_ind</span>(</span>
+<span id="cb60-333"><a href="#cb60-333" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb60-334"><a href="#cb60-334" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.ind =</span> <span class="st">"cos2"</span>,</span>
+<span id="cb60-335"><a href="#cb60-335" aria-hidden="true" tabindex="-1"></a>  <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"#00AFBB"</span>, <span class="st">"#E7B800"</span>, <span class="st">"#FC4E07"</span>),</span>
+<span id="cb60-336"><a href="#cb60-336" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb60-337"><a href="#cb60-337" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb60-338"><a href="#cb60-338" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-339"><a href="#cb60-339" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-340"><a href="#cb60-340" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-343"><a href="#cb60-343" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-344"><a href="#cb60-344" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_ind</span>(</span>
+<span id="cb60-345"><a href="#cb60-345" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb60-346"><a href="#cb60-346" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.ind =</span> <span class="st">"contrib"</span>,</span>
+<span id="cb60-347"><a href="#cb60-347" aria-hidden="true" tabindex="-1"></a>  <span class="at">gradient.cols =</span> <span class="fu">c</span>(<span class="st">"#00AFBB"</span>, <span class="st">"#E7B800"</span>, <span class="st">"#FC4E07"</span>),</span>
+<span id="cb60-348"><a href="#cb60-348" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb60-349"><a href="#cb60-349" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb60-350"><a href="#cb60-350" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-351"><a href="#cb60-351" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-352"><a href="#cb60-352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-355"><a href="#cb60-355" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-356"><a href="#cb60-356" aria-hidden="true" tabindex="-1"></a><span class="co"># Individuos que más contribuyen a las dimensiones 1 y 2</span></span>
+<span id="cb60-357"><a href="#cb60-357" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_contrib</span>(res.mca, <span class="at">choice =</span> <span class="st">"ind"</span>, <span class="at">axes =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">top =</span> <span class="dv">20</span>)</span>
+<span id="cb60-358"><a href="#cb60-358" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-359"><a href="#cb60-359" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-360"><a href="#cb60-360" aria-hidden="true" tabindex="-1"></a><span class="fu">## Colorear individuos por grupos</span></span>
+<span id="cb60-361"><a href="#cb60-361" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-362"><a href="#cb60-362" aria-hidden="true" tabindex="-1"></a>Es posible colorear los individuos utilizando cualquier variable cualitativa original. En este ejemplo se usa la variable <span class="in">`"Vomiting"`</span>.</span>
+<span id="cb60-363"><a href="#cb60-363" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-366"><a href="#cb60-366" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-367"><a href="#cb60-367" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_ind</span>(</span>
+<span id="cb60-368"><a href="#cb60-368" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb60-369"><a href="#cb60-369" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"none"</span>,</span>
+<span id="cb60-370"><a href="#cb60-370" aria-hidden="true" tabindex="-1"></a>  <span class="at">habillage =</span> <span class="st">"Vomiting"</span>,</span>
+<span id="cb60-371"><a href="#cb60-371" aria-hidden="true" tabindex="-1"></a>  <span class="at">palette =</span> <span class="fu">c</span>(<span class="st">"#00AFBB"</span>, <span class="st">"#E7B800"</span>),</span>
+<span id="cb60-372"><a href="#cb60-372" aria-hidden="true" tabindex="-1"></a>  <span class="at">addEllipses =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb60-373"><a href="#cb60-373" aria-hidden="true" tabindex="-1"></a>  <span class="at">ellipse.type =</span> <span class="st">"confidence"</span>,</span>
+<span id="cb60-374"><a href="#cb60-374" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb60-375"><a href="#cb60-375" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-376"><a href="#cb60-376" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-377"><a href="#cb60-377" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-378"><a href="#cb60-378" aria-hidden="true" tabindex="-1"></a><span class="fu">## Múltiples gráficos de elipses</span></span>
+<span id="cb60-379"><a href="#cb60-379" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-382"><a href="#cb60-382" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-383"><a href="#cb60-383" aria-hidden="true" tabindex="-1"></a><span class="co"># Elipses para dos variables cualitativas concretas</span></span>
+<span id="cb60-384"><a href="#cb60-384" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_ellipses</span>(res.mca, <span class="fu">c</span>(<span class="st">"Vomiting"</span>, <span class="st">"Fever"</span>), <span class="at">geom =</span> <span class="st">"point"</span>)</span>
+<span id="cb60-385"><a href="#cb60-385" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-386"><a href="#cb60-386" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-389"><a href="#cb60-389" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-390"><a href="#cb60-390" aria-hidden="true" tabindex="-1"></a><span class="co"># Elipses para varias variables</span></span>
+<span id="cb60-391"><a href="#cb60-391" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_ellipses</span>(res.mca, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="at">geom =</span> <span class="st">"point"</span>)</span>
+<span id="cb60-392"><a href="#cb60-392" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-393"><a href="#cb60-393" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-394"><a href="#cb60-394" aria-hidden="true" tabindex="-1"></a><span class="fu"># Paso 5. Descripción de dimensiones</span></span>
+<span id="cb60-395"><a href="#cb60-395" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-396"><a href="#cb60-396" aria-hidden="true" tabindex="-1"></a>La función <span class="in">`dimdesc()`</span> permite obtener una descripción estadística e interpretativa de cada dimensión.</span>
+<span id="cb60-397"><a href="#cb60-397" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-400"><a href="#cb60-400" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-401"><a href="#cb60-401" aria-hidden="true" tabindex="-1"></a><span class="co"># Descripción automática de las dimensiones 1 y 2</span></span>
+<span id="cb60-402"><a href="#cb60-402" aria-hidden="true" tabindex="-1"></a>res.desc <span class="ot">&lt;-</span> <span class="fu">dimdesc</span>(res.mca, <span class="at">axes =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb60-403"><a href="#cb60-403" aria-hidden="true" tabindex="-1"></a>res.desc</span>
+<span id="cb60-404"><a href="#cb60-404" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-405"><a href="#cb60-405" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-408"><a href="#cb60-408" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-409"><a href="#cb60-409" aria-hidden="true" tabindex="-1"></a><span class="co"># Descripción detallada de la dimensión 1</span></span>
+<span id="cb60-410"><a href="#cb60-410" aria-hidden="true" tabindex="-1"></a>res.desc[[<span class="dv">1</span>]]</span>
+<span id="cb60-411"><a href="#cb60-411" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-412"><a href="#cb60-412" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-415"><a href="#cb60-415" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-416"><a href="#cb60-416" aria-hidden="true" tabindex="-1"></a><span class="co"># Descripción detallada de la dimensión 2</span></span>
+<span id="cb60-417"><a href="#cb60-417" aria-hidden="true" tabindex="-1"></a>res.desc[[<span class="dv">2</span>]]</span>
+<span id="cb60-418"><a href="#cb60-418" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-419"><a href="#cb60-419" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-420"><a href="#cb60-420" aria-hidden="true" tabindex="-1"></a><span class="fu"># Temas adicionales: variables e individuos suplementarios</span></span>
+<span id="cb60-421"><a href="#cb60-421" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-422"><a href="#cb60-422" aria-hidden="true" tabindex="-1"></a>En ACM es posible incorporar:</span>
+<span id="cb60-423"><a href="#cb60-423" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-424"><a href="#cb60-424" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>**variables cuantitativas suplementarias** (<span class="in">`quanti.sup`</span>),</span>
+<span id="cb60-425"><a href="#cb60-425" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>**variables cualitativas suplementarias** (<span class="in">`quali.sup`</span>),</span>
+<span id="cb60-426"><a href="#cb60-426" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>**individuos suplementarios** (<span class="in">`ind.sup`</span>).</span>
+<span id="cb60-427"><a href="#cb60-427" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-428"><a href="#cb60-428" aria-hidden="true" tabindex="-1"></a>Estas variables e individuos **no se utilizan para construir las dimensiones principales**. Sus coordenadas se proyectan a posteriori a partir de la solución obtenida con los elementos activos.</span>
+<span id="cb60-429"><a href="#cb60-429" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-430"><a href="#cb60-430" aria-hidden="true" tabindex="-1"></a>En este ejemplo:</span>
+<span id="cb60-431"><a href="#cb60-431" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-432"><a href="#cb60-432" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span><span class="in">`quanti.sup = 1:2`</span> corresponde a las variables continuas <span class="in">`age`</span> y <span class="in">`time`</span>,</span>
+<span id="cb60-433"><a href="#cb60-433" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span><span class="in">`quali.sup = 3:4`</span> corresponde a variables cualitativas como <span class="in">`Sick`</span> y <span class="in">`Sex`</span>,</span>
+<span id="cb60-434"><a href="#cb60-434" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span><span class="in">`ind.sup = 53:55`</span> indica que esos individuos se tratarán como suplementarios.</span>
+<span id="cb60-435"><a href="#cb60-435" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-438"><a href="#cb60-438" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-439"><a href="#cb60-439" aria-hidden="true" tabindex="-1"></a><span class="co"># Nuevo ACM incluyendo variables suplementarias e individuos suplementarios</span></span>
+<span id="cb60-440"><a href="#cb60-440" aria-hidden="true" tabindex="-1"></a>res.mca <span class="ot">&lt;-</span> <span class="fu">MCA</span>(</span>
+<span id="cb60-441"><a href="#cb60-441" aria-hidden="true" tabindex="-1"></a>  poison,</span>
+<span id="cb60-442"><a href="#cb60-442" aria-hidden="true" tabindex="-1"></a>  <span class="at">ind.sup =</span> <span class="dv">53</span><span class="sc">:</span><span class="dv">55</span>,</span>
+<span id="cb60-443"><a href="#cb60-443" aria-hidden="true" tabindex="-1"></a>  <span class="at">quanti.sup =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>,</span>
+<span id="cb60-444"><a href="#cb60-444" aria-hidden="true" tabindex="-1"></a>  <span class="at">quali.sup =</span> <span class="dv">3</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb60-445"><a href="#cb60-445" aria-hidden="true" tabindex="-1"></a>  <span class="at">graph =</span> <span class="cn">FALSE</span></span>
+<span id="cb60-446"><a href="#cb60-446" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-447"><a href="#cb60-447" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-448"><a href="#cb60-448" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-449"><a href="#cb60-449" aria-hidden="true" tabindex="-1"></a><span class="fu">## Resultados suplementarios</span></span>
+<span id="cb60-450"><a href="#cb60-450" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-453"><a href="#cb60-453" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-454"><a href="#cb60-454" aria-hidden="true" tabindex="-1"></a><span class="co"># Categorías de variables cualitativas suplementarias</span></span>
+<span id="cb60-455"><a href="#cb60-455" aria-hidden="true" tabindex="-1"></a>res.mca<span class="sc">$</span>quali.sup</span>
+<span id="cb60-456"><a href="#cb60-456" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-457"><a href="#cb60-457" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-460"><a href="#cb60-460" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-461"><a href="#cb60-461" aria-hidden="true" tabindex="-1"></a><span class="co"># Variables cuantitativas suplementarias</span></span>
+<span id="cb60-462"><a href="#cb60-462" aria-hidden="true" tabindex="-1"></a>res.mca<span class="sc">$</span>quanti</span>
+<span id="cb60-463"><a href="#cb60-463" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-464"><a href="#cb60-464" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-467"><a href="#cb60-467" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-468"><a href="#cb60-468" aria-hidden="true" tabindex="-1"></a><span class="co"># Individuos suplementarios</span></span>
+<span id="cb60-469"><a href="#cb60-469" aria-hidden="true" tabindex="-1"></a>res.mca<span class="sc">$</span>ind.sup</span>
+<span id="cb60-470"><a href="#cb60-470" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-471"><a href="#cb60-471" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-472"><a href="#cb60-472" aria-hidden="true" tabindex="-1"></a><span class="fu">## Visualizaciones con elementos suplementarios</span></span>
+<span id="cb60-473"><a href="#cb60-473" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-476"><a href="#cb60-476" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-477"><a href="#cb60-477" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_biplot</span>(</span>
+<span id="cb60-478"><a href="#cb60-478" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb60-479"><a href="#cb60-479" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb60-480"><a href="#cb60-480" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb60-481"><a href="#cb60-481" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-482"><a href="#cb60-482" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-483"><a href="#cb60-483" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-486"><a href="#cb60-486" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-487"><a href="#cb60-487" aria-hidden="true" tabindex="-1"></a><span class="co"># Correlación entre variables (activas y suplementarias) y dimensiones</span></span>
+<span id="cb60-488"><a href="#cb60-488" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(res.mca, <span class="at">choice =</span> <span class="st">"mca.cor"</span>, <span class="at">repel =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb60-489"><a href="#cb60-489" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-490"><a href="#cb60-490" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-493"><a href="#cb60-493" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-494"><a href="#cb60-494" aria-hidden="true" tabindex="-1"></a><span class="co"># Mapa de variables</span></span>
+<span id="cb60-495"><a href="#cb60-495" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(</span>
+<span id="cb60-496"><a href="#cb60-496" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb60-497"><a href="#cb60-497" aria-hidden="true" tabindex="-1"></a>  <span class="at">repel =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb60-498"><a href="#cb60-498" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb60-499"><a href="#cb60-499" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-500"><a href="#cb60-500" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-501"><a href="#cb60-501" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-504"><a href="#cb60-504" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-505"><a href="#cb60-505" aria-hidden="true" tabindex="-1"></a><span class="co"># Representación de variables cuantitativas suplementarias</span></span>
+<span id="cb60-506"><a href="#cb60-506" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_var</span>(</span>
+<span id="cb60-507"><a href="#cb60-507" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb60-508"><a href="#cb60-508" aria-hidden="true" tabindex="-1"></a>  <span class="at">choice =</span> <span class="st">"quanti.sup"</span>,</span>
+<span id="cb60-509"><a href="#cb60-509" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb60-510"><a href="#cb60-510" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-511"><a href="#cb60-511" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-512"><a href="#cb60-512" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-515"><a href="#cb60-515" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-516"><a href="#cb60-516" aria-hidden="true" tabindex="-1"></a><span class="co"># Representación de individuos suplementarios</span></span>
+<span id="cb60-517"><a href="#cb60-517" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_ind</span>(</span>
+<span id="cb60-518"><a href="#cb60-518" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb60-519"><a href="#cb60-519" aria-hidden="true" tabindex="-1"></a>  <span class="at">label =</span> <span class="st">"ind.sup"</span>,</span>
+<span id="cb60-520"><a href="#cb60-520" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb60-521"><a href="#cb60-521" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-522"><a href="#cb60-522" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-523"><a href="#cb60-523" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-526"><a href="#cb60-526" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-527"><a href="#cb60-527" aria-hidden="true" tabindex="-1"></a><span class="co"># Top 5 individuos y categorías con mayor contribución</span></span>
+<span id="cb60-528"><a href="#cb60-528" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_mca_biplot</span>(</span>
+<span id="cb60-529"><a href="#cb60-529" aria-hidden="true" tabindex="-1"></a>  res.mca,</span>
+<span id="cb60-530"><a href="#cb60-530" aria-hidden="true" tabindex="-1"></a>  <span class="at">select.ind =</span> <span class="fu">list</span>(<span class="at">contrib =</span> <span class="dv">5</span>),</span>
+<span id="cb60-531"><a href="#cb60-531" aria-hidden="true" tabindex="-1"></a>  <span class="at">select.var =</span> <span class="fu">list</span>(<span class="at">contrib =</span> <span class="dv">5</span>),</span>
+<span id="cb60-532"><a href="#cb60-532" aria-hidden="true" tabindex="-1"></a>  <span class="at">ggtheme =</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb60-533"><a href="#cb60-533" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-534"><a href="#cb60-534" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-535"><a href="#cb60-535" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-536"><a href="#cb60-536" aria-hidden="true" tabindex="-1"></a><span class="fu"># Resumen final</span></span>
+<span id="cb60-537"><a href="#cb60-537" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-540"><a href="#cb60-540" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb60-541"><a href="#cb60-541" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejecución final del ACM con gráficos automáticos activados</span></span>
+<span id="cb60-542"><a href="#cb60-542" aria-hidden="true" tabindex="-1"></a>res.mca <span class="ot">&lt;-</span> <span class="fu">MCA</span>(</span>
+<span id="cb60-543"><a href="#cb60-543" aria-hidden="true" tabindex="-1"></a>  poison,</span>
+<span id="cb60-544"><a href="#cb60-544" aria-hidden="true" tabindex="-1"></a>  <span class="at">ind.sup =</span> <span class="dv">53</span><span class="sc">:</span><span class="dv">55</span>,</span>
+<span id="cb60-545"><a href="#cb60-545" aria-hidden="true" tabindex="-1"></a>  <span class="at">quanti.sup =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>,</span>
+<span id="cb60-546"><a href="#cb60-546" aria-hidden="true" tabindex="-1"></a>  <span class="at">quali.sup =</span> <span class="dv">3</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb60-547"><a href="#cb60-547" aria-hidden="true" tabindex="-1"></a>  <span class="at">graph =</span> <span class="cn">TRUE</span></span>
+<span id="cb60-548"><a href="#cb60-548" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb60-549"><a href="#cb60-549" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb60-550"><a href="#cb60-550" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-551"><a href="#cb60-551" aria-hidden="true" tabindex="-1"></a><span class="fu">## Comentario final</span></span>
+<span id="cb60-552"><a href="#cb60-552" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-553"><a href="#cb60-553" aria-hidden="true" tabindex="-1"></a>Una comprobación muy útil consiste en contrastar los resultados obtenidos con:</span>
+<span id="cb60-554"><a href="#cb60-554" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-555"><a href="#cb60-555" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>el método basado en la **tabla disyuntiva completa** (<span class="in">`Indicator`</span>),</span>
+<span id="cb60-556"><a href="#cb60-556" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>y el método basado en la **tabla de Burt**.</span>
+<span id="cb60-557"><a href="#cb60-557" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-558"><a href="#cb60-558" aria-hidden="true" tabindex="-1"></a>En general, ambos enfoques ofrecen resultados **muy similares o equivalentes** desde el punto de vista interpretativo.</span>
+<span id="cb60-559"><a href="#cb60-559" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-560"><a href="#cb60-560" aria-hidden="true" tabindex="-1"></a><span class="fu"># Bibliografía y apoyo teórico</span></span>
+<span id="cb60-561"><a href="#cb60-561" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-562"><a href="#cb60-562" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Greenacre, M. (2017). *Correspondence Analysis in Practice*.</span>
+<span id="cb60-563"><a href="#cb60-563" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Husson, F., Lê, S., &amp; Pagès, J. (2017). *Exploratory Multivariate Analysis by Example Using R*.</span>
+<span id="cb60-564"><a href="#cb60-564" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Documentación oficial de <span class="in">`FactoMineR`</span>.</span>
+<span id="cb60-565"><a href="#cb60-565" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Documentación oficial de <span class="in">`factoextra`</span>.</span>
+</code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
 </div> <!-- /content -->
 
 
