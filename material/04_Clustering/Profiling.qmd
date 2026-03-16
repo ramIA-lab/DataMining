@@ -11,6 +11,7 @@ format:
     code-fold: show
     code-summary: "Mostrar código"
     embed-resources: true
+    code-tools: true
     df-print: paged
 execute:
   echo: true
@@ -157,6 +158,87 @@ En esta fase se identifican las variables que discriminan significativamente ent
   - Si no hay normalidad, se aplica **Kruskal-Wallis**.
 - Para variables **categóricas**:
   - Se aplica **Chi-cuadrado de independencia**.
+
+### Test de Normalidad: **Shapiro-Wilk**
+
+Los **tests de normalidad** sirven para comprobar si una variable sigue una **distribución normal**.
+
+Esto es importante porque muchos métodos estadísticos (como ANOVA) requieren normalidad.
+
+**Hipótesis**
+
+* $H_{0}$: Los datos siguen una distribución Normal 
+* $H_{1}$: Los datos **NO** siguen una distribución Normal 
+
+**Decisión**
+
+* Si **p-value > 0.05** $\rightarrow$ No rechazamos $H_{0}$ $\rightarrow$ Los datos pueden considerarse normales
+* Si **p-value ≤ 0.05** $\rightarrow$ Rechazamos $H_{0}$ $\rightarrow$ Los datos no son normales
+
+### ANOVA (Analysis of Variance)
+
+El **ANOVA** se utiliza para comparar la **media de tres o más grupos**.
+
+**Hipótesis**
+
+* $H_{0}$: Todas las medias son iguales
+
+$$
+\mu_{1} = \mu_{2} = \mu_{3}
+$$
+* $H_{1}$: Al menos una media es diferente
+
+**Supuestos**
+
+Para aplicar ANOVA: 
+
+1. Normalidad
+
+2. Independencia
+
+3. Homogeneidad de varianzas
+
+**Decisión**
+
+* Si **p-value > 0.05** $\rightarrow$ No rechazamos $H_{0}$ $\rightarrow$ Las medias son similares
+* Si **p-value ≤ 0.05** $\rightarrow$ Rechazamos $H_{0}$ $\rightarrow$ Alguna media es distinta
+
+### Test de Kruskal-Wallis
+
+El Kruskal-Wallis es la alternativa no paramétrica al ANOVA.
+
+Se usa cuando:
+
+* Los datos no son normales
+
+* O las varianzas no son homogéneas.
+
+En lugar de comparar medias, compara rangos.
+
+**Hipótesis**
+
+* $H_{0}$: Las distribuciones de los grupos son iguales
+* $H_{1}$: Al menos un grupo es diferente
+
+**Decisión**
+
+* Si **p-value > 0.05** $\rightarrow$ No rechazamos $H_{0}$ 
+* Si **p-value ≤ 0.05** $\rightarrow$ Rechazamos $H_{0}$ 
+
+### Test Chi-cuadrado de independencia
+
+El test Chi-cuadrado sirve para analizar si dos variables categóricas están relacionadas.
+
+**Hipótesis**
+
+* $H_{0}$: Las variables son independientes
+* $H_{1}$: Las variables están relacionadas
+
+**Decisión**
+
+* Si **p-value > 0.05** $\rightarrow$ No rechazamos $H_{0}$ $\rightarrow$ No hay relación
+* Si **p-value ≤ 0.05** $\rightarrow$ Rechazamos $H_{0}$ $\rightarrow$ Existe relación
+
 
 ```{r}
 #| label: fase1-calculo
@@ -373,6 +455,98 @@ La segunda fase profundiza en la interpretación de los clústeres identificando
 
 - **Qué medias numéricas** caracterizan más a cada grupo.
 - **Qué modalidades categóricas** están sobrerrepresentadas o infrarrepresentadas.
+
+### Test de Lebart
+
+El test de Lebart es un contraste estadístico utilizado para comparar proporciones o medias observadas con valores teóricos o esperados.
+
+Se utiliza frecuentemente en análisis de datos y minería de datos para verificar si un grupo presenta un comportamiento significativamente diferente del esperado.
+
+Existen dos versiones habituales:
+
+* Test de Lebart para proporciones
+
+* Test de Lebart para medias
+
+#### Test de Lebart para proporciones
+
+Este test se utiliza para comprobar si la proporción observada en un grupo es significativamente diferente de una proporción esperada.
+
+
+**Hipótesis**
+
+* $H_{0}$: La proporción observada es igual a la proporción esperada
+
+$$
+p = p_{0}
+$$
+
+* $H_{1}$: La proporción observada es diferente de la esperada
+
+$$
+p \neq p_{0}
+$$
+**Estadístico del test**
+
+El test utiliza un estadístico basado en la distribución normal:
+
+$$
+Z = \frac{p - p_{0}}{\sqrt{\frac{p_{0}(1-p_{0})}{n}}}
+$$
+
+donde:
+
+* $p$: proporción observada 
+* $p_{0}$: proporción esperada
+* $n$: tamaño de la muestra
+
+
+**Decisión**
+
+* Si **p-value > 0.05** $\rightarrow$ No rechazamos $H_{0}$ 
+* Si **p-value ≤ 0.05** $\rightarrow$ Rechazamos $H_{0}$ 
+
+
+#### Test de Lebart para medias 
+
+El test de Lebart para medias se utiliza para comprobar si la media observada de un grupo es diferente de una media teórica o esperada.
+
+Este contraste es conceptualmente similar a un test Z para medias.
+
+
+**Hipótesis**
+
+* $H_{0}$: La media observada es igual a la media esperada
+
+$$
+\mu = \mu_{0}
+$$
+
+* $H_{1}$: La media observada es diferente de la esperada
+
+$$
+\mu \neq \mu_{0}
+$$
+**Estadístico del test**
+
+El test utiliza un estadístico basado en la distribución normal:
+
+$$
+Z = \frac{\bar{x} - \mu_{0}}{\frac{s}{\sqrt{n}}}
+$$
+
+donde:
+
+* $\bar{x}$: media observada
+* $\mu_{0}$: media esperada
+* $s$: desviación estándar
+* $n$: tamaño de la muestra
+
+**Decisión**
+
+* Si **p-value > 0.05** $\rightarrow$ No rechazamos $H_{0}$ 
+* Si **p-value ≤ 0.05** $\rightarrow$ Rechazamos $H_{0}$ 
+
 
 ### Resultados globales con `catdes()`
 

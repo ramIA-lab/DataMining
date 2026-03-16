@@ -16,6 +16,7 @@ format:
       dark: darkly
     toc: true
     number-sections: true
+    code-tools: true
 editor: visual
 execute:
   echo: true
@@ -26,15 +27,14 @@ execute:
 
 # Introducción
 
-Este documento adapta el script original de **Multiple Correspondence Analysis (ACM)** a formato **Quarto** para uso docente.
-Se ha respetado al máximo la estructura original del script, pero añadiendo comentarios y explicaciones para facilitar su uso en clase, laboratorio o autoaprendizaje.
+Este documento adapta el script original de **Multiple Correspondence Analysis (ACM)** a formato **Quarto** para uso docente. Se ha respetado al máximo la estructura original del script, pero añadiendo comentarios y explicaciones para facilitar su uso en clase, laboratorio o autoaprendizaje.
 
 El objetivo de este material es que el estudiante pueda:
 
-- entender qué es un ACM,
-- ejecutar el análisis paso a paso,
-- interpretar los resultados principales,
-- distinguir entre variables activas, suplementarias e individuos suplementarios.
+-   entender qué es un ACM,
+-   ejecutar el análisis paso a paso,
+-   interpretar los resultados principales,
+-   distinguir entre variables activas, suplementarias e individuos suplementarios.
 
 # Carga de librerías
 
@@ -64,9 +64,7 @@ rm(list.of.packages, new.packages)
 
 # Dataset: `poison`
 
-Los datos utilizados corresponden a una encuesta realizada a un grupo de escolares
-que sufrieron una intoxicación alimentaria. Se les preguntó por sus síntomas y por
-los alimentos consumidos.
+Los datos utilizados corresponden a una encuesta realizada a un grupo de escolares que sufrieron una intoxicación alimentaria. Se les preguntó por sus síntomas y por los alimentos consumidos.
 
 ```{r}
 # Cargamos el conjunto de datos de ejemplo incluido en FactoMineR
@@ -84,8 +82,7 @@ summary(poison)
 
 # Subsetting de variables para el ACM
 
-En este ejemplo se seleccionan únicamente algunas variables categóricas activas
-para realizar el análisis ACM.
+En este ejemplo se seleccionan únicamente algunas variables categóricas activas para realizar el análisis ACM.
 
 ```{r}
 # Seleccionamos los individuos 1:55 y las variables 5:15
@@ -95,8 +92,7 @@ poison.active <- poison[1:55, 5:15]
 
 # Inspección previa de frecuencias
 
-Antes de ejecutar un ACM, conviene revisar si existen categorías con frecuencias muy bajas.
-Estas categorías raras pueden distorsionar el análisis y, en algunos casos, debería plantearse su eliminación o agrupación.
+Antes de ejecutar un ACM, conviene revisar si existen categorías con frecuencias muy bajas. Estas categorías raras pueden distorsionar el análisis y, en algunos casos, debería plantearse su eliminación o agrupación.
 
 ```{r}
 # Representamos la frecuencia de cada variable categórica
@@ -134,8 +130,7 @@ print(res.mca)
 
 ## Paso 1. Eigenvalues e inercia explicada
 
-Los eigenvalues permiten estudiar cuánta variabilidad explica cada dimensión.
-Esto es fundamental para decidir cuántas dimensiones conservar.
+Los eigenvalues permiten estudiar cuánta variabilidad explica cada dimensión. Esto es fundamental para decidir cuántas dimensiones conservar.
 
 ```{r}
 # Extraemos eigenvalues e inercia explicada
@@ -150,18 +145,18 @@ fviz_screeplot(res.mca, addlabels = TRUE, ylim = c(0, 45))
 
 ### Criterio de selección de dimensiones
 
-- Para `method = "Indicator"` se suele utilizar:
-  - el método del codo,
-  - o bien conservar dimensiones con eigenvalue > 1/p.
-- Para `method = "Burt"` se suele usar:
-  - el método del codo,
-  - o una inercia acumulada superior al 75%–80%.
+-   Para `method = "Indicator"` se suele utilizar:
+    -   el método del codo,
+    -   o bien conservar dimensiones con eigenvalue \> 1/p.
+-   Para `method = "Burt"` se suele usar:
+    -   el método del codo,
+    -   o una inercia acumulada superior al 75%–80%.
 
 En este caso:
 
-- `p = 11`, por tanto el umbral `1/p = 1/11 = 0.0909`.
-- Aunque podrían analizarse más dimensiones, en este script se trabajará con **2 dimensiones**.
-- Desde el punto de vista docente, conviene completar después la interpretación incorporando también la **tercera dimensión**.
+-   `p = 11`, por tanto el umbral `1/p = 1/11 = 0.0909`.
+-   Aunque podrían analizarse más dimensiones, en este script se trabajará con **2 dimensiones**.
+-   Desde el punto de vista docente, conviene completar después la interpretación incorporando también la **tercera dimensión**.
 
 ## Paso 2. Revisión conjunta de individuos y variables
 
@@ -234,13 +229,12 @@ fviz_cos2(res.mca, choice = "var", axes = 1:2)
 
 ### Interpretación docente
 
-Obsérvese que algunas categorías como `Fish_n`, `Fish_y`, `Icecream_n` e `Icecream_y`
-no quedan especialmente bien representadas en las dos primeras dimensiones.
+Obsérvese que algunas categorías como `Fish_n`, `Fish_y`, `Icecream_n` e `Icecream_y` no quedan especialmente bien representadas en las dos primeras dimensiones.
 
 Eso implica que:
 
-- su posición en el plano debe interpretarse con cautela,
-- una solución de mayor dimensionalidad podría ser más adecuada para describirlas correctamente.
+-   su posición en el plano debe interpretarse con cautela,
+-   una solución de mayor dimensionalidad podría ser más adecuada para describirlas correctamente.
 
 ## Contribución de las categorías a las dimensiones
 
@@ -279,8 +273,7 @@ corrplot(var$contrib, is.corr = FALSE)
 
 ### Nota importante
 
-Antes de pasar al análisis de individuos, conviene decidir la **latencia** o número
-de dimensiones que se considerarán relevantes para la interpretación final.
+Antes de pasar al análisis de individuos, conviene decidir la **latencia** o número de dimensiones que se considerarán relevantes para la interpretación final.
 
 # Paso 4. Análisis de individuos
 
@@ -321,8 +314,7 @@ fviz_contrib(res.mca, choice = "ind", axes = 1:2, top = 20)
 
 ## Colorear individuos por grupos
 
-Es posible colorear los individuos utilizando cualquier variable cualitativa original.
-En este ejemplo se usa la variable `"Vomiting"`.
+Es posible colorear los individuos utilizando cualquier variable cualitativa original. En este ejemplo se usa la variable `"Vomiting"`.
 
 ```{r}
 fviz_mca_ind(
@@ -350,8 +342,7 @@ fviz_ellipses(res.mca, 1:4, geom = "point")
 
 # Paso 5. Descripción de dimensiones
 
-La función `dimdesc()` permite obtener una descripción estadística e interpretativa
-de cada dimensión.
+La función `dimdesc()` permite obtener una descripción estadística e interpretativa de cada dimensión.
 
 ```{r}
 # Descripción automática de las dimensiones 1 y 2
@@ -373,18 +364,17 @@ res.desc[[2]]
 
 En ACM es posible incorporar:
 
-1. **variables cuantitativas suplementarias** (`quanti.sup`),
-2. **variables cualitativas suplementarias** (`quali.sup`),
-3. **individuos suplementarios** (`ind.sup`).
+1.  **variables cuantitativas suplementarias** (`quanti.sup`),
+2.  **variables cualitativas suplementarias** (`quali.sup`),
+3.  **individuos suplementarios** (`ind.sup`).
 
-Estas variables e individuos **no se utilizan para construir las dimensiones principales**.
-Sus coordenadas se proyectan a posteriori a partir de la solución obtenida con los elementos activos.
+Estas variables e individuos **no se utilizan para construir las dimensiones principales**. Sus coordenadas se proyectan a posteriori a partir de la solución obtenida con los elementos activos.
 
 En este ejemplo:
 
-- `quanti.sup = 1:2` corresponde a las variables continuas `age` y `time`,
-- `quali.sup = 3:4` corresponde a variables cualitativas como `Sick` y `Sex`,
-- `ind.sup = 53:55` indica que esos individuos se tratarán como suplementarios.
+-   `quanti.sup = 1:2` corresponde a las variables continuas `age` y `time`,
+-   `quali.sup = 3:4` corresponde a variables cualitativas como `Sick` y `Sex`,
+-   `ind.sup = 53:55` indica que esos individuos se tratarán como suplementarios.
 
 ```{r}
 # Nuevo ACM incluyendo variables suplementarias e individuos suplementarios
@@ -483,14 +473,14 @@ res.mca <- MCA(
 
 Una comprobación muy útil consiste en contrastar los resultados obtenidos con:
 
-- el método basado en la **tabla disyuntiva completa** (`Indicator`),
-- y el método basado en la **tabla de Burt**.
+-   el método basado en la **tabla disyuntiva completa** (`Indicator`),
+-   y el método basado en la **tabla de Burt**.
 
 En general, ambos enfoques ofrecen resultados **muy similares o equivalentes** desde el punto de vista interpretativo.
 
 # Bibliografía y apoyo teórico
 
-- Greenacre, M. (2017). *Correspondence Analysis in Practice*.
-- Husson, F., Lê, S., & Pagès, J. (2017). *Exploratory Multivariate Analysis by Example Using R*.
-- Documentación oficial de `FactoMineR`.
-- Documentación oficial de `factoextra`.
+-   Greenacre, M. (2017). *Correspondence Analysis in Practice*.
+-   Husson, F., Lê, S., & Pagès, J. (2017). *Exploratory Multivariate Analysis by Example Using R*.
+-   Documentación oficial de `FactoMineR`.
+-   Documentación oficial de `factoextra`.

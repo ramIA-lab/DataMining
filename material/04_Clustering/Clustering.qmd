@@ -12,6 +12,7 @@ format:
     number-sections: true
     code-fold: show
     code-summary: "Mostrar código"
+    code-tools: true
     embed-resources: true
     df-print: paged
 execute:
