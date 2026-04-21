@@ -473,7 +473,7 @@ df_cooks <- data.frame(
   cooks = cooks
 )
 
-threshold <- 4 / nrow(dades)
+threshold <- 4 / nrow(datos)
 
 ggplot(df_cooks, aes(x = index, y = cooks)) +
   geom_segment(aes(xend = index, yend = 0), alpha = 0.6) +

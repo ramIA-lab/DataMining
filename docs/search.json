@@ -2055,7 +2055,7 @@
     "href": "material/05_StatisticalModels/LinealModels.html#gráficos-diagnósticos-básicos",
     "title": "Modelos Lineales Generalizados",
     "section": "9.2 Gráficos diagnósticos básicos",
-    "text": "9.2 Gráficos diagnósticos básicos\nAunque el modelo sea significativo se debe validar, someter a contraste los supuestos estadísticos que subyacen al modelo.\nPara hacerlo, es necesario los residuos del modelo y el cálculo de la diferencia entre los valores observados y los estimados:\n\\[\ne_i = y_i - \\hat{y}_i = y_{i} - (\\hat{\\beta}_{0} + \\hat{\\beta}_{1}x_{1i} + ... + \\hat{\\beta}_{p}x_{pi}), i = 1, ..., N\n\\]\nLo anterior carece de validez si no se satisfacen las hipótesis del modelo siguientes:\n\nLos residuos han de tener varianza constante (homocedasticidad)\n\n\\[\nV(e) = \\sigma^{2} = 0\n\\]\n\nLos residuos han de seguir la distribución de probabilidad normal.\nLas observaciones tienen que ser independientes.\nLa relación entre la variable respuesta y las explicativas se suponen lineal.\nLas variables explicativas son linealmente independientes: ninguna puede ser explicada como combinación lineal de las otras. En caso contrario, se tendría el conocido problema de la multicolinealidad y debería quitarse del modelo la variable explicada por el resto.\n\nA continuación se realiza un análisis de residuos.\n\n\nMostrar código\nlibrary(\"ggfortify\")\nautoplot(modelo_simple) +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n\n9.2.1 Interpretación\nLos cuatro gráficos diagnósticos clásicos permiten comprobar:\n\nResiduals vs Fitted: linealidad y homoscedasticidad.\n\n\nNube aleatoria horizontal → ✔ Linealidad OK + homocedasticidad\nForma curva (U, ∩, S) → ❌ No linealidad\nForma de embudo (se abre o cierra) → ❌ Heterocedasticidad\nGrupos/segmentos → ❌ Variables omitidas / modelo mal especificado\n\nPara poderlo identificar, se ha de mirar que la linea azul sea una linia recta\nTambién podemos realizar una prueba de hipótesis para detectar si existe o no homocedasticidad. En este caso, el test se trata del de Breusch-Pagan.\nHipótesis\n\n\\(H_0\\): La varianza de los residuos es constante (Homocedasticidad)\n\\(H_1\\): La varianza de los residuos depende de las variables explicativas (Heterocedasticidad)\n\nDecisión\n\nSi p-value &gt; 0.05 \\(\\rightarrow\\) No rechazamos \\(H_0\\) \\(\\rightarrow\\) Los resiudos pueden considerarse homocedasticos.\nSi p-value &lt; 0.05 \\(\\rightarrow\\) Rechazamos \\(H_0\\) \\(\\rightarrow\\) Los resiudos pueden considerarse heterocedasticos.\n\n\n\nMostrar código\nlmtest::bgtest(modelo_simple)\n\n\n\n    Breusch-Godfrey test for serial correlation of order up to 1\n\ndata:  modelo_simple\nLM test = 4533.1, df = 1, p-value &lt; 2.2e-16\n\n\nViendo el modelo, podemos decir que nuestro modelo tiene problemas de heterocedasticidad.\n\nNormal Q-Q: aproximación a normalidad de residuos.\n\n\nPuntos sobre la recta → ✔ Normalidad OK\nDesviación en extremos (colas) → ❌ Outliers / colas pesadas\nForma en S → ❌ No normalidad\nMuchos puntos alejados de la línea → ❌ Mala distribución de residuos\n\nTambién se puede realizar contrastes de hipótesis cómo el test de normalidad de Shapiro-Wilk para muestras de máximo 5000 observaciones (\\(n = 5000\\)).\n\n\nMostrar código\nshapiro.test(sample(modelo_simple$residuals, 5000))\n\n\n\n    Shapiro-Wilk normality test\n\ndata:  sample(modelo_simple$residuals, 5000)\nW = 0.87453, p-value &lt; 2.2e-16\n\n\nCómo el p-valor es inferior a 0.05 tenemos evidéncias para no aceptar la hipótesis nula, nuestros residuos NO se distribuyen de manera normal.\n\nScale-Location: varianza constante.\n\n\nLínea horizontal + dispersión uniforme → ✔ Homocedasticidad\nTendencia creciente (↑) → ❌ Varianza aumenta (heterocedasticidad)\nTendencia decreciente (↓) → ❌ Varianza disminuye\nForma de embudo → ❌ Heterocedasticidad\n\n\nResiduals vs Leverage: observaciones influyentes.\n\n\nTodos los puntos dentro de Cook → ✔ Sin influencia grave\nPunto con alto leverage (muy a la derecha) → ⚠ Potencialmente problemático\nAlto leverage + residuo grande → ❌ Observación influyente\nPuntos fuera de líneas de Cook → ❌ Muy influyentes (revisar/eliminar)\n\nEn docencia es importante remarcar que estos gráficos no se leen como “verdadero/falso”, sino como señales para juzgar si el modelo es razonable."
+    "text": "9.2 Gráficos diagnósticos básicos\nAunque el modelo sea significativo se debe validar, someter a contraste los supuestos estadísticos que subyacen al modelo.\nPara hacerlo, es necesario los residuos del modelo y el cálculo de la diferencia entre los valores observados y los estimados:\n\\[\ne_i = y_i - \\hat{y}_i = y_{i} - (\\hat{\\beta}_{0} + \\hat{\\beta}_{1}x_{1i} + ... + \\hat{\\beta}_{p}x_{pi}), i = 1, ..., N\n\\]\nLo anterior carece de validez si no se satisfacen las hipótesis del modelo siguientes:\n\nLos residuos han de tener varianza constante (homocedasticidad)\n\n\\[\nV(e) = \\sigma^{2} = 0\n\\]\n\nLos residuos han de seguir la distribución de probabilidad normal.\nLas observaciones tienen que ser independientes.\nLa relación entre la variable respuesta y las explicativas se suponen lineal.\nLas variables explicativas son linealmente independientes: ninguna puede ser explicada como combinación lineal de las otras. En caso contrario, se tendría el conocido problema de la multicolinealidad y debería quitarse del modelo la variable explicada por el resto.\n\nA continuación se realiza un análisis de residuos.\n\n\nMostrar código\nlibrary(\"ggfortify\")\nautoplot(modelo_simple) +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n\n9.2.1 Interpretación\nLos cuatro gráficos diagnósticos clásicos permiten comprobar:\n\nResiduals vs Fitted: linealidad y homoscedasticidad.\n\n\nNube aleatoria horizontal → ✔ Linealidad OK + homocedasticidad\nForma curva (U, ∩, S) → ❌ No linealidad\nForma de embudo (se abre o cierra) → ❌ Heterocedasticidad\nGrupos/segmentos → ❌ Variables omitidas / modelo mal especificado\n\nPara poderlo identificar, se ha de mirar que la linea azul sea una linia recta\nTambién podemos realizar una prueba de hipótesis para detectar si existe o no homocedasticidad. En este caso, el test se trata del de Breusch-Pagan.\nHipótesis\n\n\\(H_0\\): La varianza de los residuos es constante (Homocedasticidad)\n\\(H_1\\): La varianza de los residuos depende de las variables explicativas (Heterocedasticidad)\n\nDecisión\n\nSi p-value &gt; 0.05 \\(\\rightarrow\\) No rechazamos \\(H_0\\) \\(\\rightarrow\\) Los resiudos pueden considerarse homocedasticos.\nSi p-value &lt; 0.05 \\(\\rightarrow\\) Rechazamos \\(H_0\\) \\(\\rightarrow\\) Los resiudos pueden considerarse heterocedasticos.\n\n\n\nMostrar código\nlmtest::bgtest(modelo_simple)\n\n\n\n    Breusch-Godfrey test for serial correlation of order up to 1\n\ndata:  modelo_simple\nLM test = 4533.1, df = 1, p-value &lt; 2.2e-16\n\n\nViendo el modelo, podemos decir que nuestro modelo tiene problemas de heterocedasticidad.\n\nNormal Q-Q: aproximación a normalidad de residuos.\n\n\nPuntos sobre la recta → ✔ Normalidad OK\nDesviación en extremos (colas) → ❌ Outliers / colas pesadas\nForma en S → ❌ No normalidad\nMuchos puntos alejados de la línea → ❌ Mala distribución de residuos\n\nTambién se puede realizar contrastes de hipótesis cómo el test de normalidad de Shapiro-Wilk para muestras de máximo 5000 observaciones (\\(n = 5000\\)).\n\n\nMostrar código\nshapiro.test(sample(modelo_simple$residuals, 5000))\n\n\n\n    Shapiro-Wilk normality test\n\ndata:  sample(modelo_simple$residuals, 5000)\nW = 0.9092, p-value &lt; 2.2e-16\n\n\nCómo el p-valor es inferior a 0.05 tenemos evidéncias para no aceptar la hipótesis nula, nuestros residuos NO se distribuyen de manera normal.\n\nScale-Location: varianza constante.\n\n\nLínea horizontal + dispersión uniforme → ✔ Homocedasticidad\nTendencia creciente (↑) → ❌ Varianza aumenta (heterocedasticidad)\nTendencia decreciente (↓) → ❌ Varianza disminuye\nForma de embudo → ❌ Heterocedasticidad\n\n\nResiduals vs Leverage: observaciones influyentes.\n\n\nTodos los puntos dentro de Cook → ✔ Sin influencia grave\nPunto con alto leverage (muy a la derecha) → ⚠ Potencialmente problemático\nAlto leverage + residuo grande → ❌ Observación influyente\nPuntos fuera de líneas de Cook → ❌ Muy influyentes (revisar/eliminar)\n\nEn docencia es importante remarcar que estos gráficos no se leen como “verdadero/falso”, sino como señales para juzgar si el modelo es razonable."
   },
   {
     "objectID": "material/05_StatisticalModels/LinealModels.html#suma-de-cuadrados",
@@ -2224,5 +2224,145 @@
     "title": "Modelos Lineales Generalizados",
     "section": "23.2 Tranformación de Box-Cox",
     "text": "23.2 Tranformación de Box-Cox\nA veces hay variables que no cumplen la normalidad pedida. Es por ello que va bien realizar transformaciones logarítimicas de ellas pasando de modelos lineales a modelos log-lineales o modelos log-log.\nEn nuestro caso, vamos a transformar la variable PRICE. Para ello, se ha de introducir el log(PRICE) en el modelo.\n\n\nMostrar código\nmodelo_logNormal &lt;- lm(log(PRICE) ~ CONSTRUCTEDAREA + I(CONSTRUCTEDAREA^2), data = dades)\nsummary(modelo_cuadratico)\n\n\n\nCall:\nlm(formula = PRICE ~ CONSTRUCTEDAREA + I(CONSTRUCTEDAREA^2), \n    data = dades)\n\nResiduals:\n     Min       1Q   Median       3Q      Max \n-2041953   -70562    -2711    67244  1678661 \n\nCoefficients:\n                       Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)          -8.809e+04  1.689e+03  -52.16   &lt;2e-16 ***\nCONSTRUCTEDAREA       5.248e+03  2.220e+01  236.45   &lt;2e-16 ***\nI(CONSTRUCTEDAREA^2) -1.442e+00  5.171e-02  -27.89   &lt;2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 134100 on 61483 degrees of freedom\nMultiple R-squared:  0.7731,    Adjusted R-squared:  0.7731 \nF-statistic: 1.047e+05 on 2 and 61483 DF,  p-value: &lt; 2.2e-16"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html",
+    "href": "material/05_StatisticalModels/LogistcModels.html",
+    "title": "Modelos Lineales Generalizados",
+    "section": "",
+    "text": "El objetivo detrás del uso de modelos es el de intentar explicar el comportamiento de una variable en función del comportamiento de otras que se cree que influyen en ella.\nHay tipos de variables a predecir que no pueden analizarse correctamente con el modelo de regresión lineal múltiple porque la variable respuesta, la que interesa predecir en cada ejemplo, no sigue una distribución de probabilidad normal (supuesto necesario para utilizar la regresión lineal) o ni siquiera es continua. Por ejemplo disponemos:\n\nvariable dicotómica/binaria asignando los valores 0 y 1 a las dos posibles respuestas, lo que encaja perfectamente con una distribución de probabilidad de Bernoulli (muy distinta de la normal, ya que es discreta, aunque podría parecerse)\nvariables de tipo recuento (solo cero o valores positivos) modelizables mediante una variable discreta que podría seguir una distribución de Poisson (que es también distinta a la normal, por ser discreta, aunque también podría parecerse).\n\nEl modelo lineal generalizado (GLM) consiste en modelos que generlizan el caso en que la variable respuesta sea normal a cualquier tipo de distribución de probabilidad perteneciente a la familia exponencial y que permite varianzas no constantes en los errores.\n\n\nEl modelo lineal generalizado se escribe como:\n\\[\n\\mu = g^{-1}(\\eta)\n\\]\nen el que se tiene las siguientes componentes:\n\n\\(\\mu = E(Y)\\): la media de la variable respuesta Y, que puede seguir cualquier distribución de probabilidad de la familia exponencial.\n\\(\\eta = X\\beta\\): la “estructura” que aportan las variables explicativas/predictoras.\n\\(g(\\cdot)\\) (función de enlace): relaciona los dos componentes anteriores.\n\n\n\n\nCada distribución de probabilidad tiene asociada una función enlace canónica:\n\nPara la normal es la identidad: \\(g(\\mu) = \\mu\\)\nPara la Bernoulli, es la función logit: \\(g(\\mu) = logit(\\mu) = log(\\frac{\\mu}{1-\\mu})\\)\nPara la Poisson, es el logaritmo: \\(g(\\mu) = log(\\mu)\\)\nPara la gamma, es la inversa: \\(g(\\mu) = 1/\\mu\\)\nAquesta web està creada por Dante Conti y Sergi Ramírez, (c) 2026"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#el-modelo-y-sus-componentes",
+    "href": "material/05_StatisticalModels/LogistcModels.html#el-modelo-y-sus-componentes",
+    "title": "Modelos Lineales Generalizados",
+    "section": "",
+    "text": "El modelo lineal generalizado se escribe como:\n\\[\n\\mu = g^{-1}(\\eta)\n\\]\nen el que se tiene las siguientes componentes:\n\n\\(\\mu = E(Y)\\): la media de la variable respuesta Y, que puede seguir cualquier distribución de probabilidad de la familia exponencial.\n\\(\\eta = X\\beta\\): la “estructura” que aportan las variables explicativas/predictoras.\n\\(g(\\cdot)\\) (función de enlace): relaciona los dos componentes anteriores."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#función-de-enlace",
+    "href": "material/05_StatisticalModels/LogistcModels.html#función-de-enlace",
+    "title": "Modelos Lineales Generalizados",
+    "section": "",
+    "text": "Cada distribución de probabilidad tiene asociada una función enlace canónica:\n\nPara la normal es la identidad: \\(g(\\mu) = \\mu\\)\nPara la Bernoulli, es la función logit: \\(g(\\mu) = logit(\\mu) = log(\\frac{\\mu}{1-\\mu})\\)\nPara la Poisson, es el logaritmo: \\(g(\\mu) = log(\\mu)\\)\nPara la gamma, es la inversa: \\(g(\\mu) = 1/\\mu\\)"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#por-qué-no-usar-regresión-lineal",
+    "href": "material/05_StatisticalModels/LogistcModels.html#por-qué-no-usar-regresión-lineal",
+    "title": "Modelos Lineales Generalizados",
+    "section": "2.1 ¿Por qué no usar regresión lineal?",
+    "text": "2.1 ¿Por qué no usar regresión lineal?\nSi la respuesta solo puede valer 0 o 1, una recta de regresión puede producir predicciones imposibles, por ejemplo menores que 0 o mayores que 1. Además, la relación entre predictores y probabilidad no suele ser lineal.\nLa regresión logística resuelve este problema modelizando:\n[ (p) = () = _0 + _1X_1 + + _pX_p ]\ndonde:\n\n(p = P(Y=1)) es la probabilidad del evento de interés\n() son las odds\n(()) es el logit"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#proporción-de-abandono-escolar",
+    "href": "material/05_StatisticalModels/LogistcModels.html#proporción-de-abandono-escolar",
+    "title": "Modelos Lineales Generalizados",
+    "section": "5.1 Proporción de abandono escolar",
+    "text": "5.1 Proporción de abandono escolar\n\n\nMostrar código\ndatos %&gt;%\n  count(Dropout) %&gt;%\n  mutate(prop = n / sum(n))\n\n\n\n  \n\n\n\nMostrar código\nggplot(datos, aes(x = Dropout)) +\n  geom_bar() +\n  labs(\n    title = \"Distribución de la variable respuesta\",\n    x = \"Abandono\",\n    y = \"Frecuencia\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n\n\nMostrar código\nGGally::ggpairs(datos)"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#estructura-del-modelo",
+    "href": "material/05_StatisticalModels/LogistcModels.html#estructura-del-modelo",
+    "title": "Modelos Lineales Generalizados",
+    "section": "7.1 Estructura del modelo",
+    "text": "7.1 Estructura del modelo\nEl modelo ajustado tiene la forma:\n\\[\\log\\left(\\frac{p}{1-p}\\right) = \\beta_0 + \\sum_{i =1}^{p} \\beta_{i}X_{i}\\]"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-en-el-summary",
+    "href": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-en-el-summary",
+    "title": "Modelos Lineales Generalizados",
+    "section": "7.2 ¿Qué mirar en el summary()?",
+    "text": "7.2 ¿Qué mirar en el summary()?\n\n7.2.1 Signo del coeficiente\n\nsi el coeficiente es positivo, al aumentar esa variable aumenta la probabilidad de (Dropout=1)\nsi el coeficiente es negativo, al aumentar esa variable disminuye la probabilidad de (Dropout=1)\n\n\n\n7.2.2 Valor p\n\nsi p-value &lt; 0.05, la variable se considera significativa\nsi p-value &gt; 0.05, no hay evidencia suficiente de efecto estadísticamente significativo\n\n\n\n7.2.3 Deviance\n\nnull deviance: Indica lo “bien” que predice el modelo sin variables explicativas (sólo con el término independiente)\nresidual deviance: Indica lo “bien” que predice el modelo con las variables explicativas.\n\nUn contraste Chi-cuadrado permitirá dilucidar si el modelo con variables explicativas predice significativamente mejor que el que solo tiene un término independiente y su predicción, sea cual sea el valor de las variables explicativas, es siempre la media de los valores de la variable respuesta.\n\n\n7.2.4 Actualizar modelo con nuevas variables\nSi se quiere actualizar un modelo con nuevas variables, basta con usar la función update.\n\n\nMostrar código\nregresion_update &lt;- update(modelo_log, ~ . + var1 + var2)\n\n\n\n\n7.2.5 Adecuación del modelo\nPara evaluar la bondad de ajuste de los modelos se lleva a cabo el contraste de Hosmer-Lemeshow:\n\n\nMostrar código\nhoslem.test(modelo_log$y, modelo_log$fitted.values)\n\n\n\n    Hosmer and Lemeshow goodness of fit (GOF) test\n\ndata:  modelo_log$y, modelo_log$fitted.values\nX-squared = 2.6468, df = 8, p-value = 0.9545\n\n\nAl tener p-valor alto, indica un ajuste suficientemente bueno.\nPodemos realizar el test de la razón de verosimilitud.\n\n\nMostrar código\nanova(modelo_log, test = \"Chisq\")\n\n\n\n  \n\n\n\nLas deviances correspondientes a añadir secuencialmente cada variable o factor al modelo que contiene los anteriores permite concluir que dicha inclusión secuencial de tales variables predictoras es significativa respecto a los modelos que no las incluyen.\nPara completar, se podría contrastar también el efecto de una variable sobre la respuesta comparando la deviance del modelo con dicha variable y sin ella.\nEl valor del pseudo \\(R^{2}\\) de McFadden se obtiene de la siguiente forma:\n\n\nMostrar código\nnull &lt;- glm(Dropout ~ ., data = datos, family = binomial)\n1 - logLik(modelo_log) / logLik(null)\n\n\n'log Lik.' 0 (df=27)\n\n\n\n\n7.2.6 Magnitud\nLos coeficientes están en escala log-odds, por lo que no conviene interpretarlos directamente en términos de probabilidad."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#qué-son-las-odds",
+    "href": "material/05_StatisticalModels/LogistcModels.html#qué-son-las-odds",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.1 Qué son las odds",
+    "text": "8.1 Qué son las odds\nLas odds son:\n[ = ]\nPor ejemplo, si (p = 0.8), entonces:\n[ = = 4 ]\nEso significa que el evento es 4 veces más probable que el no evento."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#odds-ratio",
+    "href": "material/05_StatisticalModels/LogistcModels.html#odds-ratio",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.2 Odds Ratio",
+    "text": "8.2 Odds Ratio\nPara interpretar mejor los coeficientes, usamos la exponencial:\n[ OR = e^{} ]\n\n\nMostrar código\nexp(coef(modelo_log))\n\n\n                  (Intercept)                    Student_ID \n                    6.6524242                     1.0000123 \n                          Age                    GenderMale \n                    1.0108914                     0.9394417 \n                Family_Income            Internet_AccessYes \n                    0.9999983                     0.6855535 \n          Study_Hours_per_Day               Attendance_Rate \n                    0.9877490                     0.9695397 \n        Assignment_Delay_Days           Travel_Time_Minutes \n                    1.1709353                     1.0096899 \n             Part_Time_JobYes                ScholarshipYes \n                    1.2481252                     0.9728139 \n                 Stress_Index                           GPA \n                    1.2047265                     0.3365748 \n                 Semester_GPA                          CGPA \n                    0.4385574                     2.2191490 \n               SemesterYear 2                SemesterYear 3 \n                    1.2066783                     1.1537866 \n               SemesterYear 4            DepartmentBusiness \n                    1.1496080                     0.9649584 \n                 DepartmentCS         DepartmentEngineering \n                    0.9305613                     0.9380458 \n            DepartmentScience Parental_EducationHigh School \n                    0.9513250                     1.0615138 \n     Parental_EducationMaster        Parental_EducationNone \n                    0.9166313                     1.1013723 \n        Parental_EducationPhD \n                    1.0995097"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#intervalos-de-confianza-de-los-odds-ratio",
+    "href": "material/05_StatisticalModels/LogistcModels.html#intervalos-de-confianza-de-los-odds-ratio",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.3 Intervalos de confianza de los Odds Ratio",
+    "text": "8.3 Intervalos de confianza de los Odds Ratio\n\n\nMostrar código\nexp(confint(modelo_log))\n\n\n                                  2.5 %     97.5 %\n(Intercept)                   2.8367054 15.6284808\nStudent_ID                    0.9999936  1.0000311\nAge                           0.9857212  1.0366895\nGenderMale                    0.8434886  1.0462454\nFamily_Income                 0.9999956  1.0000009\nInternet_AccessYes            0.5860904  0.8029947\nStudy_Hours_per_Day           0.9462257  1.0310636\nAttendance_Rate               0.9629783  0.9761162\nAssignment_Delay_Days         1.1260309  1.2176558\nTravel_Time_Minutes           1.0051090  1.0142997\nPart_Time_JobYes              1.1188047  1.3922975\nScholarshipYes                0.8685974  1.0890575\nStress_Index                  1.1648349  1.2462120\nGPA                           0.2774725  0.4078554\nSemester_GPA                  0.1251686  1.5350837\nCGPA                          0.6425914  7.6724297\nSemesterYear 2                1.0348306  1.4074116\nSemesterYear 3                0.9895970  1.3455104\nSemesterYear 4                0.9857382  1.3409981\nDepartmentBusiness            0.8143275  1.1433794\nDepartmentCS                  0.7849432  1.1030681\nDepartmentEngineering         0.7911435  1.1120902\nDepartmentScience             0.8033606  1.1264837\nParental_EducationHigh School 0.9333331  1.2071267\nParental_EducationMaster      0.7882268  1.0649600\nParental_EducationNone        0.8563089  1.4098258\nParental_EducationPhD         0.8433880  1.4252969"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#tabla-ordenada-para-interpretar",
+    "href": "material/05_StatisticalModels/LogistcModels.html#tabla-ordenada-para-interpretar",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.4 Tabla ordenada para interpretar",
+    "text": "8.4 Tabla ordenada para interpretar\n\n\nMostrar código\ntabla_or &lt;- tidy(modelo_log) %&gt;%\n  mutate(\n    odds_ratio = exp(estimate),\n    OR_inf = exp(estimate - 1.96 * std.error),\n    OR_sup = exp(estimate + 1.96 * std.error)\n  )\n\ntabla_or"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#cómo-interpretar-un-or",
+    "href": "material/05_StatisticalModels/LogistcModels.html#cómo-interpretar-un-or",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.5 Cómo interpretar un OR",
+    "text": "8.5 Cómo interpretar un OR\n\nOR &gt; 1: al aumentar la variable, aumentan las odds de que ocurra el evento\nOR &lt; 1: al aumentar la variable, disminuyen las odds\nOR = 1: no hay efecto\n\nEjemplo de lectura:\n\nsi OR = 1.50, cada incremento unitario multiplica las odds por 1.50\nsi OR = 0.80, cada incremento unitario reduce las odds un 20%"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#obtener-probabilidades",
+    "href": "material/05_StatisticalModels/LogistcModels.html#obtener-probabilidades",
+    "title": "Modelos Lineales Generalizados",
+    "section": "9.1 Obtener probabilidades",
+    "text": "9.1 Obtener probabilidades\n\n\nMostrar código\ndatos &lt;- datos %&gt;%\n  mutate(\n    prob_pred = predict(modelo_log, type = \"response\")\n  )\n\nhead(datos)\n\n\n\n  \n\n\n\nLas probabilidades predichas siempre estarán entre 0 y 1."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#visualizar-probabilidades-predichas",
+    "href": "material/05_StatisticalModels/LogistcModels.html#visualizar-probabilidades-predichas",
+    "title": "Modelos Lineales Generalizados",
+    "section": "9.2 Visualizar probabilidades predichas",
+    "text": "9.2 Visualizar probabilidades predichas\n\n\nMostrar código\nggplot(datos, aes(x = prob_pred)) +\n  geom_histogram(bins = 30) +\n  labs(\n    title = \"Distribución de probabilidades predichas\",\n    x = \"Probabilidad predicha\",\n    y = \"Frecuencia\"\n  ) +\n  theme_minimal()"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-en-la-matriz-de-confusión",
+    "href": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-en-la-matriz-de-confusión",
+    "title": "Modelos Lineales Generalizados",
+    "section": "11.1 Qué mirar en la matriz de confusión",
+    "text": "11.1 Qué mirar en la matriz de confusión\n\nAccuracy: porcentaje total de aciertos\nSensitivity / Recall: capacidad para detectar los casos positivos\nSpecificity: capacidad para detectar los casos negativos"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#interpretación-del-auc",
+    "href": "material/05_StatisticalModels/LogistcModels.html#interpretación-del-auc",
+    "title": "Modelos Lineales Generalizados",
+    "section": "12.1 Interpretación del AUC",
+    "text": "12.1 Interpretación del AUC\n\n0.5: el modelo no discrimina\n0.6 - 0.7: pobre\n0.7 - 0.8: aceptable\n0.8 - 0.9: bueno\n\n0.9: excelente\n\n\n\n\nMostrar código\nROC(form = modelo_log$formula, data = datos, plot = \"sp\")\n\n\n\n\n\n\n\n\n\n\n\nMostrar código\nROC(\n  form = modelo_log$formula, data = datos,\n  plot = \"ROC\", las = 1\n)"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#residuos-de-deviance",
+    "href": "material/05_StatisticalModels/LogistcModels.html#residuos-de-deviance",
+    "title": "Modelos Lineales Generalizados",
+    "section": "14.1 Residuos de deviance",
+    "text": "14.1 Residuos de deviance\n\n\nMostrar código\nres_dev &lt;- residuals(modelo_log, type = \"deviance\")\n\nggplot(data.frame(\n  fitted = fitted(modelo_log),\n  resid = res_dev\n), aes(x = fitted, y = resid)) +\n  geom_point(alpha = 0.6) +\n  geom_hline(yintercept = 0, linetype = 2, color = \"red\") +\n  labs(\n    title = \"Residuos de deviance vs valores ajustados\",\n    x = \"Valores ajustados\",\n    y = \"Residuos de deviance\"\n  ) +\n  theme_minimal()"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-aquí",
+    "href": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-aquí",
+    "title": "Modelos Lineales Generalizados",
+    "section": "14.2 Qué mirar aquí",
+    "text": "14.2 Qué mirar aquí\n\nresiduos repartidos sin patrón claro: mejor\npuntos muy alejados: posibles observaciones problemáticas\npatrones extraños: posible mala especificación del modelo"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#observaciones-influyentes-distancia-de-cook",
+    "href": "material/05_StatisticalModels/LogistcModels.html#observaciones-influyentes-distancia-de-cook",
+    "title": "Modelos Lineales Generalizados",
+    "section": "14.3 Observaciones influyentes: distancia de Cook",
+    "text": "14.3 Observaciones influyentes: distancia de Cook\n\n\nMostrar código\ncooks &lt;- cooks.distance(modelo_log)\n\ndf_cooks &lt;- data.frame(\n  index = 1:length(cooks),\n  cooks = cooks\n)\n\nthreshold &lt;- 4 / nrow(datos)\n\nggplot(df_cooks, aes(x = index, y = cooks)) +\n  geom_segment(aes(xend = index, yend = 0), alpha = 0.6) +\n  geom_point(\n    data = subset(df_cooks, cooks &gt; threshold),\n    size = 2\n  ) +\n  geom_hline(yintercept = threshold, color = \"red\", linetype = \"dashed\") +\n  labs(\n    title = \"Distancia de Cook\",\n    subtitle = \"Las observaciones por encima de la línea roja son potencialmente influyentes\",\n    x = \"Observación\",\n    y = \"Cook's distance\"\n  ) +\n  theme_minimal()"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-en-cook",
+    "href": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-en-cook",
+    "title": "Modelos Lineales Generalizados",
+    "section": "14.4 Qué mirar en Cook",
+    "text": "14.4 Qué mirar en Cook\n\nvalores bajos: observaciones sin influencia relevante\nvalores altos: observaciones influyentes\npuntos por encima de 4/n: candidatos a revisión"
   }
 ]
