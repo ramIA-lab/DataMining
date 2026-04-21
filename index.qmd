@@ -40,9 +40,9 @@ number-sections: true
 
 ## Predictive Models
 
-[Lineal Regresion]( material/05_StatisticalModels/LinealModels.html)
+[Lineal Regresion](material/05_StatisticalModels/LinealModels.html)
 
-[Logistic Regresion](material/05_StatisticalModels/LogisticModels.html)
+[Logistic Regresion](material/05_StatisticalModels/LogistcModels.html)
 
 ## Asociation Rules
 
