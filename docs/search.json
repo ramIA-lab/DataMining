@@ -53,7 +53,7 @@
     "href": "index.html#decisions-trees-bagging-and-ensamble-methods",
     "title": "Data Mining (DM GEI - FIB)",
     "section": "1.7 Decisions Trees, Bagging and Ensamble Methods",
-    "text": "1.7 Decisions Trees, Bagging and Ensamble Methods\nDecisions Trees\nBagging Methods\nBagging Methods"
+    "text": "1.7 Decisions Trees, Bagging and Ensamble Methods\nDecisions Trees\nRandom Forest\nBagging Methods"
   },
   {
     "objectID": "index.html#discriminant-models-and-non-parametric-discriminant",
@@ -1965,5 +1965,404 @@
     "title": "ACM: Multiple Correspondence Analysis",
     "section": "12.1 Comentario final",
     "text": "12.1 Comentario final\nUna comprobación muy útil consiste en contrastar los resultados obtenidos con:\n\nel método basado en la tabla disyuntiva completa (Indicator),\ny el método basado en la tabla de Burt.\n\nEn general, ambos enfoques ofrecen resultados muy similares o equivalentes desde el punto de vista interpretativo."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html",
+    "href": "material/05_StatisticalModels/LinealModels.html",
+    "title": "Modelos Lineales Generalizados",
+    "section": "",
+    "text": "Los modelos lineales constituyen una de las familias más importantes dentro de la estadística y del machine learning clásico. Aunque en ocasiones se presentan como herramientas “básicas”, en realidad son fundamentales por cuatro motivos:\n\npermiten explicar relaciones entre variables;\nofrecen una base sólida para la inferencia estadística;\nsirven como punto de partida para modelos más complejos;\nson muy útiles en contextos de Data Mining, donde interesa tanto predecir como interpretar.\n\nEn este tutorial trabajaremos el caso de la regresión lineal, es decir, modelos donde una variable respuesta numérica se explica a partir de una o varias variables predictoras.\nEl objetivo no es solo aprender a ejecutar código, sino entender:\n\nqué modelo se está ajustando;\nqué significan sus parámetros;\ncómo se interpreta la salida;\ncuándo el modelo es razonable y cuándo no.\nAquesta web està creada por Dante Conti y Sergi Ramírez, (c) 2026"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#propósito-explicativo",
+    "href": "material/05_StatisticalModels/LinealModels.html#propósito-explicativo",
+    "title": "Modelos Lineales Generalizados",
+    "section": "4.1 Propósito explicativo",
+    "text": "4.1 Propósito explicativo\nQueremos entender qué variables influyen sobre una respuesta y en qué dirección:\n\nsi aumenta el precio, ¿bajan las ventas?\nsi aumenta la inversión publicitaria, ¿suben los ingresos?\n¿qué perfil de variables se asocia a una mayor puntuación?"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#propósito-predictivo",
+    "href": "material/05_StatisticalModels/LinealModels.html#propósito-predictivo",
+    "title": "Modelos Lineales Generalizados",
+    "section": "4.2 Propósito predictivo",
+    "text": "4.2 Propósito predictivo\nQueremos predecir el valor de una variable numérica para nuevos individuos.\nEjemplos:\n\nestimar el precio de una vivienda;\npredecir ventas;\nanticipar consumo energético;\nestimar nota final a partir de variables académicas.\n\nUn punto importante: en contextos reales, un modelo lineal muchas veces no será el más preciso, pero sí uno de los más interpretables. Por eso suele ser el primer modelo de referencia o baseline."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#estructura-del-dataset",
+    "href": "material/05_StatisticalModels/LinealModels.html#estructura-del-dataset",
+    "title": "Modelos Lineales Generalizados",
+    "section": "6.1 Estructura del dataset",
+    "text": "6.1 Estructura del dataset\n\n\nMostrar código\nstr(dades)\n\n\n'data.frame':   61486 obs. of  30 variables:\n $ PRICE                        : num  323000 217000 114000 378000 434000 298000 228000 888000 291000 786000 ...\n $ CONSTRUCTEDAREA              : int  84 84 81 79 111 93 58 152 80 150 ...\n $ ROOMNUMBER                   : int  4 3 2 2 4 2 3 4 3 3 ...\n $ BATHNUMBER                   : int  1 2 1 1 2 2 1 2 2 2 ...\n $ HASTERRACE                   : chr  \"sí\" \"no\" \"no\" \"no\" ...\n $ HASLIFT                      : chr  \"sí\" \"sí\" \"sí\" \"sí\" ...\n $ HASAIRCONDITIONING           : chr  \"sí\" \"sí\" \"sí\" \"no\" ...\n $ AMENITYID                    : chr  \"amueblado\" \"amueblado\" \"amueblado\" \"amueblado\" ...\n $ HASPARKINGSPACE              : chr  \"no\" \"no\" \"no\" \"no\" ...\n $ ISPARKINGSPACEINCLUDEDINPRICE: chr  \"no\" \"no\" \"no\" \"no\" ...\n $ PARKINGSPACEPRICE            : num  1 1 1 1 1 1 1 1 1 1 ...\n $ HASNORTHORIENTATION          : chr  \"no\" \"no\" \"no\" \"no\" ...\n $ HASSOUTHORIENTATION          : chr  \"no\" \"no\" \"no\" \"no\" ...\n $ HASEASTORIENTATION           : chr  \"no\" \"no\" \"no\" \"no\" ...\n $ HASWESTORIENTATION           : chr  \"no\" \"no\" \"no\" \"no\" ...\n $ HASBOXROOM                   : chr  \"no\" \"no\" \"sí\" \"no\" ...\n $ HASWARDROBE                  : chr  \"no\" \"no\" \"no\" \"no\" ...\n $ HASSWIMMINGPOOL              : chr  \"no\" \"no\" \"no\" \"no\" ...\n $ HASDOORMAN                   : chr  \"no\" \"no\" \"no\" \"no\" ...\n $ HASGARDEN                    : chr  \"no\" \"sí\" \"no\" \"no\" ...\n $ ISDUPLEX                     : chr  \"no\" \"sí\" \"no\" \"no\" ...\n $ ISSTUDIO                     : chr  \"no\" \"no\" \"no\" \"no\" ...\n $ ISINTOPFLOOR                 : chr  \"no\" \"no\" \"no\" \"no\" ...\n $ BUILTTYPEID_1                : chr  \"no\" \"no\" \"no\" \"no\" ...\n $ BUILTTYPEID_2                : chr  \"no\" \"no\" \"sí\" \"no\" ...\n $ BUILTTYPEID_3                : chr  \"sí\" \"sí\" \"no\" \"sí\" ...\n $ DISTANCE_TO_CITY_CENTER      : num  1.88 2.12 4.13 2.24 2.33 ...\n $ DISTANCE_TO_METRO            : num  0.354 0.284 0.262 0.159 0.102 ...\n $ DISTANCE_TO_DIAGONAL         : num  1.475 1.194 2.505 0.796 1.2 ...\n $ CADCONSTRUCTIONYEAR          : int  1972 1930 1940 2016 1970 1997 1930 1940 1966 1940 ...\n\n\nMostrar código\nsummary(dades)\n\n\n     PRICE         CONSTRUCTEDAREA    ROOMNUMBER       BATHNUMBER    \n Min.   :  37000   Min.   : 21.00   Min.   : 0.000   Min.   : 0.000  \n 1st Qu.: 230000   1st Qu.: 66.00   1st Qu.: 2.000   1st Qu.: 1.000  \n Median : 325000   Median : 82.00   Median : 3.000   Median : 1.000  \n Mean   : 395771   Mean   : 95.46   Mean   : 2.864   Mean   : 1.519  \n 3rd Qu.: 462000   3rd Qu.:108.00   3rd Qu.: 3.000   3rd Qu.: 2.000  \n Max.   :4866000   Max.   :959.00   Max.   :40.000   Max.   :12.000  \n  HASTERRACE          HASLIFT          HASAIRCONDITIONING  AMENITYID        \n Length:61486       Length:61486       Length:61486       Length:61486      \n Class :character   Class :character   Class :character   Class :character  \n Mode  :character   Mode  :character   Mode  :character   Mode  :character  \n                                                                            \n                                                                            \n                                                                            \n HASPARKINGSPACE    ISPARKINGSPACEINCLUDEDINPRICE PARKINGSPACEPRICE \n Length:61486       Length:61486                  Min.   :     1.0  \n Class :character   Class :character              1st Qu.:     1.0  \n Mode  :character   Mode  :character              Median :     1.0  \n                                                  Mean   :   620.4  \n                                                  3rd Qu.:     1.0  \n                                                  Max.   :425001.0  \n HASNORTHORIENTATION HASSOUTHORIENTATION HASEASTORIENTATION HASWESTORIENTATION\n Length:61486        Length:61486        Length:61486       Length:61486      \n Class :character    Class :character    Class :character   Class :character  \n Mode  :character    Mode  :character    Mode  :character   Mode  :character  \n                                                                              \n                                                                              \n                                                                              \n  HASBOXROOM        HASWARDROBE        HASSWIMMINGPOOL     HASDOORMAN       \n Length:61486       Length:61486       Length:61486       Length:61486      \n Class :character   Class :character   Class :character   Class :character  \n Mode  :character   Mode  :character   Mode  :character   Mode  :character  \n                                                                            \n                                                                            \n                                                                            \n  HASGARDEN           ISDUPLEX           ISSTUDIO         ISINTOPFLOOR      \n Length:61486       Length:61486       Length:61486       Length:61486      \n Class :character   Class :character   Class :character   Class :character  \n Mode  :character   Mode  :character   Mode  :character   Mode  :character  \n                                                                            \n                                                                            \n                                                                            \n BUILTTYPEID_1      BUILTTYPEID_2      BUILTTYPEID_3     \n Length:61486       Length:61486       Length:61486      \n Class :character   Class :character   Class :character  \n Mode  :character   Mode  :character   Mode  :character  \n                                                         \n                                                         \n                                                         \n DISTANCE_TO_CITY_CENTER DISTANCE_TO_METRO   DISTANCE_TO_DIAGONAL\n Min.   :0.05457         Min.   :0.0007362   Min.   :0.002235    \n 1st Qu.:1.56297         1st Qu.:0.1551987   1st Qu.:0.900254    \n Median :2.61598         Median :0.2463591   Median :1.646425    \n Mean   :2.80364         Mean   :0.2656222   Mean   :1.769907    \n 3rd Qu.:3.77766         3rd Qu.:0.3462516   3rd Qu.:2.383208    \n Max.   :9.05757         Max.   :4.0996294   Max.   :7.244329    \n CADCONSTRUCTIONYEAR\n Min.   :1588       \n 1st Qu.:1932       \n Median :1963       \n Mean   :1952       \n 3rd Qu.:1974       \n Max.   :2018       \n\n\n\n6.1.1 Interpretación\n\nstr() nos muestra tipos de variables.\nsummary() proporciona un resumen descriptivo inicial.\nAntes de modelizar, debemos entender rangos, escalas y posibles outliers."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#conversión-de-variables-categóricas",
+    "href": "material/05_StatisticalModels/LinealModels.html#conversión-de-variables-categóricas",
+    "title": "Modelos Lineales Generalizados",
+    "section": "6.2 Conversión de variables categóricas",
+    "text": "6.2 Conversión de variables categóricas\nEste paso es crucial. Si una variable categórica se deja como numérica, el modelo podría interpretar una relación cuantitativa inexistente. En Data Mining, una mala codificación de variables suele producir interpretaciones erróneas.\n\n\nMostrar código\ntipos &lt;- sapply(dades, class)\nvarCat &lt;- names(tipos)[which(tipos %in% c(\"character\", \"factor\"))] \nvarNum &lt;- names(tipos)[which(tipos %in% c(\"integer\", \"numeric\"))] \nfor (var in varCat) {\n  dades[, var] &lt;- as.factor(as.character(dades[, var]))\n}"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#matriz-de-dispersión",
+    "href": "material/05_StatisticalModels/LinealModels.html#matriz-de-dispersión",
+    "title": "Modelos Lineales Generalizados",
+    "section": "7.1 Matriz de dispersión",
+    "text": "7.1 Matriz de dispersión\n\n\nMostrar código\nGGally::ggpairs(dades, columns = varNum)\n\n\n\n\n\n\n\n\n\n\n7.1.1 Interpretación\nLa matriz de dispersión permite detectar:\n\nrelaciones aproximadamente lineales;\nasociaciones fuertes entre predictores;\nposibles observaciones atípicas;\nestructuras no lineales."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#correlaciones-entre-variables-numéricas",
+    "href": "material/05_StatisticalModels/LinealModels.html#correlaciones-entre-variables-numéricas",
+    "title": "Modelos Lineales Generalizados",
+    "section": "7.2 Correlaciones entre variables numéricas",
+    "text": "7.2 Correlaciones entre variables numéricas\n\n\nMostrar código\ncor(dades[, varNum])\n\n\n                              PRICE CONSTRUCTEDAREA  ROOMNUMBER  BATHNUMBER\nPRICE                    1.00000000      0.87760541  0.49353066  0.71481973\nCONSTRUCTEDAREA          0.87760541      1.00000000  0.58335263  0.69995790\nROOMNUMBER               0.49353066      0.58335263  1.00000000  0.51527930\nBATHNUMBER               0.71481973      0.69995790  0.51527930  1.00000000\nPARKINGSPACEPRICE        0.05236988      0.04559892  0.04402086  0.06768343\nDISTANCE_TO_CITY_CENTER -0.21523770     -0.07828199  0.05002041 -0.10958942\nDISTANCE_TO_METRO        0.06235053      0.04867803  0.01448854  0.05330928\nDISTANCE_TO_DIAGONAL    -0.39766441     -0.25309989 -0.14339508 -0.27109797\nCADCONSTRUCTIONYEAR      0.04651750      0.08232589  0.16495746  0.11458356\n                        PARKINGSPACEPRICE DISTANCE_TO_CITY_CENTER\nPRICE                          0.05236988             -0.21523770\nCONSTRUCTEDAREA                0.04559892             -0.07828199\nROOMNUMBER                     0.04402086              0.05002041\nBATHNUMBER                     0.06768343             -0.10958942\nPARKINGSPACEPRICE              1.00000000              0.02240448\nDISTANCE_TO_CITY_CENTER        0.02240448              1.00000000\nDISTANCE_TO_METRO              0.01120724              0.12170284\nDISTANCE_TO_DIAGONAL          -0.01819045              0.64443761\nCADCONSTRUCTIONYEAR            0.08829998              0.45708297\n                        DISTANCE_TO_METRO DISTANCE_TO_DIAGONAL\nPRICE                          0.06235053          -0.39766441\nCONSTRUCTEDAREA                0.04867803          -0.25309989\nROOMNUMBER                     0.01448854          -0.14339508\nBATHNUMBER                     0.05330928          -0.27109797\nPARKINGSPACEPRICE              0.01120724          -0.01819045\nDISTANCE_TO_CITY_CENTER        0.12170284           0.64443761\nDISTANCE_TO_METRO              1.00000000           0.05254929\nDISTANCE_TO_DIAGONAL           0.05254929           1.00000000\nCADCONSTRUCTIONYEAR            0.09854106           0.08579109\n                        CADCONSTRUCTIONYEAR\nPRICE                            0.04651750\nCONSTRUCTEDAREA                  0.08232589\nROOMNUMBER                       0.16495746\nBATHNUMBER                       0.11458356\nPARKINGSPACEPRICE                0.08829998\nDISTANCE_TO_CITY_CENTER          0.45708297\nDISTANCE_TO_METRO                0.09854106\nDISTANCE_TO_DIAGONAL             0.08579109\nCADCONSTRUCTIONYEAR              1.00000000\n\n\n\n7.2.1 Interpretación\nSi dos predictores están muy correlacionados entre sí, puede aparecer multicolinealidad. Esto no siempre empeora la predicción, pero sí puede dificultar mucho la interpretación de coeficientes individuales."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#relación-entre-price-y-wt",
+    "href": "material/05_StatisticalModels/LinealModels.html#relación-entre-price-y-wt",
+    "title": "Modelos Lineales Generalizados",
+    "section": "7.3 Relación entre PRICE y wt",
+    "text": "7.3 Relación entre PRICE y wt\n\n\n\n\n\n\n\n\n\n\n7.3.1 Interpretación\nVisualmente parece existir una relación positiva: a mayor precio del inmueble, mayor número de metros cuadrados (CONSTRUCTEDAREA). Esto hace de CONSTRUCTEDAREA un buen candidato para un primer modelo simple."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#ajuste-del-modelo",
+    "href": "material/05_StatisticalModels/LinealModels.html#ajuste-del-modelo",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.1 Ajuste del modelo",
+    "text": "8.1 Ajuste del modelo\nComenzamos con un único predictor:\n\\[\nmpg_i = \\beta_0 + \\beta_1 CONSTRUCTEDAREA_i + \\varepsilon_i\n\\]\n\n\nMostrar código\nmodelo_simple &lt;- lm(PRICE ~ CONSTRUCTEDAREA, data = dades)\nsummary(modelo_simple)\n\n\n\nCall:\nlm(formula = PRICE ~ CONSTRUCTEDAREA, data = dades)\n\nResiduals:\n     Min       1Q   Median       3Q      Max \n-2523454   -70311    -4159    64080  1177062 \n\nCoefficients:\n                 Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)     -52857.29    1128.29  -46.85   &lt;2e-16 ***\nCONSTRUCTEDAREA   4699.63      10.35  453.94   &lt;2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 135000 on 61484 degrees of freedom\nMultiple R-squared:  0.7702,    Adjusted R-squared:  0.7702 \nF-statistic: 2.061e+05 on 1 and 61484 DF,  p-value: &lt; 2.2e-16\n\n\n\n8.1.1 Interpretación de la salida\nLa función summary() ofrece los elementos clave:\n\nEstimate: estimación de los coeficientes;\nStd. Error: error estándar de cada coeficiente;\nt value y Pr(&gt;|t|): contraste individual de significación;\nResidual standard error: dispersión típica de los errores;\nMultiple R-squared: proporción de variabilidad explicada;\nF-statistic: contraste global del modelo."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#ecuación-estimada",
+    "href": "material/05_StatisticalModels/LinealModels.html#ecuación-estimada",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.2 Ecuación estimada",
+    "text": "8.2 Ecuación estimada\n\n\nMostrar código\ncoef(modelo_simple)\n\n\n    (Intercept) CONSTRUCTEDAREA \n     -52857.291        4699.629 \n\n\n\n8.2.1 Interpretación\nSi obtenemos una ecuación estimada del tipo:\n\\[\n\\widehat{PRICE} = -52.857,29 - 4.699,63\\,CONSTRUCTEDAREA\n\\]\nla interpretación es:\n\nel intercepto representa el valor esperado de mpg cuando wt = 0;\nla pendiente indica cuánto cambia mpg por cada unidad adicional de peso.\n\nLa pendiente del modelo es 4.699,63€, por lo tanto por cada 1\\(m^2\\) adicional, el precio aumenta en 4.699,63€."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#recta-ajustada-sobre-el-gráfico",
+    "href": "material/05_StatisticalModels/LinealModels.html#recta-ajustada-sobre-el-gráfico",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.3 Recta ajustada sobre el gráfico",
+    "text": "8.3 Recta ajustada sobre el gráfico\n\n\nMostrar código\ngrafico +\n  geom_smooth(method = \"lm\")\n\n\n\n\n\n\n\n\n\n\n8.3.1 Interpretación\nLa recta representa la media estimada de PRICE para cada valor de CONSTRUCTEDAREA. Los puntos alejados de la recta presentan residuos grandes."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#extracción-de-valores-ajustados-y-residuos",
+    "href": "material/05_StatisticalModels/LinealModels.html#extracción-de-valores-ajustados-y-residuos",
+    "title": "Modelos Lineales Generalizados",
+    "section": "9.1 Extracción de valores ajustados y residuos",
+    "text": "9.1 Extracción de valores ajustados y residuos\n\n\nMostrar código\nhead(data.frame(\n  observado = dades$PRICE,\n  ajustado = fitted(modelo_simple),\n  residuo = residuals(modelo_simple)\n))\n\n\n\n  \n\n\n\n\n9.1.1 Interpretación\n\nResiduo positivo: el modelo predijo menos de lo observado.\nResiduo negativo: el modelo predijo más de lo observado.\nAnalizar residuos permite detectar patrones problemáticos."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#gráficos-diagnósticos-básicos",
+    "href": "material/05_StatisticalModels/LinealModels.html#gráficos-diagnósticos-básicos",
+    "title": "Modelos Lineales Generalizados",
+    "section": "9.2 Gráficos diagnósticos básicos",
+    "text": "9.2 Gráficos diagnósticos básicos\nAunque el modelo sea significativo se debe validar, someter a contraste los supuestos estadísticos que subyacen al modelo.\nPara hacerlo, es necesario los residuos del modelo y el cálculo de la diferencia entre los valores observados y los estimados:\n\\[\ne_i = y_i - \\hat{y}_i = y_{i} - (\\hat{\\beta}_{0} + \\hat{\\beta}_{1}x_{1i} + ... + \\hat{\\beta}_{p}x_{pi}), i = 1, ..., N\n\\]\nLo anterior carece de validez si no se satisfacen las hipótesis del modelo siguientes:\n\nLos residuos han de tener varianza constante (homocedasticidad)\n\n\\[\nV(e) = \\sigma^{2} = 0\n\\]\n\nLos residuos han de seguir la distribución de probabilidad normal.\nLas observaciones tienen que ser independientes.\nLa relación entre la variable respuesta y las explicativas se suponen lineal.\nLas variables explicativas son linealmente independientes: ninguna puede ser explicada como combinación lineal de las otras. En caso contrario, se tendría el conocido problema de la multicolinealidad y debería quitarse del modelo la variable explicada por el resto.\n\nA continuación se realiza un análisis de residuos.\n\n\nMostrar código\nlibrary(\"ggfortify\")\nautoplot(modelo_simple) +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n\n9.2.1 Interpretación\nLos cuatro gráficos diagnósticos clásicos permiten comprobar:\n\nResiduals vs Fitted: linealidad y homoscedasticidad.\n\n\nNube aleatoria horizontal → ✔ Linealidad OK + homocedasticidad\nForma curva (U, ∩, S) → ❌ No linealidad\nForma de embudo (se abre o cierra) → ❌ Heterocedasticidad\nGrupos/segmentos → ❌ Variables omitidas / modelo mal especificado\n\nPara poderlo identificar, se ha de mirar que la linea azul sea una linia recta\nTambién podemos realizar una prueba de hipótesis para detectar si existe o no homocedasticidad. En este caso, el test se trata del de Breusch-Pagan.\nHipótesis\n\n\\(H_0\\): La varianza de los residuos es constante (Homocedasticidad)\n\\(H_1\\): La varianza de los residuos depende de las variables explicativas (Heterocedasticidad)\n\nDecisión\n\nSi p-value &gt; 0.05 \\(\\rightarrow\\) No rechazamos \\(H_0\\) \\(\\rightarrow\\) Los resiudos pueden considerarse homocedasticos.\nSi p-value &lt; 0.05 \\(\\rightarrow\\) Rechazamos \\(H_0\\) \\(\\rightarrow\\) Los resiudos pueden considerarse heterocedasticos.\n\n\n\nMostrar código\nlmtest::bgtest(modelo_simple)\n\n\n\n    Breusch-Godfrey test for serial correlation of order up to 1\n\ndata:  modelo_simple\nLM test = 4533.1, df = 1, p-value &lt; 2.2e-16\n\n\nViendo el modelo, podemos decir que nuestro modelo tiene problemas de heterocedasticidad.\n\nNormal Q-Q: aproximación a normalidad de residuos.\n\n\nPuntos sobre la recta → ✔ Normalidad OK\nDesviación en extremos (colas) → ❌ Outliers / colas pesadas\nForma en S → ❌ No normalidad\nMuchos puntos alejados de la línea → ❌ Mala distribución de residuos\n\nTambién se puede realizar contrastes de hipótesis cómo el test de normalidad de Shapiro-Wilk para muestras de máximo 5000 observaciones (\\(n = 5000\\)).\n\n\nMostrar código\nshapiro.test(sample(modelo_simple$residuals, 5000))\n\n\n\n    Shapiro-Wilk normality test\n\ndata:  sample(modelo_simple$residuals, 5000)\nW = 0.9092, p-value &lt; 2.2e-16\n\n\nCómo el p-valor es inferior a 0.05 tenemos evidéncias para no aceptar la hipótesis nula, nuestros residuos NO se distribuyen de manera normal.\n\nScale-Location: varianza constante.\n\n\nLínea horizontal + dispersión uniforme → ✔ Homocedasticidad\nTendencia creciente (↑) → ❌ Varianza aumenta (heterocedasticidad)\nTendencia decreciente (↓) → ❌ Varianza disminuye\nForma de embudo → ❌ Heterocedasticidad\n\n\nResiduals vs Leverage: observaciones influyentes.\n\n\nTodos los puntos dentro de Cook → ✔ Sin influencia grave\nPunto con alto leverage (muy a la derecha) → ⚠ Potencialmente problemático\nAlto leverage + residuo grande → ❌ Observación influyente\nPuntos fuera de líneas de Cook → ❌ Muy influyentes (revisar/eliminar)\n\nEn docencia es importante remarcar que estos gráficos no se leen como “verdadero/falso”, sino como señales para juzgar si el modelo es razonable."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#suma-de-cuadrados",
+    "href": "material/05_StatisticalModels/LinealModels.html#suma-de-cuadrados",
+    "title": "Modelos Lineales Generalizados",
+    "section": "10.1 Suma de cuadrados",
+    "text": "10.1 Suma de cuadrados\nLa variabilidad total se descompone como:\n\\[\nSST = SSR + SSE\n\\]\ndonde:\n\n\\(SST\\): suma total de cuadrados;\n\\(SSR\\): variabilidad explicada por el modelo;\n\\(SSE\\): variabilidad residual."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#coeficiente-de-determinación-r2",
+    "href": "material/05_StatisticalModels/LinealModels.html#coeficiente-de-determinación-r2",
+    "title": "Modelos Lineales Generalizados",
+    "section": "10.2 Coeficiente de determinación \\(R^2\\)",
+    "text": "10.2 Coeficiente de determinación \\(R^2\\)\n\\[\nR^2 = 1 - \\frac{SSE}{SST}\n\\]\nRepresenta la proporción de variabilidad de la respuesta explicada por el modelo.\n\n\nMostrar código\nsummary(modelo_simple)$r.squared\n\n\n[1] 0.7701913\n\n\nMostrar código\nsummary(modelo_simple)$adj.r.squared\n\n\n[1] 0.7701875\n\n\n\n10.2.1 Interpretación\n\nUn \\(R^2\\) alto indica mejor ajuste dentro de la muestra.\nNo implica causalidad.\nNo garantiza buena predicción fuera de muestra.\nEn modelos múltiples, conviene mirar también el \\(R^2\\) ajustado, que penaliza por número de variables."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#predicción-puntual",
+    "href": "material/05_StatisticalModels/LinealModels.html#predicción-puntual",
+    "title": "Modelos Lineales Generalizados",
+    "section": "12.1 Predicción puntual",
+    "text": "12.1 Predicción puntual\n\n\nMostrar código\nnuevo_inmueble &lt;- data.frame(CONSTRUCTEDAREA = 188)\npredict(modelo_simple, newdata = nuevo_inmueble)\n\n\n       1 \n830672.9 \n\n\n\n12.1.1 Interpretación\nEl modelo proporciona el valor esperado de PRICE para un inmueble con 188 \\(m^{2}\\)."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#intervalo-de-confianza-e-intervalo-de-predicción",
+    "href": "material/05_StatisticalModels/LinealModels.html#intervalo-de-confianza-e-intervalo-de-predicción",
+    "title": "Modelos Lineales Generalizados",
+    "section": "12.2 Intervalo de confianza e intervalo de predicción",
+    "text": "12.2 Intervalo de confianza e intervalo de predicción\n\n\nMostrar código\npredict(modelo_simple, newdata = nuevo_inmueble, interval = \"confidence\")\n\n\n       fit      lwr      upr\n1 830672.9 828513.1 832832.6\n\n\nMostrar código\npredict(modelo_simple, newdata = nuevo_inmueble, interval = \"prediction\")\n\n\n       fit      lwr     upr\n1 830672.9 566114.9 1095231\n\n\n\n12.2.1 Interpretación\n\nEl intervalo de confianza se refiere a la media esperada.\nEl intervalo de predicción se refiere a una nueva observación individual.\n\nEl segundo es más ancho porque incorpora la variabilidad individual adicional."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#ajuste-del-modelo-múltiple",
+    "href": "material/05_StatisticalModels/LinealModels.html#ajuste-del-modelo-múltiple",
+    "title": "Modelos Lineales Generalizados",
+    "section": "13.1 Ajuste del modelo múltiple",
+    "text": "13.1 Ajuste del modelo múltiple\n\n\nMostrar código\nmodelo_multiple &lt;- lm(PRICE ~ CONSTRUCTEDAREA + ROOMNUMBER + BATHNUMBER, data = dades)\nsummary(modelo_multiple)\n\n\n\nCall:\nlm(formula = PRICE ~ CONSTRUCTEDAREA + ROOMNUMBER + BATHNUMBER, \n    data = dades)\n\nResiduals:\n     Min       1Q   Median       3Q      Max \n-2296963   -64592    -1537    59581  1341081 \n\nCoefficients:\n                 Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)     -78293.66    1496.09  -52.33   &lt;2e-16 ***\nCONSTRUCTEDAREA   4105.76      14.79  277.61   &lt;2e-16 ***\nROOMNUMBER      -15409.58     572.13  -26.93   &lt;2e-16 ***\nBATHNUMBER       83137.59    1035.75   80.27   &lt;2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 128300 on 61482 degrees of freedom\nMultiple R-squared:  0.7925,    Adjusted R-squared:  0.7924 \nF-statistic: 7.825e+04 on 3 and 61482 DF,  p-value: &lt; 2.2e-16\n\n\n\n13.1.1 Interpretación\nAhora cada coeficiente se interpreta manteniendo constantes las demás variables.\nPor ejemplo, el coeficiente de PRICE representa el cambio esperado en CONSTRUCTEDAREA por unidad de peso a igualdad de número de habitaciones (ROOMNUMBER) y número de baños (BATHNUMBER).\nEste matiz es absolutamente esencial en regresión múltiple."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#comparación-entre-modelo-simple-y-múltiple",
+    "href": "material/05_StatisticalModels/LinealModels.html#comparación-entre-modelo-simple-y-múltiple",
+    "title": "Modelos Lineales Generalizados",
+    "section": "13.2 11.2 Comparación entre modelo simple y múltiple",
+    "text": "13.2 11.2 Comparación entre modelo simple y múltiple\n\n\nMostrar código\nsummary(modelo_simple)$r.squared\n\n\n[1] 0.7701913\n\n\nMostrar código\nsummary(modelo_multiple)$r.squared\n\n\n[1] 0.7924552\n\n\nMostrar código\nsummary(modelo_multiple)$adj.r.squared\n\n\n[1] 0.792445\n\n\n\n13.2.1 Interpretación\nAl añadir variables, \\(R^2\\) no disminuye. Por eso conviene observar también el \\(R^2\\) ajustado y, si el objetivo es predicción, evaluar el rendimiento fuera de muestra."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#modelo-con-si-dispone-terraza-o-no-hasterrace",
+    "href": "material/05_StatisticalModels/LinealModels.html#modelo-con-si-dispone-terraza-o-no-hasterrace",
+    "title": "Modelos Lineales Generalizados",
+    "section": "15.1 Modelo con si dispone terraza o no (HASTERRACE)",
+    "text": "15.1 Modelo con si dispone terraza o no (HASTERRACE)\n\n\nMostrar código\nmodelo_factor &lt;- lm(PRICE ~ CONSTRUCTEDAREA + ROOMNUMBER + BATHNUMBER + HASTERRACE, data = dades)\nsummary(modelo_factor)\n\n\n\nCall:\nlm(formula = PRICE ~ CONSTRUCTEDAREA + ROOMNUMBER + BATHNUMBER + \n    HASTERRACE, data = dades)\n\nResiduals:\n     Min       1Q   Median       3Q      Max \n-2263504   -64251     -917    59494  1344100 \n\nCoefficients:\n                 Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)     -80579.07    1498.06  -53.79   &lt;2e-16 ***\nCONSTRUCTEDAREA   4071.15      14.88  273.51   &lt;2e-16 ***\nROOMNUMBER      -15012.59     571.16  -26.28   &lt;2e-16 ***\nBATHNUMBER       81749.32    1036.21   78.89   &lt;2e-16 ***\nHASTERRACEsí     19885.16    1134.37   17.53   &lt;2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 128000 on 61481 degrees of freedom\nMultiple R-squared:  0.7935,    Adjusted R-squared:  0.7935 \nF-statistic: 5.906e+04 on 4 and 61481 DF,  p-value: &lt; 2.2e-16\n\n\n\n15.1.1 Interpretación\nAl tratar HASTERRACE como factor, R crea automáticamente una categoría de referencia.\nSi la referencia es no, entonces el coeficiente asociado a sí indica cuánto cambia el PRICE esperado para inmuebles con terraza respecto a sin terraza, manteniendo constante el peso."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#medias-ajustadas-por-grupo",
+    "href": "material/05_StatisticalModels/LinealModels.html#medias-ajustadas-por-grupo",
+    "title": "Modelos Lineales Generalizados",
+    "section": "15.2 Medias ajustadas por grupo",
+    "text": "15.2 Medias ajustadas por grupo\n\n\nMostrar código\naggregate(PRICE ~ HASTERRACE, data = dades, mean)\n\n\n\n  \n\n\n\n\n15.2.1 Interpretación\nComparar medias por grupo ayuda a contextualizar el efecto categórico, aunque el modelo lineal ajusta esa diferencia junto a otras variables incluidas."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#ajuste-de-un-modelo-con-interacción",
+    "href": "material/05_StatisticalModels/LinealModels.html#ajuste-de-un-modelo-con-interacción",
+    "title": "Modelos Lineales Generalizados",
+    "section": "16.1 Ajuste de un modelo con interacción",
+    "text": "16.1 Ajuste de un modelo con interacción\n\n\nMostrar código\nmodelo_interaccion &lt;- lm(PRICE ~ CONSTRUCTEDAREA * HASTERRACE + ROOMNUMBER + BATHNUMBER, data = dades)\nsummary(modelo_interaccion)\n\n\n\nCall:\nlm(formula = PRICE ~ CONSTRUCTEDAREA * HASTERRACE + ROOMNUMBER + \n    BATHNUMBER, data = dades)\n\nResiduals:\n     Min       1Q   Median       3Q      Max \n-2271617   -64282    -1112    59385  1315334 \n\nCoefficients:\n                              Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)                  -74958.34    1720.74 -43.562  &lt; 2e-16 ***\nCONSTRUCTEDAREA                4002.81      18.10 221.157  &lt; 2e-16 ***\nHASTERRACEsí                   6488.62    2316.55   2.801   0.0051 ** \nROOMNUMBER                   -14751.96     572.31 -25.776  &lt; 2e-16 ***\nBATHNUMBER                    81447.98    1036.85  78.554  &lt; 2e-16 ***\nCONSTRUCTEDAREA:HASTERRACEsí    134.46      20.27   6.632 3.34e-11 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 127900 on 61480 degrees of freedom\nMultiple R-squared:  0.7936,    Adjusted R-squared:  0.7936 \nF-statistic: 4.729e+04 on 5 and 61480 DF,  p-value: &lt; 2.2e-16\n\n\n\n16.1.1 Interpretación\nEl término CONSTRUCTEDAREA * HASTERRACE equivale a incluir:\n\nefecto principal de CONSTRUCTEDAREA;\nefecto principal de HASTERRACE;\ninteracción CONSTRUCTEDAREA:HASTERRACE.\n\nSi la interacción es relevante, significa que la pendiente de CONSTRUCTEDAREA no es la misma para inmuebles con terraza que sin ella."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#detección-mediante-correlaciones",
+    "href": "material/05_StatisticalModels/LinealModels.html#detección-mediante-correlaciones",
+    "title": "Modelos Lineales Generalizados",
+    "section": "18.1 Detección mediante correlaciones",
+    "text": "18.1 Detección mediante correlaciones\n\n\nMostrar código\ncor(dades[, varNum])\n\n\n                              PRICE CONSTRUCTEDAREA  ROOMNUMBER  BATHNUMBER\nPRICE                    1.00000000      0.87760541  0.49353066  0.71481973\nCONSTRUCTEDAREA          0.87760541      1.00000000  0.58335263  0.69995790\nROOMNUMBER               0.49353066      0.58335263  1.00000000  0.51527930\nBATHNUMBER               0.71481973      0.69995790  0.51527930  1.00000000\nPARKINGSPACEPRICE        0.05236988      0.04559892  0.04402086  0.06768343\nDISTANCE_TO_CITY_CENTER -0.21523770     -0.07828199  0.05002041 -0.10958942\nDISTANCE_TO_METRO        0.06235053      0.04867803  0.01448854  0.05330928\nDISTANCE_TO_DIAGONAL    -0.39766441     -0.25309989 -0.14339508 -0.27109797\nCADCONSTRUCTIONYEAR      0.04651750      0.08232589  0.16495746  0.11458356\n                        PARKINGSPACEPRICE DISTANCE_TO_CITY_CENTER\nPRICE                          0.05236988             -0.21523770\nCONSTRUCTEDAREA                0.04559892             -0.07828199\nROOMNUMBER                     0.04402086              0.05002041\nBATHNUMBER                     0.06768343             -0.10958942\nPARKINGSPACEPRICE              1.00000000              0.02240448\nDISTANCE_TO_CITY_CENTER        0.02240448              1.00000000\nDISTANCE_TO_METRO              0.01120724              0.12170284\nDISTANCE_TO_DIAGONAL          -0.01819045              0.64443761\nCADCONSTRUCTIONYEAR            0.08829998              0.45708297\n                        DISTANCE_TO_METRO DISTANCE_TO_DIAGONAL\nPRICE                          0.06235053          -0.39766441\nCONSTRUCTEDAREA                0.04867803          -0.25309989\nROOMNUMBER                     0.01448854          -0.14339508\nBATHNUMBER                     0.05330928          -0.27109797\nPARKINGSPACEPRICE              0.01120724          -0.01819045\nDISTANCE_TO_CITY_CENTER        0.12170284           0.64443761\nDISTANCE_TO_METRO              1.00000000           0.05254929\nDISTANCE_TO_DIAGONAL           0.05254929           1.00000000\nCADCONSTRUCTIONYEAR            0.09854106           0.08579109\n                        CADCONSTRUCTIONYEAR\nPRICE                            0.04651750\nCONSTRUCTEDAREA                  0.08232589\nROOMNUMBER                       0.16495746\nBATHNUMBER                       0.11458356\nPARKINGSPACEPRICE                0.08829998\nDISTANCE_TO_CITY_CENTER          0.45708297\nDISTANCE_TO_METRO                0.09854106\nDISTANCE_TO_DIAGONAL             0.08579109\nCADCONSTRUCTIONYEAR              1.00000000"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#factor-de-inflación-de-la-varianza-vif",
+    "href": "material/05_StatisticalModels/LinealModels.html#factor-de-inflación-de-la-varianza-vif",
+    "title": "Modelos Lineales Generalizados",
+    "section": "18.2 Factor de inflación de la varianza (VIF)",
+    "text": "18.2 Factor de inflación de la varianza (VIF)\nEste estadístico indica el incremenot de la varianza estimada del coeficiente de regresión de una determinada variable explicatiava como consecuencia de la colinealidad con las demás.\n\n\nMostrar código\nif (!require(car)) install.packages(\"car\")\nlibrary(car)\n\ncar::vif(modelo_multiple)\n\n\nCONSTRUCTEDAREA      ROOMNUMBER      BATHNUMBER \n       2.259641        1.569190        2.029558 \n\n\n\n18.2.1 Interpretación\nUn VIF alto indica que un coeficiente está siendo estimado con poca estabilidad por culpa de la colinealidad. Regla práctica habitual:\n\nVIF cercano a 1: sin problema importante;\nVIF entre 5 y 10: posible preocupación;\nVIF superior a 10: problema serio.\n\nEn Data Mining, la multicolinealidad no siempre destruye la predicción, pero sí puede volver poco fiables las interpretaciones individuales."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#modelo-completo",
+    "href": "material/05_StatisticalModels/LinealModels.html#modelo-completo",
+    "title": "Modelos Lineales Generalizados",
+    "section": "19.1 Modelo completo",
+    "text": "19.1 Modelo completo\n\n\nMostrar código\nmodelo_completo &lt;- lm(PRICE ~ ., data = dades)\nsummary(modelo_completo)\n\n\n\nCall:\nlm(formula = PRICE ~ ., data = dades)\n\nResiduals:\n     Min       1Q   Median       3Q      Max \n-2076174   -51527    -1670    48687  1404864 \n\nCoefficients: (2 not defined because of singularities)\n                                  Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)                      4.733e+05  2.970e+04  15.934  &lt; 2e-16 ***\nCONSTRUCTEDAREA                  3.856e+03  1.366e+01 282.191  &lt; 2e-16 ***\nROOMNUMBER                      -1.175e+04  5.779e+02 -20.327  &lt; 2e-16 ***\nBATHNUMBER                       5.650e+04  9.647e+02  58.563  &lt; 2e-16 ***\nHASTERRACEsí                     1.156e+04  1.046e+03  11.044  &lt; 2e-16 ***\nHASLIFTsí                        3.249e+04  1.199e+03  27.096  &lt; 2e-16 ***\nHASAIRCONDITIONINGsí             1.746e+04  1.020e+03  17.120  &lt; 2e-16 ***\nAMENITYIDno amueblado            1.281e+04  2.309e+03   5.549 2.89e-08 ***\nAMENITYIDobjetos cocina          1.780e+04  2.019e+03   8.818  &lt; 2e-16 ***\nHASPARKINGSPACEsí                6.372e+04  1.908e+03  33.404  &lt; 2e-16 ***\nISPARKINGSPACEINCLUDEDINPRICEsí         NA         NA      NA       NA    \nPARKINGSPACEPRICE                1.983e-01  9.522e-02   2.083  0.03730 *  \nHASNORTHORIENTATIONsí           -5.633e+03  1.388e+03  -4.059 4.94e-05 ***\nHASSOUTHORIENTATIONsí           -3.298e+03  1.026e+03  -3.214  0.00131 ** \nHASEASTORIENTATIONsí            -2.087e+03  1.102e+03  -1.895  0.05814 .  \nHASWESTORIENTATIONsí            -1.439e+03  1.283e+03  -1.121  0.26209    \nHASBOXROOMsí                     4.515e+03  1.514e+03   2.982  0.00287 ** \nHASWARDROBEsí                    2.769e+03  1.101e+03   2.515  0.01190 *  \nHASSWIMMINGPOOLsí                6.323e+04  3.203e+03  19.740  &lt; 2e-16 ***\nHASDOORMANsí                     4.395e+04  1.785e+03  24.626  &lt; 2e-16 ***\nHASGARDENsí                     -7.232e+03  2.764e+03  -2.617  0.00888 ** \nISDUPLEXsí                      -5.365e+04  2.884e+03 -18.600  &lt; 2e-16 ***\nISSTUDIOsí                      -5.769e+04  3.789e+03 -15.228  &lt; 2e-16 ***\nISINTOPFLOORsí                   2.025e+04  3.299e+03   6.138 8.39e-10 ***\nBUILTTYPEID_1sí                  3.754e+04  4.331e+03   8.667  &lt; 2e-16 ***\nBUILTTYPEID_2sí                 -2.945e+04  1.293e+03 -22.780  &lt; 2e-16 ***\nBUILTTYPEID_3sí                         NA         NA      NA       NA    \nDISTANCE_TO_CITY_CENTER         -1.109e+04  4.580e+02 -24.213  &lt; 2e-16 ***\nDISTANCE_TO_METRO                4.596e+04  2.842e+03  16.174  &lt; 2e-16 ***\nDISTANCE_TO_DIAGONAL            -2.809e+04  5.833e+02 -48.164  &lt; 2e-16 ***\nCADCONSTRUCTIONYEAR             -2.405e+02  1.556e+01 -15.454  &lt; 2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 113500 on 61457 degrees of freedom\nMultiple R-squared:  0.8374,    Adjusted R-squared:  0.8374 \nF-statistic: 1.131e+04 on 28 and 61457 DF,  p-value: &lt; 2.2e-16"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#selección-paso-a-paso-por-aic",
+    "href": "material/05_StatisticalModels/LinealModels.html#selección-paso-a-paso-por-aic",
+    "title": "Modelos Lineales Generalizados",
+    "section": "19.2 Selección paso a paso por AIC",
+    "text": "19.2 Selección paso a paso por AIC\n\n\nMostrar código\nmodelo_step &lt;- step(modelo_completo, trace = 1)\n\n\nStart:  AIC=1431415\nPRICE ~ CONSTRUCTEDAREA + ROOMNUMBER + BATHNUMBER + HASTERRACE + \n    HASLIFT + HASAIRCONDITIONING + AMENITYID + HASPARKINGSPACE + \n    ISPARKINGSPACEINCLUDEDINPRICE + PARKINGSPACEPRICE + HASNORTHORIENTATION + \n    HASSOUTHORIENTATION + HASEASTORIENTATION + HASWESTORIENTATION + \n    HASBOXROOM + HASWARDROBE + HASSWIMMINGPOOL + HASDOORMAN + \n    HASGARDEN + ISDUPLEX + ISSTUDIO + ISINTOPFLOOR + BUILTTYPEID_1 + \n    BUILTTYPEID_2 + BUILTTYPEID_3 + DISTANCE_TO_CITY_CENTER + \n    DISTANCE_TO_METRO + DISTANCE_TO_DIAGONAL + CADCONSTRUCTIONYEAR\n\n\nStep:  AIC=1431415\nPRICE ~ CONSTRUCTEDAREA + ROOMNUMBER + BATHNUMBER + HASTERRACE + \n    HASLIFT + HASAIRCONDITIONING + AMENITYID + HASPARKINGSPACE + \n    ISPARKINGSPACEINCLUDEDINPRICE + PARKINGSPACEPRICE + HASNORTHORIENTATION + \n    HASSOUTHORIENTATION + HASEASTORIENTATION + HASWESTORIENTATION + \n    HASBOXROOM + HASWARDROBE + HASSWIMMINGPOOL + HASDOORMAN + \n    HASGARDEN + ISDUPLEX + ISSTUDIO + ISINTOPFLOOR + BUILTTYPEID_1 + \n    BUILTTYPEID_2 + DISTANCE_TO_CITY_CENTER + DISTANCE_TO_METRO + \n    DISTANCE_TO_DIAGONAL + CADCONSTRUCTIONYEAR\n\n\nStep:  AIC=1431415\nPRICE ~ CONSTRUCTEDAREA + ROOMNUMBER + BATHNUMBER + HASTERRACE + \n    HASLIFT + HASAIRCONDITIONING + AMENITYID + HASPARKINGSPACE + \n    PARKINGSPACEPRICE + HASNORTHORIENTATION + HASSOUTHORIENTATION + \n    HASEASTORIENTATION + HASWESTORIENTATION + HASBOXROOM + HASWARDROBE + \n    HASSWIMMINGPOOL + HASDOORMAN + HASGARDEN + ISDUPLEX + ISSTUDIO + \n    ISINTOPFLOOR + BUILTTYPEID_1 + BUILTTYPEID_2 + DISTANCE_TO_CITY_CENTER + \n    DISTANCE_TO_METRO + DISTANCE_TO_DIAGONAL + CADCONSTRUCTIONYEAR\n\n                          Df  Sum of Sq        RSS     AIC\n- HASWESTORIENTATION       1 1.6214e+10 7.9231e+14 1431414\n&lt;none&gt;                                  7.9230e+14 1431415\n- HASEASTORIENTATION       1 4.6278e+10 7.9234e+14 1431416\n- PARKINGSPACEPRICE        1 5.5911e+10 7.9235e+14 1431417\n- HASWARDROBE              1 8.1556e+10 7.9238e+14 1431419\n- HASGARDEN                1 8.8265e+10 7.9239e+14 1431420\n- HASBOXROOM               1 1.1461e+11 7.9241e+14 1431422\n- HASSOUTHORIENTATION      1 1.3313e+11 7.9243e+14 1431423\n- HASNORTHORIENTATION      1 2.1237e+11 7.9251e+14 1431429\n- ISINTOPFLOOR             1 4.8575e+11 7.9278e+14 1431451\n- BUILTTYPEID_1            1 9.6848e+11 7.9327e+14 1431488\n- AMENITYID                2 1.3397e+12 7.9364e+14 1431515\n- HASTERRACE               1 1.5724e+12 7.9387e+14 1431535\n- ISSTUDIO                 1 2.9895e+12 7.9529e+14 1431644\n- CADCONSTRUCTIONYEAR      1 3.0788e+12 7.9538e+14 1431651\n- DISTANCE_TO_METRO        1 3.3723e+12 7.9567e+14 1431674\n- HASAIRCONDITIONING       1 3.7783e+12 7.9608e+14 1431705\n- ISDUPLEX                 1 4.4601e+12 7.9676e+14 1431758\n- HASSWIMMINGPOOL          1 5.0236e+12 7.9732e+14 1431801\n- ROOMNUMBER               1 5.3269e+12 7.9763e+14 1431825\n- BUILTTYPEID_2            1 6.6900e+12 7.9899e+14 1431930\n- DISTANCE_TO_CITY_CENTER  1 7.5579e+12 7.9986e+14 1431997\n- HASDOORMAN               1 7.8183e+12 8.0012e+14 1432017\n- HASLIFT                  1 9.4655e+12 8.0176e+14 1432143\n- HASPARKINGSPACE          1 1.4385e+13 8.0668e+14 1432519\n- DISTANCE_TO_DIAGONAL     1 2.9907e+13 8.2221e+14 1433691\n- BATHNUMBER               1 4.4215e+13 8.3651e+14 1434752\n- CONSTRUCTEDAREA          1 1.0266e+15 1.8189e+15 1482511\n\nStep:  AIC=1431414\nPRICE ~ CONSTRUCTEDAREA + ROOMNUMBER + BATHNUMBER + HASTERRACE + \n    HASLIFT + HASAIRCONDITIONING + AMENITYID + HASPARKINGSPACE + \n    PARKINGSPACEPRICE + HASNORTHORIENTATION + HASSOUTHORIENTATION + \n    HASEASTORIENTATION + HASBOXROOM + HASWARDROBE + HASSWIMMINGPOOL + \n    HASDOORMAN + HASGARDEN + ISDUPLEX + ISSTUDIO + ISINTOPFLOOR + \n    BUILTTYPEID_1 + BUILTTYPEID_2 + DISTANCE_TO_CITY_CENTER + \n    DISTANCE_TO_METRO + DISTANCE_TO_DIAGONAL + CADCONSTRUCTIONYEAR\n\n                          Df  Sum of Sq        RSS     AIC\n&lt;none&gt;                                  7.9231e+14 1431414\n- HASEASTORIENTATION       1 4.3871e+10 7.9236e+14 1431416\n- PARKINGSPACEPRICE        1 5.4916e+10 7.9237e+14 1431416\n- HASWARDROBE              1 7.8298e+10 7.9239e+14 1431418\n- HASGARDEN                1 8.8944e+10 7.9240e+14 1431419\n- HASBOXROOM               1 1.1180e+11 7.9243e+14 1431421\n- HASSOUTHORIENTATION      1 1.3946e+11 7.9245e+14 1431423\n- HASNORTHORIENTATION      1 2.2637e+11 7.9254e+14 1431430\n- ISINTOPFLOOR             1 4.8319e+11 7.9280e+14 1431450\n- BUILTTYPEID_1            1 9.7740e+11 7.9329e+14 1431488\n- AMENITYID                2 1.3428e+12 7.9366e+14 1431514\n- HASTERRACE               1 1.5643e+12 7.9388e+14 1431533\n- ISSTUDIO                 1 2.9851e+12 7.9530e+14 1431643\n- CADCONSTRUCTIONYEAR      1 3.0752e+12 7.9539e+14 1431650\n- DISTANCE_TO_METRO        1 3.3685e+12 7.9568e+14 1431673\n- HASAIRCONDITIONING       1 3.7660e+12 7.9608e+14 1431704\n- ISDUPLEX                 1 4.4673e+12 7.9678e+14 1431758\n- HASSWIMMINGPOOL          1 5.0311e+12 7.9735e+14 1431801\n- ROOMNUMBER               1 5.3431e+12 7.9766e+14 1431825\n- BUILTTYPEID_2            1 6.7164e+12 7.9903e+14 1431931\n- DISTANCE_TO_CITY_CENTER  1 7.5565e+12 7.9987e+14 1431996\n- HASDOORMAN               1 7.8102e+12 8.0012e+14 1432015\n- HASLIFT                  1 9.4552e+12 8.0177e+14 1432142\n- HASPARKINGSPACE          1 1.4389e+13 8.0670e+14 1432519\n- DISTANCE_TO_DIAGONAL     1 2.9916e+13 8.2223e+14 1433691\n- BATHNUMBER               1 4.4246e+13 8.3656e+14 1434753\n- CONSTRUCTEDAREA          1 1.0269e+15 1.8193e+15 1482521\n\n\nMostrar código\nsummary(modelo_step)\n\n\n\nCall:\nlm(formula = PRICE ~ CONSTRUCTEDAREA + ROOMNUMBER + BATHNUMBER + \n    HASTERRACE + HASLIFT + HASAIRCONDITIONING + AMENITYID + HASPARKINGSPACE + \n    PARKINGSPACEPRICE + HASNORTHORIENTATION + HASSOUTHORIENTATION + \n    HASEASTORIENTATION + HASBOXROOM + HASWARDROBE + HASSWIMMINGPOOL + \n    HASDOORMAN + HASGARDEN + ISDUPLEX + ISSTUDIO + ISINTOPFLOOR + \n    BUILTTYPEID_1 + BUILTTYPEID_2 + DISTANCE_TO_CITY_CENTER + \n    DISTANCE_TO_METRO + DISTANCE_TO_DIAGONAL + CADCONSTRUCTIONYEAR, \n    data = dades)\n\nResiduals:\n     Min       1Q   Median       3Q      Max \n-2077264   -51574    -1634    48641  1405243 \n\nCoefficients:\n                          Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)              4.729e+05  2.970e+04  15.921  &lt; 2e-16 ***\nCONSTRUCTEDAREA          3.856e+03  1.366e+01 282.237  &lt; 2e-16 ***\nROOMNUMBER              -1.176e+04  5.778e+02 -20.358  &lt; 2e-16 ***\nBATHNUMBER               5.651e+04  9.647e+02  58.584  &lt; 2e-16 ***\nHASTERRACEsí             1.152e+04  1.046e+03  11.015  &lt; 2e-16 ***\nHASLIFTsí                3.247e+04  1.199e+03  27.082  &lt; 2e-16 ***\nHASAIRCONDITIONINGsí     1.742e+04  1.019e+03  17.091  &lt; 2e-16 ***\nAMENITYIDno amueblado    1.287e+04  2.308e+03   5.575 2.49e-08 ***\nAMENITYIDobjetos cocina  1.780e+04  2.019e+03   8.817  &lt; 2e-16 ***\nHASPARKINGSPACEsí        6.373e+04  1.908e+03  33.408  &lt; 2e-16 ***\nPARKINGSPACEPRICE        1.965e-01  9.520e-02   2.064  0.03903 *  \nHASNORTHORIENTATIONsí   -5.788e+03  1.381e+03  -4.190 2.79e-05 ***\nHASSOUTHORIENTATIONsí   -3.369e+03  1.024e+03  -3.289  0.00101 ** \nHASEASTORIENTATIONsí    -2.030e+03  1.100e+03  -1.845  0.06508 .  \nHASBOXROOMsí             4.457e+03  1.514e+03   2.945  0.00323 ** \nHASWARDROBEsí            2.710e+03  1.100e+03   2.464  0.01373 *  \nHASSWIMMINGPOOLsí        6.327e+04  3.203e+03  19.755  &lt; 2e-16 ***\nHASDOORMANsí             4.392e+04  1.785e+03  24.613  &lt; 2e-16 ***\nHASGARDENsí             -7.260e+03  2.764e+03  -2.627  0.00863 ** \nISDUPLEXsí              -5.369e+04  2.884e+03 -18.615  &lt; 2e-16 ***\nISSTUDIOsí              -5.765e+04  3.788e+03 -15.217  &lt; 2e-16 ***\nISINTOPFLOORsí           2.020e+04  3.299e+03   6.122 9.29e-10 ***\nBUILTTYPEID_1sí          3.769e+04  4.329e+03   8.707  &lt; 2e-16 ***\nBUILTTYPEID_2sí         -2.949e+04  1.292e+03 -22.825  &lt; 2e-16 ***\nDISTANCE_TO_CITY_CENTER -1.109e+04  4.580e+02 -24.210  &lt; 2e-16 ***\nDISTANCE_TO_METRO        4.593e+04  2.842e+03  16.164  &lt; 2e-16 ***\nDISTANCE_TO_DIAGONAL    -2.810e+04  5.833e+02 -48.172  &lt; 2e-16 ***\nCADCONSTRUCTIONYEAR     -2.403e+02  1.556e+01 -15.445  &lt; 2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 113500 on 61458 degrees of freedom\nMultiple R-squared:  0.8374,    Adjusted R-squared:  0.8374 \nF-statistic: 1.173e+04 on 27 and 61458 DF,  p-value: &lt; 2.2e-16\n\n\n\n19.2.1 Interpretación\nEl procedimiento step() busca un compromiso entre ajuste y complejidad usando el criterio AIC. Debe usarse con prudencia:\n\npuede ser útil como herramienta exploratoria;\nno sustituye criterio sustantivo;\npuede ser inestable en muestras pequeñas.\n\nEn docencia conviene remarcar que “selección automática” no significa “verdad científica”."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#partición-entrenamientoprueba",
+    "href": "material/05_StatisticalModels/LinealModels.html#partición-entrenamientoprueba",
+    "title": "Modelos Lineales Generalizados",
+    "section": "21.1 Partición entrenamiento/prueba",
+    "text": "21.1 Partición entrenamiento/prueba\n\n\nMostrar código\nset.seed(1994)\n\ntrainIndex &lt;- caret::createDataPartition(dades$PRICE, p = .8, \n                                         list = FALSE, \n                                         times = 1)\n\ntrain &lt;- dades[ trainIndex,]\ntest  &lt;- dades[-trainIndex,]\n\nmodelo_train &lt;- lm(modelo_step$call$formula, data = train)\npred_test &lt;- predict(modelo_train, newdata = test)\n\n(rmse &lt;- sqrt(mean((test$PRICE - pred_test)^2)))\n\n\n[1] 111194\n\n\nMostrar código\n(mae  &lt;- mean(abs(test$PRICE - pred_test)))\n\n\n[1] 72640\n\n\n\n21.1.1 Interpretación\n\nRMSE penaliza más los errores grandes.\nMAE es más robusto e interpretable como error medio absoluto.\n\nEstas métricas son más relevantes para predicción que el \\(R^2\\) de entrenamiento."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#término-cuadrático",
+    "href": "material/05_StatisticalModels/LinealModels.html#término-cuadrático",
+    "title": "Modelos Lineales Generalizados",
+    "section": "23.1 Término cuadrático",
+    "text": "23.1 Término cuadrático\n\n\nMostrar código\nmodelo_cuadratico &lt;- lm(PRICE ~ CONSTRUCTEDAREA + I(CONSTRUCTEDAREA^2), data = dades)\nsummary(modelo_cuadratico)\n\n\n\nCall:\nlm(formula = PRICE ~ CONSTRUCTEDAREA + I(CONSTRUCTEDAREA^2), \n    data = dades)\n\nResiduals:\n     Min       1Q   Median       3Q      Max \n-2041953   -70562    -2711    67244  1678661 \n\nCoefficients:\n                       Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)          -8.809e+04  1.689e+03  -52.16   &lt;2e-16 ***\nCONSTRUCTEDAREA       5.248e+03  2.220e+01  236.45   &lt;2e-16 ***\nI(CONSTRUCTEDAREA^2) -1.442e+00  5.171e-02  -27.89   &lt;2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 134100 on 61483 degrees of freedom\nMultiple R-squared:  0.7731,    Adjusted R-squared:  0.7731 \nF-statistic: 1.047e+05 on 2 and 61483 DF,  p-value: &lt; 2.2e-16\n\n\n\n23.1.1 Interpretación\nEl término I(CONSTRUCTEDAREA^2) permite capturar curvatura. El modelo sigue siendo lineal en parámetros. Si el coeficiente cuadrático es relevante, la relación media entre CONSTRUCTEDAREA y PRICE no es una recta pura."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#comparación-con-el-modelo-lineal-simple",
+    "href": "material/05_StatisticalModels/LinealModels.html#comparación-con-el-modelo-lineal-simple",
+    "title": "Modelos Lineales Generalizados",
+    "section": "23.3 Comparación con el modelo lineal simple",
+    "text": "23.3 Comparación con el modelo lineal simple\n\n\nMostrar código\nanova(modelo_simple, modelo_cuadratico)\n\n\n\n  \n\n\n\n\n23.3.1 Interpretación\nSi el modelo cuadrático mejora significativamente, la linealidad simple podría ser insuficiente."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#distancia-de-cook",
+    "href": "material/05_StatisticalModels/LinealModels.html#distancia-de-cook",
+    "title": "Modelos Lineales Generalizados",
+    "section": "24.1 Distancia de Cook",
+    "text": "24.1 Distancia de Cook\n\n\nMostrar código\ncooks &lt;- cooks.distance(modelo_multiple)\nhead(cooks, n = 20)\n\n\n           1            2            3            4            5            6 \n1.251305e-06 1.709072e-05 1.848831e-05 3.070021e-06 1.348481e-06 1.579923e-05 \n           7            8            9           10           11           12 \n5.180684e-07 3.359521e-05 4.078651e-06 9.917551e-06 4.890988e-05 8.059625e-09 \n          13           14           15           16           17           18 \n7.181431e-05 3.546997e-09 9.857850e-07 5.646318e-09 2.473805e-06 9.441805e-07 \n          19           20 \n2.154346e-07 1.650767e-07"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#visualización-de-observaciones-influyentes",
+    "href": "material/05_StatisticalModels/LinealModels.html#visualización-de-observaciones-influyentes",
+    "title": "Modelos Lineales Generalizados",
+    "section": "24.2 Visualización de observaciones influyentes",
+    "text": "24.2 Visualización de observaciones influyentes\n\n\nMostrar código\n# Crear dataframe\ndf_cooks &lt;- data.frame(\n  index = 1:length(cooks),\n  cooks = cooks\n)\n\n# Umbral típico\nthreshold &lt;- 4 / nrow(dades)\n\nggplot(df_cooks, aes(x = index, y = cooks)) +\n  geom_segment(aes(xend = index, yend = 0), alpha = 0.6) +\n  geom_hline(yintercept = threshold, color = \"red\", linetype = \"dashed\") +\n  labs(\n    title = \"Distancia de Cook\",\n    x = \"Observación\",\n    y = \"Cook's Distance\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n\n24.2.1 Interpretación\nObservaciones con distancia de Cook elevada merecen revisión. No significa que deban eliminarse automáticamente, sino que tienen gran influencia y conviene entender por qué.\n\n\nMostrar código\nggplot(df_cooks, aes(x = index, y = cooks)) +\n  geom_segment(aes(xend = index, yend = 0), alpha = 0.6) +\n  \n  # Puntos influyentes\n  geom_point(data = subset(df_cooks, cooks &gt; threshold),\n             aes(x = index, y = cooks),\n             color = \"red\", size = 2) +\n  \n  geom_hline(yintercept = threshold, color = \"red\", linetype = \"dashed\") +\n  \n  labs(\n    title = \"Detección de observaciones influyentes (Cook's Distance)\",\n    subtitle = \"Puntos en rojo superan el umbral 4/n\",\n    x = \"Observación\",\n    y = \"Cook's Distance\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n\n\nMostrar código\ndf_cooks_sorted &lt;- df_cooks[order(-df_cooks$cooks), ]\n\nggplot(df_cooks_sorted[1:50, ], aes(x = reorder(index, -cooks), y = cooks)) +\n  geom_col() +\n  geom_hline(yintercept = threshold, color = \"red\", linetype = \"dashed\") +\n  labs(\n    title = \"Top 50 observaciones más influyentes\",\n    x = \"Observación\",\n    y = \"Cook's Distance\"\n  ) +\n  theme_minimal() +\n  theme(axis.text.x = element_text(angle=45))"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#confundir-asociación-con-causalidad",
+    "href": "material/05_StatisticalModels/LinealModels.html#confundir-asociación-con-causalidad",
+    "title": "Modelos Lineales Generalizados",
+    "section": "26.1 Confundir asociación con causalidad",
+    "text": "26.1 Confundir asociación con causalidad\nUn coeficiente significativo no demuestra causalidad. Solo indica asociación condicionada al modelo ajustado."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#interpretar-el-intercepto-de-forma-mecánica",
+    "href": "material/05_StatisticalModels/LinealModels.html#interpretar-el-intercepto-de-forma-mecánica",
+    "title": "Modelos Lineales Generalizados",
+    "section": "26.2 Interpretar el intercepto de forma mecánica",
+    "text": "26.2 Interpretar el intercepto de forma mecánica\nA veces el valor X = 0 carece de sentido real. En ese caso, el intercepto existe matemáticamente, pero su interpretación sustantiva puede ser irrelevante."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#creer-que-un-valor-p-pequeño-implica-modelo-bueno",
+    "href": "material/05_StatisticalModels/LinealModels.html#creer-que-un-valor-p-pequeño-implica-modelo-bueno",
+    "title": "Modelos Lineales Generalizados",
+    "section": "26.3 Creer que un valor-p pequeño implica “modelo bueno”",
+    "text": "26.3 Creer que un valor-p pequeño implica “modelo bueno”\nLa significación de coeficientes no garantiza buen ajuste ni buena predicción."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#elegir-el-modelo-solo-por-r2",
+    "href": "material/05_StatisticalModels/LinealModels.html#elegir-el-modelo-solo-por-r2",
+    "title": "Modelos Lineales Generalizados",
+    "section": "26.4 Elegir el modelo solo por \\(R^2\\)",
+    "text": "26.4 Elegir el modelo solo por \\(R^2\\)\nUn modelo con mucho sobreajuste puede tener alto \\(R^2\\) en entrenamiento y mal rendimiento fuera de muestra."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#ignorar-el-tipo-de-variable",
+    "href": "material/05_StatisticalModels/LinealModels.html#ignorar-el-tipo-de-variable",
+    "title": "Modelos Lineales Generalizados",
+    "section": "26.5 Ignorar el tipo de variable",
+    "text": "26.5 Ignorar el tipo de variable\nTratar categorías como numéricas o viceversa puede invalidar la interpretación."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LinealModels.html#tranformación-de-box-cox",
+    "href": "material/05_StatisticalModels/LinealModels.html#tranformación-de-box-cox",
+    "title": "Modelos Lineales Generalizados",
+    "section": "23.2 Tranformación de Box-Cox",
+    "text": "23.2 Tranformación de Box-Cox\nA veces hay variables que no cumplen la normalidad pedida. Es por ello que va bien realizar transformaciones logarítimicas de ellas pasando de modelos lineales a modelos log-lineales o modelos log-log.\nEn nuestro caso, vamos a transformar la variable PRICE. Para ello, se ha de introducir el log(PRICE) en el modelo.\n\n\nMostrar código\nmodelo_logNormal &lt;- lm(log(PRICE) ~ CONSTRUCTEDAREA + I(CONSTRUCTEDAREA^2), data = dades)\nsummary(modelo_cuadratico)\n\n\n\nCall:\nlm(formula = PRICE ~ CONSTRUCTEDAREA + I(CONSTRUCTEDAREA^2), \n    data = dades)\n\nResiduals:\n     Min       1Q   Median       3Q      Max \n-2041953   -70562    -2711    67244  1678661 \n\nCoefficients:\n                       Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)          -8.809e+04  1.689e+03  -52.16   &lt;2e-16 ***\nCONSTRUCTEDAREA       5.248e+03  2.220e+01  236.45   &lt;2e-16 ***\nI(CONSTRUCTEDAREA^2) -1.442e+00  5.171e-02  -27.89   &lt;2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 134100 on 61483 degrees of freedom\nMultiple R-squared:  0.7731,    Adjusted R-squared:  0.7731 \nF-statistic: 1.047e+05 on 2 and 61483 DF,  p-value: &lt; 2.2e-16"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html",
+    "href": "material/05_StatisticalModels/LogistcModels.html",
+    "title": "Modelos Lineales Generalizados",
+    "section": "",
+    "text": "El objetivo detrás del uso de modelos es el de intentar explicar el comportamiento de una variable en función del comportamiento de otras que se cree que influyen en ella.\nHay tipos de variables a predecir que no pueden analizarse correctamente con el modelo de regresión lineal múltiple porque la variable respuesta, la que interesa predecir en cada ejemplo, no sigue una distribución de probabilidad normal (supuesto necesario para utilizar la regresión lineal) o ni siquiera es continua. Por ejemplo disponemos:\n\nvariable dicotómica/binaria asignando los valores 0 y 1 a las dos posibles respuestas, lo que encaja perfectamente con una distribución de probabilidad de Bernoulli (muy distinta de la normal, ya que es discreta, aunque podría parecerse)\nvariables de tipo recuento (solo cero o valores positivos) modelizables mediante una variable discreta que podría seguir una distribución de Poisson (que es también distinta a la normal, por ser discreta, aunque también podría parecerse).\n\nEl modelo lineal generalizado (GLM) consiste en modelos que generlizan el caso en que la variable respuesta sea normal a cualquier tipo de distribución de probabilidad perteneciente a la familia exponencial y que permite varianzas no constantes en los errores.\n\n\nEl modelo lineal generalizado se escribe como:\n\\[\n\\mu = g^{-1}(\\eta)\n\\]\nen el que se tiene las siguientes componentes:\n\n\\(\\mu = E(Y)\\): la media de la variable respuesta Y, que puede seguir cualquier distribución de probabilidad de la familia exponencial.\n\\(\\eta = X\\beta\\): la “estructura” que aportan las variables explicativas/predictoras.\n\\(g(\\cdot)\\) (función de enlace): relaciona los dos componentes anteriores.\n\n\n\n\nCada distribución de probabilidad tiene asociada una función enlace canónica:\n\nPara la normal es la identidad: \\(g(\\mu) = \\mu\\)\nPara la Bernoulli, es la función logit: \\(g(\\mu) = logit(\\mu) = log(\\frac{\\mu}{1-\\mu})\\)\nPara la Poisson, es el logaritmo: \\(g(\\mu) = log(\\mu)\\)\nPara la gamma, es la inversa: \\(g(\\mu) = 1/\\mu\\)\nAquesta web està creada por Dante Conti y Sergi Ramírez, (c) 2026"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#el-modelo-y-sus-componentes",
+    "href": "material/05_StatisticalModels/LogistcModels.html#el-modelo-y-sus-componentes",
+    "title": "Modelos Lineales Generalizados",
+    "section": "",
+    "text": "El modelo lineal generalizado se escribe como:\n\\[\n\\mu = g^{-1}(\\eta)\n\\]\nen el que se tiene las siguientes componentes:\n\n\\(\\mu = E(Y)\\): la media de la variable respuesta Y, que puede seguir cualquier distribución de probabilidad de la familia exponencial.\n\\(\\eta = X\\beta\\): la “estructura” que aportan las variables explicativas/predictoras.\n\\(g(\\cdot)\\) (función de enlace): relaciona los dos componentes anteriores."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#función-de-enlace",
+    "href": "material/05_StatisticalModels/LogistcModels.html#función-de-enlace",
+    "title": "Modelos Lineales Generalizados",
+    "section": "",
+    "text": "Cada distribución de probabilidad tiene asociada una función enlace canónica:\n\nPara la normal es la identidad: \\(g(\\mu) = \\mu\\)\nPara la Bernoulli, es la función logit: \\(g(\\mu) = logit(\\mu) = log(\\frac{\\mu}{1-\\mu})\\)\nPara la Poisson, es el logaritmo: \\(g(\\mu) = log(\\mu)\\)\nPara la gamma, es la inversa: \\(g(\\mu) = 1/\\mu\\)"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#por-qué-no-usar-regresión-lineal",
+    "href": "material/05_StatisticalModels/LogistcModels.html#por-qué-no-usar-regresión-lineal",
+    "title": "Modelos Lineales Generalizados",
+    "section": "2.1 ¿Por qué no usar regresión lineal?",
+    "text": "2.1 ¿Por qué no usar regresión lineal?\nSi la respuesta solo puede valer 0 o 1, una recta de regresión puede producir predicciones imposibles, por ejemplo menores que 0 o mayores que 1. Además, la relación entre predictores y probabilidad no suele ser lineal.\nLa regresión logística resuelve este problema modelizando:\n[ (p) = () = _0 + _1X_1 + + _pX_p ]\ndonde:\n\n(p = P(Y=1)) es la probabilidad del evento de interés\n() son las odds\n(()) es el logit"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#proporción-de-abandono-escolar",
+    "href": "material/05_StatisticalModels/LogistcModels.html#proporción-de-abandono-escolar",
+    "title": "Modelos Lineales Generalizados",
+    "section": "5.1 Proporción de abandono escolar",
+    "text": "5.1 Proporción de abandono escolar\n\n\nMostrar código\ndatos %&gt;%\n  count(Dropout) %&gt;%\n  mutate(prop = n / sum(n))\n\n\n\n  \n\n\n\nMostrar código\nggplot(datos, aes(x = Dropout)) +\n  geom_bar() +\n  labs(\n    title = \"Distribución de la variable respuesta\",\n    x = \"Abandono\",\n    y = \"Frecuencia\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n\n\nMostrar código\nGGally::ggpairs(datos)"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#estructura-del-modelo",
+    "href": "material/05_StatisticalModels/LogistcModels.html#estructura-del-modelo",
+    "title": "Modelos Lineales Generalizados",
+    "section": "7.1 Estructura del modelo",
+    "text": "7.1 Estructura del modelo\nEl modelo ajustado tiene la forma:\n\\[\\log\\left(\\frac{p}{1-p}\\right) = \\beta_0 + \\sum_{i =1}^{p} \\beta_{i}X_{i}\\]"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-en-el-summary",
+    "href": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-en-el-summary",
+    "title": "Modelos Lineales Generalizados",
+    "section": "7.2 ¿Qué mirar en el summary()?",
+    "text": "7.2 ¿Qué mirar en el summary()?\n\n7.2.1 Signo del coeficiente\n\nsi el coeficiente es positivo, al aumentar esa variable aumenta la probabilidad de (Dropout=1)\nsi el coeficiente es negativo, al aumentar esa variable disminuye la probabilidad de (Dropout=1)\n\n\n\n7.2.2 Valor p\n\nsi p-value &lt; 0.05, la variable se considera significativa\nsi p-value &gt; 0.05, no hay evidencia suficiente de efecto estadísticamente significativo\n\n\n\n7.2.3 Deviance\n\nnull deviance: Indica lo “bien” que predice el modelo sin variables explicativas (sólo con el término independiente)\nresidual deviance: Indica lo “bien” que predice el modelo con las variables explicativas.\n\nUn contraste Chi-cuadrado permitirá dilucidar si el modelo con variables explicativas predice significativamente mejor que el que solo tiene un término independiente y su predicción, sea cual sea el valor de las variables explicativas, es siempre la media de los valores de la variable respuesta.\n\n\n7.2.4 Actualizar modelo con nuevas variables\nSi se quiere actualizar un modelo con nuevas variables, basta con usar la función update.\n\n\nMostrar código\nregresion_update &lt;- update(modelo_log, ~ . + var1 + var2)\n\n\n\n\n7.2.5 Adecuación del modelo\nPara evaluar la bondad de ajuste de los modelos se lleva a cabo el contraste de Hosmer-Lemeshow:\n\n\nMostrar código\nhoslem.test(modelo_log$y, modelo_log$fitted.values)\n\n\n\n    Hosmer and Lemeshow goodness of fit (GOF) test\n\ndata:  modelo_log$y, modelo_log$fitted.values\nX-squared = 2.6468, df = 8, p-value = 0.9545\n\n\nAl tener p-valor alto, indica un ajuste suficientemente bueno.\nPodemos realizar el test de la razón de verosimilitud.\n\n\nMostrar código\nanova(modelo_log, test = \"Chisq\")\n\n\n\n  \n\n\n\nLas deviances correspondientes a añadir secuencialmente cada variable o factor al modelo que contiene los anteriores permite concluir que dicha inclusión secuencial de tales variables predictoras es significativa respecto a los modelos que no las incluyen.\nPara completar, se podría contrastar también el efecto de una variable sobre la respuesta comparando la deviance del modelo con dicha variable y sin ella.\nEl valor del pseudo \\(R^{2}\\) de McFadden se obtiene de la siguiente forma:\n\n\nMostrar código\nnull &lt;- glm(Dropout ~ ., data = datos, family = binomial)\n1 - logLik(modelo_log) / logLik(null)\n\n\n'log Lik.' 0 (df=27)\n\n\n\n\n7.2.6 Magnitud\nLos coeficientes están en escala log-odds, por lo que no conviene interpretarlos directamente en términos de probabilidad."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#qué-son-las-odds",
+    "href": "material/05_StatisticalModels/LogistcModels.html#qué-son-las-odds",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.1 Qué son las odds",
+    "text": "8.1 Qué son las odds\nLas odds son:\n[ = ]\nPor ejemplo, si (p = 0.8), entonces:\n[ = = 4 ]\nEso significa que el evento es 4 veces más probable que el no evento."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#odds-ratio",
+    "href": "material/05_StatisticalModels/LogistcModels.html#odds-ratio",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.2 Odds Ratio",
+    "text": "8.2 Odds Ratio\nPara interpretar mejor los coeficientes, usamos la exponencial:\n[ OR = e^{} ]\n\n\nMostrar código\nexp(coef(modelo_log))\n\n\n                  (Intercept)                    Student_ID \n                    6.6524242                     1.0000123 \n                          Age                    GenderMale \n                    1.0108914                     0.9394417 \n                Family_Income            Internet_AccessYes \n                    0.9999983                     0.6855535 \n          Study_Hours_per_Day               Attendance_Rate \n                    0.9877490                     0.9695397 \n        Assignment_Delay_Days           Travel_Time_Minutes \n                    1.1709353                     1.0096899 \n             Part_Time_JobYes                ScholarshipYes \n                    1.2481252                     0.9728139 \n                 Stress_Index                           GPA \n                    1.2047265                     0.3365748 \n                 Semester_GPA                          CGPA \n                    0.4385574                     2.2191490 \n               SemesterYear 2                SemesterYear 3 \n                    1.2066783                     1.1537866 \n               SemesterYear 4            DepartmentBusiness \n                    1.1496080                     0.9649584 \n                 DepartmentCS         DepartmentEngineering \n                    0.9305613                     0.9380458 \n            DepartmentScience Parental_EducationHigh School \n                    0.9513250                     1.0615138 \n     Parental_EducationMaster        Parental_EducationNone \n                    0.9166313                     1.1013723 \n        Parental_EducationPhD \n                    1.0995097"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#intervalos-de-confianza-de-los-odds-ratio",
+    "href": "material/05_StatisticalModels/LogistcModels.html#intervalos-de-confianza-de-los-odds-ratio",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.3 Intervalos de confianza de los Odds Ratio",
+    "text": "8.3 Intervalos de confianza de los Odds Ratio\n\n\nMostrar código\nexp(confint(modelo_log))\n\n\n                                  2.5 %     97.5 %\n(Intercept)                   2.8367054 15.6284808\nStudent_ID                    0.9999936  1.0000311\nAge                           0.9857212  1.0366895\nGenderMale                    0.8434886  1.0462454\nFamily_Income                 0.9999956  1.0000009\nInternet_AccessYes            0.5860904  0.8029947\nStudy_Hours_per_Day           0.9462257  1.0310636\nAttendance_Rate               0.9629783  0.9761162\nAssignment_Delay_Days         1.1260309  1.2176558\nTravel_Time_Minutes           1.0051090  1.0142997\nPart_Time_JobYes              1.1188047  1.3922975\nScholarshipYes                0.8685974  1.0890575\nStress_Index                  1.1648349  1.2462120\nGPA                           0.2774725  0.4078554\nSemester_GPA                  0.1251686  1.5350837\nCGPA                          0.6425914  7.6724297\nSemesterYear 2                1.0348306  1.4074116\nSemesterYear 3                0.9895970  1.3455104\nSemesterYear 4                0.9857382  1.3409981\nDepartmentBusiness            0.8143275  1.1433794\nDepartmentCS                  0.7849432  1.1030681\nDepartmentEngineering         0.7911435  1.1120902\nDepartmentScience             0.8033606  1.1264837\nParental_EducationHigh School 0.9333331  1.2071267\nParental_EducationMaster      0.7882268  1.0649600\nParental_EducationNone        0.8563089  1.4098258\nParental_EducationPhD         0.8433880  1.4252969"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#tabla-ordenada-para-interpretar",
+    "href": "material/05_StatisticalModels/LogistcModels.html#tabla-ordenada-para-interpretar",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.4 Tabla ordenada para interpretar",
+    "text": "8.4 Tabla ordenada para interpretar\n\n\nMostrar código\ntabla_or &lt;- tidy(modelo_log) %&gt;%\n  mutate(\n    odds_ratio = exp(estimate),\n    OR_inf = exp(estimate - 1.96 * std.error),\n    OR_sup = exp(estimate + 1.96 * std.error)\n  )\n\ntabla_or"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#cómo-interpretar-un-or",
+    "href": "material/05_StatisticalModels/LogistcModels.html#cómo-interpretar-un-or",
+    "title": "Modelos Lineales Generalizados",
+    "section": "8.5 Cómo interpretar un OR",
+    "text": "8.5 Cómo interpretar un OR\n\nOR &gt; 1: al aumentar la variable, aumentan las odds de que ocurra el evento\nOR &lt; 1: al aumentar la variable, disminuyen las odds\nOR = 1: no hay efecto\n\nEjemplo de lectura:\n\nsi OR = 1.50, cada incremento unitario multiplica las odds por 1.50\nsi OR = 0.80, cada incremento unitario reduce las odds un 20%"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#obtener-probabilidades",
+    "href": "material/05_StatisticalModels/LogistcModels.html#obtener-probabilidades",
+    "title": "Modelos Lineales Generalizados",
+    "section": "9.1 Obtener probabilidades",
+    "text": "9.1 Obtener probabilidades\n\n\nMostrar código\ndatos &lt;- datos %&gt;%\n  mutate(\n    prob_pred = predict(modelo_log, type = \"response\")\n  )\n\nhead(datos)\n\n\n\n  \n\n\n\nLas probabilidades predichas siempre estarán entre 0 y 1."
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#visualizar-probabilidades-predichas",
+    "href": "material/05_StatisticalModels/LogistcModels.html#visualizar-probabilidades-predichas",
+    "title": "Modelos Lineales Generalizados",
+    "section": "9.2 Visualizar probabilidades predichas",
+    "text": "9.2 Visualizar probabilidades predichas\n\n\nMostrar código\nggplot(datos, aes(x = prob_pred)) +\n  geom_histogram(bins = 30) +\n  labs(\n    title = \"Distribución de probabilidades predichas\",\n    x = \"Probabilidad predicha\",\n    y = \"Frecuencia\"\n  ) +\n  theme_minimal()"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-en-la-matriz-de-confusión",
+    "href": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-en-la-matriz-de-confusión",
+    "title": "Modelos Lineales Generalizados",
+    "section": "11.1 Qué mirar en la matriz de confusión",
+    "text": "11.1 Qué mirar en la matriz de confusión\n\nAccuracy: porcentaje total de aciertos\nSensitivity / Recall: capacidad para detectar los casos positivos\nSpecificity: capacidad para detectar los casos negativos"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#interpretación-del-auc",
+    "href": "material/05_StatisticalModels/LogistcModels.html#interpretación-del-auc",
+    "title": "Modelos Lineales Generalizados",
+    "section": "12.1 Interpretación del AUC",
+    "text": "12.1 Interpretación del AUC\n\n0.5: el modelo no discrimina\n0.6 - 0.7: pobre\n0.7 - 0.8: aceptable\n0.8 - 0.9: bueno\n\n0.9: excelente\n\n\n\n\nMostrar código\nROC(form = modelo_log$formula, data = datos, plot = \"sp\")\n\n\n\n\n\n\n\n\n\n\n\nMostrar código\nROC(\n  form = modelo_log$formula, data = datos,\n  plot = \"ROC\", las = 1\n)"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#residuos-de-deviance",
+    "href": "material/05_StatisticalModels/LogistcModels.html#residuos-de-deviance",
+    "title": "Modelos Lineales Generalizados",
+    "section": "14.1 Residuos de deviance",
+    "text": "14.1 Residuos de deviance\n\n\nMostrar código\nres_dev &lt;- residuals(modelo_log, type = \"deviance\")\n\nggplot(data.frame(\n  fitted = fitted(modelo_log),\n  resid = res_dev\n), aes(x = fitted, y = resid)) +\n  geom_point(alpha = 0.6) +\n  geom_hline(yintercept = 0, linetype = 2, color = \"red\") +\n  labs(\n    title = \"Residuos de deviance vs valores ajustados\",\n    x = \"Valores ajustados\",\n    y = \"Residuos de deviance\"\n  ) +\n  theme_minimal()"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-aquí",
+    "href": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-aquí",
+    "title": "Modelos Lineales Generalizados",
+    "section": "14.2 Qué mirar aquí",
+    "text": "14.2 Qué mirar aquí\n\nresiduos repartidos sin patrón claro: mejor\npuntos muy alejados: posibles observaciones problemáticas\npatrones extraños: posible mala especificación del modelo"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#observaciones-influyentes-distancia-de-cook",
+    "href": "material/05_StatisticalModels/LogistcModels.html#observaciones-influyentes-distancia-de-cook",
+    "title": "Modelos Lineales Generalizados",
+    "section": "14.3 Observaciones influyentes: distancia de Cook",
+    "text": "14.3 Observaciones influyentes: distancia de Cook\n\n\nMostrar código\ncooks &lt;- cooks.distance(modelo_log)\n\ndf_cooks &lt;- data.frame(\n  index = 1:length(cooks),\n  cooks = cooks\n)\n\nthreshold &lt;- 4 / nrow(datos)\n\nggplot(df_cooks, aes(x = index, y = cooks)) +\n  geom_segment(aes(xend = index, yend = 0), alpha = 0.6) +\n  geom_point(\n    data = subset(df_cooks, cooks &gt; threshold),\n    size = 2\n  ) +\n  geom_hline(yintercept = threshold, color = \"red\", linetype = \"dashed\") +\n  labs(\n    title = \"Distancia de Cook\",\n    subtitle = \"Las observaciones por encima de la línea roja son potencialmente influyentes\",\n    x = \"Observación\",\n    y = \"Cook's distance\"\n  ) +\n  theme_minimal()"
+  },
+  {
+    "objectID": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-en-cook",
+    "href": "material/05_StatisticalModels/LogistcModels.html#qué-mirar-en-cook",
+    "title": "Modelos Lineales Generalizados",
+    "section": "14.4 Qué mirar en Cook",
+    "text": "14.4 Qué mirar en Cook\n\nvalores bajos: observaciones sin influencia relevante\nvalores altos: observaciones influyentes\npuntos por encima de 4/n: candidatos a revisión"
   }
 ]
