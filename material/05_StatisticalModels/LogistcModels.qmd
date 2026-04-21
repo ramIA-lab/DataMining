@@ -1,0 +1,503 @@
+---
+title: "Modelos Lineales Generalizados"
+subtitle: "Modelo logístico"
+author: Dante Conti, Sergi Ramirez, (c) IDEAI
+date: "`r Sys.Date()`"
+date-modified: "`r Sys.Date()`"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: show
+    code-summary: "Mostrar código"
+    code-tools: true
+    embed-resources: true
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+# Introducción
+
+El objetivo detrás del uso de modelos es el de intentar explicar el comportamiento de una variable en función del comportamiento de otras que se cree que influyen en ella. 
+
+Hay tipos de variables a predecir que no pueden analizarse correctamente con el modelo de regresión lineal múltiple porque la variable respuesta, la que interesa predecir en cada ejemplo, no sigue una distribución de probabilidad normal (supuesto necesario para utilizar la regresión lineal) o ni siquiera es continua. Por ejemplo disponemos: 
+
+- **variable dicotómica/binaria** asignando los valores 0 y 1 a las dos posibles respuestas, lo que encaja perfectamente con una distribución de probabilidad de Bernoulli (muy distinta de la normal, ya que es discreta, aunque podría parecerse)
+
+- **variables de tipo recuento** (solo cero o valores positivos) modelizables mediante una variable discreta que podría seguir una distribución de Poisson (que es también distinta a la normal, por ser discreta, aunque también podría parecerse).
+
+El modelo lineal generalizado (GLM) consiste en modelos que generlizan el caso en que la variable respuesta sea normal a cualquier tipo de distribución de probabilidad perteneciente a la familia exponencial y que permite varianzas no constantes en los errores. 
+
+## El modelo y sus componentes
+
+El modelo lineal generalizado se escribe como: 
+
+$$
+\mu = g^{-1}(\eta)
+$$
+
+en el que se tiene las siguientes componentes: 
+
+1. $\mu = E(Y)$: la media de la variable respuesta Y, que puede seguir cualquier distribución de probabilidad de la familia exponencial.
+
+2. $\eta = X\beta$: la “estructura” que aportan las variables explicativas/predictoras. 
+
+3. $g(\cdot)$ (función de enlace): relaciona los dos componentes anteriores.
+
+## Función de enlace
+
+Cada distribución de probabilidad tiene asociada una función enlace canónica: 
+
+* Para la normal es la identidad: $g(\mu) = \mu$
+
+* Para la Bernoulli, es la función logit: $g(\mu) = logit(\mu) = log(\frac{\mu}{1-\mu})$
+
+* Para la Poisson, es el logaritmo: $g(\mu) = log(\mu)$
+
+* Para la gamma, es la inversa: $g(\mu) = 1/\mu$
+
+# La regresión logística
+
+La **regresión logística** es un modelo lineal generalizado que se utiliza cuando la variable respuesta es **binaria**, es decir, cuando solo puede tomar dos valores, habitualmente 0 y 1.
+
+Ejemplos típicos:
+
+-   aprobar / no aprobar
+-   enfermo / no enfermo
+-   compra / no compra
+-   fraude / no fraude
+
+A diferencia de la regresión lineal, aquí no modelizamos directamente el valor de la variable respuesta, sino la **probabilidad** de que ocurra el evento de interés.
+
+## ¿Por qué no usar regresión lineal?
+
+Si la respuesta solo puede valer 0 o 1, una recta de regresión puede producir predicciones imposibles, por ejemplo menores que 0 o mayores que 1. Además, la relación entre predictores y probabilidad no suele ser lineal.
+
+La regresión logística resuelve este problema modelizando:
+
+\[ \text{logit}(p) = \log\left(\frac{p}{1-p}\right) = \beta\_0 + \beta\_1X_1 + \cdots + \beta\_pX_p \]
+
+donde:
+
+-   (p = P(Y=1)) es la probabilidad del evento de interés
+-   (\frac{p}{1-p}) son las **odds**
+-   (\log\left(\frac{p}{1-p}\right)) es el **logit**
+
+# Objetivos de aprendizaje
+
+En este tutorial aprenderemos a:
+
+1.  entender qué hace la regresión logística
+2.  ajustar un modelo con `glm()`
+3.  interpretar coeficientes y odds ratio
+4.  obtener probabilidades predichas
+5.  clasificar observaciones
+6.  evaluar el modelo con matriz de confusión y AUC
+7.  representar gráficamente los resultados
+8.  revisar observaciones influyentes
+
+```{r}
+list.of.packages <- c("tidyverse", "ggplot2", "broom", "pROC", "caret", "haven", "mice", "ResourceSelection", "Epi")
+
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
+if (length(new.packages) > 0) {
+  install.packages(new.packages)
+}
+
+invisible(lapply(list.of.packages, require, character.only = TRUE))
+rm(list.of.packages, new.packages)
+```
+
+# Conjunto de datos de trabajo
+
+Este conjunto de datos simula un entorno académico realista para 10 000 estudiantes y está diseñado para predecir el abandono escolar . Incluye características demográficas, conductuales y de rendimiento académico, como promedio general de calificaciones (GPA), promedio general de calificaciones semestral (GPA semestral), promedio general acumulado de calificaciones (CGPA), hábitos de estudio, asistencia, índice de estrés, nivel educativo de los padres y departamento.
+
+Aunque sintéticos, los datos imitan fielmente la distribución real de los estudiantes , incluyendo una ligera asimetría en los ingresos y el estrés y correlaciones lógicas entre el rendimiento académico y el riesgo de abandono escolar.
+
+**Variable objetivo:**
+
+- `Dropout`(0 = continuó, 1 = abandonó)
+
+**Características principales:**
+
+- `Student_ID`: Identificador único de estudiante
+- Age: Edad del estudiante en años
+- `Gender`: Masculino / Femenino
+- `Family_Income`: Ingresos` familiares mensuales
+- `Internet_Access`: Sí / No
+- `Study_Hours_per_Day` Horas de estudio promedio por día
+- `Attendance_Rate` Porcentaje de asistencia
+- `Assignment_Delay_Days`: Retraso promedio en la asignación (en días)
+- `Travel_Time_Minutes`: Tiempo de desplazamiento diario en minutos
+- `Part_Time_Job` Sí / No
+- `Scholarship` Sí / No
+- `Stress_Index` Nivel de estrés autoinformado (1–10)
+- `GPA`, `Semester_GPA`, `CGPA`: Rendimiento académico
+- `Semester` Año actual (años 1-4)
+- `Department` Ciencias, Artes, Negocios, Informática, Ingeniería
+- `Parental_Education` Nivel educativo más alto de los padre
+
+```{r}
+datos <- read.csv("student_dropout_dataset_v3.csv")
+
+tempData <- mice(datos, m = 5, maxit = 50, meth = 'pmm', seed = 500)
+datos <- complete(tempData, 2)
+
+datos$Dropout <- as.factor(datos$Dropout)
+```
+
+# Exploración inicial
+
+## Proporción de abandono escolar
+
+```{r}
+datos %>%
+  count(Dropout) %>%
+  mutate(prop = n / sum(n))
+
+
+ggplot(datos, aes(x = Dropout)) +
+  geom_bar() +
+  labs(
+    title = "Distribución de la variable respuesta",
+    x = "Abandono",
+    y = "Frecuencia"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+GGally::ggpairs(datos)
+```
+
+
+# Ajuste del modelo logístico
+
+La regresión logística en R se ajusta con `glm()` indicando `family = binomial`.
+
+```{r}
+modelo_log <- glm(Dropout ~ ., data = datos, family = binomial)
+summary(modelo_log)
+```
+
+# Interpretación del output
+
+## Estructura del modelo
+
+El modelo ajustado tiene la forma:
+
+$$\log\left(\frac{p}{1-p}\right) = \beta_0 + \sum_{i =1}^{p} \beta_{i}X_{i}$$
+
+## ¿Qué mirar en el `summary()`?
+
+### Signo del coeficiente
+
+-   si el coeficiente es **positivo**, al aumentar esa variable aumenta la probabilidad de (`Dropout`=1)
+-   si el coeficiente es **negativo**, al aumentar esa variable disminuye la probabilidad de (`Dropout`=1)
+
+### Valor p
+
+-   si `p-value < 0.05`, la variable se considera significativa
+-   si `p-value > 0.05`, no hay evidencia suficiente de efecto estadísticamente significativo
+
+### Deviance
+
+- *null deviance*: Indica lo "bien" que predice el modelo sin variables explicativas (sólo con el término independiente)
+
+- *residual deviance*: Indica lo "bien" que predice el modelo con las variables explicativas. 
+
+Un contraste Chi-cuadrado permitirá dilucidar si el modelo con variables explicativas predice significativamente mejor que el que solo tiene un término independiente y su predicción, sea cual sea el valor de las variables explicativas, es siempre la media de los valores de la variable respuesta.
+
+### Actualizar modelo con nuevas variables 
+
+Si se quiere actualizar un modelo con nuevas variables, basta con usar la función `update`. 
+
+```{r}
+#| eval: false
+regresion_update <- update(modelo_log, ~ . + var1 + var2)
+```
+
+### Adecuación del modelo 
+
+Para evaluar la bondad de ajuste de los modelos se lleva a cabo el contraste de Hosmer-Lemeshow:
+
+```{r}
+hoslem.test(modelo_log$y, modelo_log$fitted.values)
+```
+
+Al tener p-valor alto, indica un ajuste suficientemente bueno. 
+
+Podemos realizar el test de la razón de verosimilitud. 
+
+```{r}
+anova(modelo_log, test = "Chisq")
+```
+Las deviances correspondientes a añadir secuencialmente cada variable o factor al modelo que contiene los anteriores permite concluir que dicha inclusión secuencial de tales variables predictoras es significativa respecto a los modelos que no las incluyen.
+
+Para completar, se podría contrastar también el efecto de una variable sobre la respuesta comparando la deviance del modelo con dicha variable y sin ella.
+
+El valor del pseudo $R^{2}$ de McFadden se obtiene de la siguiente forma: 
+
+```{r}
+null <- glm(Dropout ~ ., data = datos, family = binomial)
+1 - logLik(modelo_log) / logLik(null)
+```
+
+### Magnitud
+
+Los coeficientes están en escala **log-odds**, por lo que no conviene interpretarlos directamente en términos de probabilidad.
+
+# Odds y Odds Ratio
+
+## Qué son las odds
+
+Las **odds** son:
+
+\[ \text{odds} = \frac{p}{1-p} \]
+
+Por ejemplo, si (p = 0.8), entonces:
+
+\[ \text{odds} = \frac{0.8}{0.2} = 4 \]
+
+Eso significa que el evento es 4 veces más probable que el no evento.
+
+## Odds Ratio
+
+Para interpretar mejor los coeficientes, usamos la exponencial:
+
+\[ OR = e\^{\beta} \]
+
+```{r}
+exp(coef(modelo_log))
+```
+
+## Intervalos de confianza de los Odds Ratio
+
+```{r}
+exp(confint(modelo_log))
+```
+
+## Tabla ordenada para interpretar
+
+```{r}
+tabla_or <- tidy(modelo_log) %>%
+  mutate(
+    odds_ratio = exp(estimate),
+    OR_inf = exp(estimate - 1.96 * std.error),
+    OR_sup = exp(estimate + 1.96 * std.error)
+  )
+
+tabla_or
+```
+
+## Cómo interpretar un OR
+
+-   `OR > 1`: al aumentar la variable, aumentan las odds de que ocurra el evento
+-   `OR < 1`: al aumentar la variable, disminuyen las odds
+-   `OR = 1`: no hay efecto
+
+Ejemplo de lectura:
+
+-   si `OR = 1.50`, cada incremento unitario multiplica las odds por 1.50
+-   si `OR = 0.80`, cada incremento unitario reduce las odds un 20%
+
+# Probabilidades predichas
+
+## Obtener probabilidades
+
+```{r}
+datos <- datos %>%
+  mutate(
+    prob_pred = predict(modelo_log, type = "response")
+  )
+
+head(datos)
+```
+
+Las probabilidades predichas siempre estarán entre 0 y 1.
+
+## Visualizar probabilidades predichas
+
+```{r}
+ggplot(datos, aes(x = prob_pred)) +
+  geom_histogram(bins = 30) +
+  labs(
+    title = "Distribución de probabilidades predichas",
+    x = "Probabilidad predicha",
+    y = "Frecuencia"
+  ) +
+  theme_minimal()
+```
+# Clasificación
+
+Para convertir probabilidades en clases, elegimos un punto de corte. El más habitual es 0.5.
+
+```{r}
+datos <- datos %>%
+  mutate(
+    pred_clase = ifelse(prob_pred >= 0.5, 1, 0),
+    pred_factor = factor(pred_clase, levels = c(0,1), labels = c("No", "Sí"))
+  )
+```
+
+# Matriz de confusión
+
+```{r}
+datos$Dropout <- as.factor(ifelse(datos$Dropout == 0, "No", "Sí"))
+confusionMatrix(datos$pred_factor, datos$Dropout, positive = "Sí")
+```
+
+## Qué mirar en la matriz de confusión
+
+-   **Accuracy**: porcentaje total de aciertos
+-   **Sensitivity / Recall**: capacidad para detectar los casos positivos
+-   **Specificity**: capacidad para detectar los casos negativos
+
+# Curva ROC y AUC
+
+La curva ROC representa la capacidad discriminante del modelo para distintos puntos de corte.
+
+```{r}
+roc_obj <- roc(datos$Dropout, datos$prob_pred)
+auc(roc_obj)
+```
+
+```{r}
+plot(roc_obj, main = "Curva ROC")
+abline(a = 0, b = 1, lty = 2, col = "gray")
+```
+## Interpretación del AUC
+
+-   0.5: el modelo no discrimina
+
+-   0.6 - 0.7: pobre
+
+-   0.7 - 0.8: aceptable
+
+-   0.8 - 0.9: bueno
+
+-   > 0.9: excelente
+
+
+```{r}
+ROC(form = modelo_log$formula, data = datos, plot = "sp")
+```
+
+```{r}
+ROC(
+  form = modelo_log$formula, data = datos,
+  plot = "ROC", las = 1
+)
+```
+
+
+# Visualización del ajuste en un caso simple
+
+Para ver mejor la forma logística, ajustamos un modelo con una sola variable.
+
+```{r}
+modelo_simple <- glm(Dropout ~ 1, data = datos,family = binomial)
+summary(modelo_simple)
+```
+
+```{r}
+ggplot(datos, aes(x = Attendance_Rate, y = Dropout)) +
+  geom_jitter(height = 0.05, width = 0, alpha = 0.35) +
+  stat_smooth(
+    method = "glm",
+    method.args = list(family = "binomial"),
+    se = TRUE
+  ) +
+  labs(
+    title = "Curva logística ajustada",
+    x = "Horas de estudio",
+    y = "Probabilidad de aprobar"
+  ) +
+  theme_minimal()
+```
+
+# Diagnóstico del modelo logístico
+
+En regresión logística no se revisan exactamente los mismos supuestos que en regresión lineal.
+
+Aquí no exigimos:
+
+-   normalidad de residuos
+-   homocedasticidad clásica
+
+En cambio, nos interesa revisar:
+
+-   calidad del ajuste
+-   observaciones influyentes
+-   residuos anómalos
+-   capacidad predictiva
+
+## Residuos de deviance
+
+```{r}
+res_dev <- residuals(modelo_log, type = "deviance")
+
+ggplot(data.frame(
+  fitted = fitted(modelo_log),
+  resid = res_dev
+), aes(x = fitted, y = resid)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = 2, color = "red") +
+  labs(
+    title = "Residuos de deviance vs valores ajustados",
+    x = "Valores ajustados",
+    y = "Residuos de deviance"
+  ) +
+  theme_minimal()
+```
+
+## Qué mirar aquí
+
+-   residuos repartidos sin patrón claro: mejor
+-   puntos muy alejados: posibles observaciones problemáticas
+-   patrones extraños: posible mala especificación del modelo
+
+## Observaciones influyentes: distancia de Cook
+
+```{r}
+cooks <- cooks.distance(modelo_log)
+
+df_cooks <- data.frame(
+  index = 1:length(cooks),
+  cooks = cooks
+)
+
+threshold <- 4 / nrow(dades)
+
+ggplot(df_cooks, aes(x = index, y = cooks)) +
+  geom_segment(aes(xend = index, yend = 0), alpha = 0.6) +
+  geom_point(
+    data = subset(df_cooks, cooks > threshold),
+    size = 2
+  ) +
+  geom_hline(yintercept = threshold, color = "red", linetype = "dashed") +
+  labs(
+    title = "Distancia de Cook",
+    subtitle = "Las observaciones por encima de la línea roja son potencialmente influyentes",
+    x = "Observación",
+    y = "Cook's distance"
+  ) +
+  theme_minimal()
+```
+
+## Qué mirar en Cook
+
+-   valores bajos: observaciones sin influencia relevante
+-   valores altos: observaciones influyentes
+-   puntos por encima de `4/n`: candidatos a revisión
+
+
+# Bibliografia 
+
+- <https://cdr-book.github.io/cap-glm.html#reg-logistica>

@@ -40,9 +40,9 @@ number-sections: true
 
 ## Predictive Models
 
-[Lineal Regresion]()
+[Lineal Regresion]( material/05_StatisticalModels/LinealModels.html)
 
-[Logistic Regresion]()
+[Logistic Regresion](material/05_StatisticalModels/LogisticModels.html)
 
 ## Asociation Rules
 
@@ -52,7 +52,7 @@ number-sections: true
 
 [Decisions Trees]()
 
-[Bagging Methods]()
+[Random Forest]()
 
 [Bagging Methods]()
 

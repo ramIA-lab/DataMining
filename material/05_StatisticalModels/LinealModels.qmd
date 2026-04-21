@@ -1,0 +1,930 @@
+---
+title: "Modelos Lineales Generalizados"
+subtitle: "Modelos lineales"
+author: Dante Conti, Sergi Ramirez, (c) IDEAI
+date: "`r Sys.Date()`"
+date-modified: "`r Sys.Date()`"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: show
+    code-summary: "Mostrar código"
+    code-tools: true
+    embed-resources: true
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+# Introducción
+
+Los **modelos lineales** constituyen una de las familias más importantes dentro de la estadística y del machine learning clásico. Aunque en ocasiones se presentan como herramientas “básicas”, en realidad son fundamentales por cuatro motivos:
+
+1.  permiten **explicar relaciones** entre variables;
+2.  ofrecen una base sólida para la **inferencia estadística**;
+3.  sirven como punto de partida para modelos más complejos;
+4.  son muy útiles en contextos de **Data Mining**, donde interesa tanto predecir como interpretar.
+
+En este tutorial trabajaremos el caso de la **regresión lineal**, es decir, modelos donde una variable respuesta numérica se explica a partir de una o varias variables predictoras.
+
+El objetivo no es solo aprender a ejecutar código, sino entender:
+
+-   qué modelo se está ajustando;
+-   qué significan sus parámetros;
+-   cómo se interpreta la salida;
+-   cuándo el modelo es razonable y cuándo no.
+
+# Objetivos de aprendizaje
+
+Al finalizar este tema el estudiante debería ser capaz de:
+
+-   entender la formulación matemática de un modelo lineal;
+-   diferenciar entre regresión lineal simple y múltiple;
+-   ajustar modelos lineales en R;
+-   interpretar coeficientes, errores estándar, valores-*p* y $R^2$;
+-   detectar problemas de multicolinealidad, no linealidad y heterocedasticidad;
+-   comparar modelos y evaluar capacidad predictiva;
+-   incorporar variables cualitativas e interacciones;
+-   utilizar modelos lineales dentro de un flujo de Data Mining.
+
+# ¿Qué es un modelo lineal?
+
+Un modelo lineal relaciona una variable respuesta $Y$ con un conjunto de predictores $X_1, X_2, \dots, X_p$ mediante una expresión de la forma:
+
+$$
+Y_i = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} + \cdots + \beta_p X_{ip} + \varepsilon_i
+$$
+
+donde:
+
+-   $\beta_0$ es el intercepto;
+-   $\beta_j$ es el efecto asociado al predictor $X_j$;
+-   $\varepsilon_i$ es el error aleatorio de la observación $i$.
+
+La palabra **lineal** no significa necesariamente que la relación entre una variable y la respuesta sea “una recta” en sentido visual simple, sino que el modelo es lineal en los **parámetros** $\beta$.
+
+Por ejemplo, el siguiente modelo sigue siendo lineal:
+
+$$
+Y = \beta_0 + \beta_1 X + \beta_2 X^2 + \varepsilon
+$$
+
+porque los parámetros aparecen linealmente.
+
+# Perspectiva de Data Mining
+
+En Data Mining, un modelo lineal puede utilizarse con dos propósitos principales:
+
+## Propósito explicativo
+
+Queremos entender qué variables influyen sobre una respuesta y en qué dirección:
+
+-   si aumenta el precio, ¿bajan las ventas?
+-   si aumenta la inversión publicitaria, ¿suben los ingresos?
+-   ¿qué perfil de variables se asocia a una mayor puntuación?
+
+## Propósito predictivo
+
+Queremos predecir el valor de una variable numérica para nuevos individuos.
+
+Ejemplos:
+
+-   estimar el precio de una vivienda;
+-   predecir ventas;
+-   anticipar consumo energético;
+-   estimar nota final a partir de variables académicas.
+
+Un punto importante: en contextos reales, un modelo lineal muchas veces no será el más preciso, pero sí uno de los más **interpretables**. Por eso suele ser el primer modelo de referencia o **baseline**.
+
+# Supuestos del modelo lineal
+
+Para que la inferencia clásica del modelo lineal sea válida, se suelen asumir las siguientes condiciones:
+
+1.  **Linealidad**: la relación media entre $Y$ y los predictores está bien representada por la forma lineal.
+2.  **Independencia** de los errores.
+3.  **Homoscedasticidad**: la varianza del error es constante.
+4.  **Normalidad de los errores**: importante sobre todo para contrastes e intervalos.
+5.  **Ausencia de multicolinealidad fuerte** entre predictores.
+
+En Data Mining, cuando el objetivo es puramente predictivo, a veces no exigimos todos los supuestos con el mismo rigor. Sin embargo, siguen siendo esenciales para interpretar el modelo correctamente.
+
+# Conjunto de datos de trabajo
+
+En este documento se presentan el principal enfoque de los modelos linales aplicados sobre una base de datos sobre venta de edificios.  
+
+
+Nuestro objetivo inicial será modelizar `Price` (**Valor monetario**) como variable respuesta.
+
+```{r}
+#| warning: false
+#| error: false
+#| message: false
+# Cargamos las librerías necesarias.
+# Se incluyen paquetes para:
+# - manipulación y visualización
+# - clustering particional y jerárquico
+# - métricas de validación
+# - representación gráfica de dendrogramas
+list.of.packages <- c(
+  "dplyr", "fpc", "reshape2", "tidyr", "ggplot2", "stats", 
+  "cluster", "factoextra", "colorspace", "patchwork", 
+  "tidyverse", "ggpubr", "NbClust", "HDclassif", "clustMixType", 
+  "clusterSim", "pracma", "DataVisualizations", "entropy",
+  "clevr", "dendextend", "ggdendro", "gridExtra", "idealista18",
+  "GGally", "ggplot2", "caret")
+
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
+if (length(new.packages) > 0) {
+  install.packages(new.packages)
+}
+
+invisible(lapply(list.of.packages, require, character.only = TRUE))
+rm(list.of.packages, new.packages)
+```
+
+```{r}
+# Cargamos la base de datos directamente desde GitHub
+data(Barcelona_Sale)
+
+BCN <- Barcelona_Sale |>
+  dplyr::select(PRICE, CONSTRUCTEDAREA, ROOMNUMBER, BATHNUMBER, HASTERRACE, HASLIFT, HASAIRCONDITIONING, AMENITYID, HASPARKINGSPACE, ISPARKINGSPACEINCLUDEDINPRICE, PARKINGSPACEPRICE, HASNORTHORIENTATION, HASSOUTHORIENTATION, HASEASTORIENTATION, HASWESTORIENTATION, HASBOXROOM, HASWARDROBE, HASSWIMMINGPOOL, HASDOORMAN, HASGARDEN, ISDUPLEX, ISSTUDIO, ISINTOPFLOOR, BUILTTYPEID_1, BUILTTYPEID_2, BUILTTYPEID_3, DISTANCE_TO_CITY_CENTER, DISTANCE_TO_METRO, DISTANCE_TO_DIAGONAL, CADCONSTRUCTIONYEAR) |>
+  data.frame()
+```
+
+Las variables a utilizar son las siguientes: 
+
+* **PRICE*:* Precio del inmueble
+* **CONSTRUCTEDAREA**: metros cuadrados construidos ($m^{2}$)
+* **ROOMNUMBER**: número de habitaciones
+* **BATHNUMBER**: número de baños 
+* **HASTERRACE**: Indicador de si tiene (1) o no (0) terraza
+* **HASLIFT**: Indicador de si tiene (1) o no (0) ascensor
+* **HASAIRCONDITIONING**: Indicador de si tiene (1) o no (0) aire acondicionado
+* **AMENITYID**: Indica las comodidades incluidas (sin muebles ni utensilios de cocina (1), utensilios de cocina sin muebles (2), utensilios y muebles (3))
+* **HASPARKINGSPACE**: Si tiene disponible el parking (1) o no
+* **ISPARKINGSPACEINCLUDEDINPRICE**: Si está incluido en el precio el parking (1) o no (0)
+* **PARKINGSPACEPRICE**: Precio del parking
+* **HASNORTHORIENTATION**: Tiene orientación norte (1) o no (0)
+* **HASSOUTHORIENTATION**: Tiene orientación sud (1) o no (0)
+* **HASEASTORIENTATION**: Tiene orientación este (1) o no (0)
+* **HASWESTORIENTATION**: Tiene orientación oeste (1) o no (0)
+* **HASBOXROOM**: Si tiene trastero (1) o no (0)
+* **HASWARDROBE**: Si tiene guardaropa (1) o no (0)
+* **HASSWIMMINGPOOL**: Si tiene piscina (1) o no (0)
+* **HASDOORMAN**: Si existe portero (1) o no (0)
+* **HASGARDEN**: Tiene jardón (1) o no (0)
+* **ISDUPLEX**: Si es duplex (1) o no (0)
+* **ISSTUDIO**: Si es un estudio (1) o no (0)
+* **ISINTOPFLOOR**: Si es ático (1) o no (0)
+* **BUILTTYPEID_1**: Si es un piso de obra nueva (1) o no (0)
+* **BUILTTYPEID_2**: Si es un piso de segunda mano a restaurar (1) o no (0)
+* **BUILTTYPEID_3**: Si es un piso de segunda mano en buen estado (1) o no (0)
+* **DISTANCE_TO_CITY_CENTER**: Distancia en km al centro de la ciudad
+* **DISTANCE_TO_METRO**: Distancia a la entrada de metro más cercana en km
+* **DISTANCE_TO_DIAGONAL**: Distancia en km a la avenida diagonal
+* **CADCONSTRUCTIONYEAR**: Año de construcción del edificio según el catastro
+
+```{r}
+#| echo: false
+
+dades <- BCN |>
+  dplyr::mutate(dplyr::across(
+      starts_with("HAS") | starts_with("IS") | starts_with("BUILT"),
+      ~ ifelse(. == 1, "sí", "no")))
+
+dades[which(dades$AMENITYID == 1), "AMENITYID"] <- "no amueblado"
+dades[which(dades$AMENITYID == 2), "AMENITYID"] <- "objetos cocina"
+dades[which(dades$AMENITYID == 3), "AMENITYID"] <- "amueblado"
+
+dades$geometry <- NULL
+```
+
+### Interpretación
+
+Cada fila representa un comprador de la tienda online y cada columna una variable. La variable `Review.Rating` será nuestra respuesta. 
+
+## Estructura del dataset
+
+```{r}
+str(dades)
+summary(dades)
+```
+
+### Interpretación
+
+-   `str()` nos muestra tipos de variables.
+-   `summary()` proporciona un resumen descriptivo inicial.
+-   Antes de modelizar, debemos entender rangos, escalas y posibles outliers.
+
+## Conversión de variables categóricas
+
+Este paso es crucial. Si una variable categórica se deja como numérica, el modelo podría interpretar una relación cuantitativa inexistente. En Data Mining, una mala codificación de variables suele producir interpretaciones erróneas.
+
+```{r}
+tipos <- sapply(dades, class)
+varCat <- names(tipos)[which(tipos %in% c("character", "factor"))] 
+varNum <- names(tipos)[which(tipos %in% c("integer", "numeric"))] 
+for (var in varCat) {
+  dades[, var] <- as.factor(as.character(dades[, var]))
+}
+```
+
+# Análisis exploratorio previo
+
+Antes de ajustar un modelo, conviene explorar relaciones entre variables.
+
+## Matriz de dispersión
+
+```{r}
+GGally::ggpairs(dades, columns = varNum)
+```
+
+### Interpretación
+
+La matriz de dispersión permite detectar:
+
+-   relaciones aproximadamente lineales;
+-   asociaciones fuertes entre predictores;
+-   posibles observaciones atípicas;
+-   estructuras no lineales.
+
+## Correlaciones entre variables numéricas
+
+```{r}
+cor(dades[, varNum])
+```
+### Interpretación
+
+Si dos predictores están muy correlacionados entre sí, puede aparecer **multicolinealidad**. Esto no siempre empeora la predicción, pero sí puede dificultar mucho la interpretación de coeficientes individuales.
+
+## Relación entre `PRICE` y `wt`
+
+```{r}
+#| echo: false
+grafico <- ggplot(dades, aes(CONSTRUCTEDAREA, PRICE)) +
+  geom_point() +
+  theme() + 
+  labs(title = "Precio (PRICE) frente a Area de Construcción (CONSTRUCTEDAREA)", x = "Metros Cuadrados", y = "Precio")
+grafico
+```
+
+### Interpretación
+
+Visualmente parece existir una relación positiva: a mayor precio del inmueble, mayor número de metros cuadrados (`CONSTRUCTEDAREA`). Esto hace de `CONSTRUCTEDAREA` un buen candidato para un primer modelo simple.
+
+# Regresión lineal simple
+
+## Ajuste del modelo
+
+Comenzamos con un único predictor:
+
+$$
+mpg_i = \beta_0 + \beta_1 CONSTRUCTEDAREA_i + \varepsilon_i
+$$
+
+```{r}
+modelo_simple <- lm(PRICE ~ CONSTRUCTEDAREA, data = dades)
+summary(modelo_simple)
+```
+
+### Interpretación de la salida
+
+La función `summary()` ofrece los elementos clave:
+
+-   **Estimate**: estimación de los coeficientes;
+-   **Std. Error**: error estándar de cada coeficiente;
+-   **t value** y **Pr(\>\|t\|)**: contraste individual de significación;
+-   **Residual standard error**: dispersión típica de los errores;
+-   **Multiple R-squared**: proporción de variabilidad explicada;
+-   **F-statistic**: contraste global del modelo.
+
+## Ecuación estimada
+
+```{r}
+coef(modelo_simple)
+```
+
+### Interpretación
+
+Si obtenemos una ecuación estimada del tipo:
+
+$$
+\widehat{PRICE} = -52.857,29 - 4.699,63\,CONSTRUCTEDAREA
+$$
+
+la interpretación es:
+
+-   el intercepto representa el valor esperado de `mpg` cuando `wt = 0`;
+-   la pendiente indica cuánto cambia `mpg` por cada unidad adicional de peso.
+
+La pendiente del modelo es 4.699,63€, por lo tanto por cada 1$m^2$ adicional, el precio aumenta en 4.699,63€.
+
+## Recta ajustada sobre el gráfico
+
+```{r}
+grafico +
+  geom_smooth(method = "lm")
+```
+
+### Interpretación
+
+La recta representa la media estimada de `PRICE` para cada valor de `CONSTRUCTEDAREA`. Los puntos alejados de la recta presentan residuos grandes.
+
+# Residuos: qué son y por qué importan
+
+El residuo de una observación es:
+
+$$
+e_i = y_i - \hat{y}_i
+$$
+
+Es decir, la diferencia entre el valor observado y el predicho.
+
+## Extracción de valores ajustados y residuos
+
+```{r}
+head(data.frame(
+  observado = dades$PRICE,
+  ajustado = fitted(modelo_simple),
+  residuo = residuals(modelo_simple)
+))
+```
+
+### Interpretación
+
+-   **Residuo positivo**: el modelo predijo menos de lo observado.
+-   **Residuo negativo**: el modelo predijo más de lo observado.
+-   Analizar residuos permite detectar patrones problemáticos.
+
+## Gráficos diagnósticos básicos
+
+Aunque el modelo sea significativo se debe validar, someter a contraste los supuestos estadísticos que subyacen al modelo. 
+
+Para hacerlo, es necesario los residuos del modelo y el cálculo de la diferencia entre los valores observados y los estimados: 
+
+$$
+e_i = y_i - \hat{y}_i = y_{i} - (\hat{\beta}_{0} + \hat{\beta}_{1}x_{1i} + ... + \hat{\beta}_{p}x_{pi}), i = 1, ..., N
+$$
+
+Lo anterior carece de validez si no se satisfacen las hipótesis del modelo siguientes: 
+
+- Los residuos han de tener **varianza constante** (homocedasticidad)
+
+$$
+V(e) = \sigma^{2} = 0
+$$
+
+- Los residuos han de seguir la **distribución de probabilidad normal**.
+
+- Las observaciones tienen que ser **independientes**.
+
+- La **relación** entre la variable respuesta y las explicativas se suponen lineal.
+
+- Las variables explicativas son linealmente independientes: ninguna puede ser explicada como combinación lineal de las otras. En caso contrario, se tendría el conocido problema de la **multicolinealidad** y debería quitarse del modelo la variable explicada por el resto.
+
+A continuación se realiza un análisis de residuos. 
+
+```{r}
+library("ggfortify")
+autoplot(modelo_simple) +
+  theme_minimal()
+```
+### Interpretación
+
+Los cuatro gráficos diagnósticos clásicos permiten comprobar:
+
+1.  **Residuals vs Fitted**: linealidad y homoscedasticidad. 
+  
+  - **Nube aleatoria horizontal** → ✔ Linealidad OK + homocedasticidad
+  - **Forma curva (U, ∩, S)** → ❌ No linealidad
+  - **Forma de embudo (se abre o cierra)** → ❌ Heterocedasticidad
+  - **Grupos/segmentos** → ❌ Variables omitidas / modelo mal especificado
+
+  Para poderlo identificar, se ha de mirar que la linea azul sea una linia recta
+  
+También podemos realizar una prueba de hipótesis para detectar si existe o no homocedasticidad. En este caso, el test se trata del de Breusch-Pagan.
+
+**Hipótesis**
+
+* $H_0$: La varianza de los residuos es constante (Homocedasticidad)
+* $H_1$: La varianza de los residuos depende de las variables explicativas (Heterocedasticidad)
+
+**Decisión**
+
+* Si **p-value > 0.05** $\rightarrow$ No rechazamos $H_0$ $\rightarrow$ Los resiudos pueden considerarse homocedasticos.
+
+* Si **p-value < 0.05** $\rightarrow$ Rechazamos $H_0$ $\rightarrow$ Los resiudos pueden considerarse heterocedasticos.
+
+```{r}
+lmtest::bgtest(modelo_simple)
+```
+
+Viendo el modelo, podemos decir que nuestro modelo tiene problemas de heterocedasticidad. 
+  
+2.  **Normal Q-Q**: aproximación a normalidad de residuos.
+
+  - **Puntos sobre la recta** → ✔ Normalidad OK
+  - **Desviación en extremos (colas)** → ❌ Outliers / colas pesadas
+  - **Forma en S** → ❌ No normalidad
+  - **Muchos puntos alejados de la línea** → ❌ Mala distribución de residuos
+
+También se puede realizar contrastes de hipótesis cómo el test de normalidad de Shapiro-Wilk para muestras de máximo 5000 observaciones ($n = 5000$).
+
+```{r}
+shapiro.test(sample(modelo_simple$residuals, 5000))
+```
+
+Cómo el p-valor es inferior a 0.05 tenemos evidéncias para no aceptar la hipótesis nula, nuestros residuos NO se distribuyen de manera normal. 
+
+
+3.  **Scale-Location**: varianza constante.
+
+  - **Línea horizontal + dispersión uniforme** → ✔ Homocedasticidad
+  - **Tendencia creciente (↑)** → ❌ Varianza aumenta (heterocedasticidad)
+  - **Tendencia decreciente (↓)** → ❌ Varianza disminuye
+  - **Forma de embudo** → ❌ Heterocedasticidad
+
+4.  **Residuals vs Leverage**: observaciones influyentes.
+
+  - **Todos los puntos dentro de Cook** → ✔ Sin influencia grave
+  - **Punto con alto leverage (muy a la derecha)** → ⚠ Potencialmente problemático
+  - **Alto leverage + residuo grande** → ❌ Observación influyente
+  - **Puntos fuera de líneas de Cook** → ❌ Muy influyentes (revisar/eliminar)
+
+En docencia es importante remarcar que estos gráficos no se leen como “verdadero/falso”, sino como señales para juzgar si el modelo es razonable.
+
+# Bondad de ajuste
+
+## Suma de cuadrados
+
+La variabilidad total se descompone como:
+
+$$
+SST = SSR + SSE
+$$
+
+donde:
+
+-   $SST$: suma total de cuadrados;
+-   $SSR$: variabilidad explicada por el modelo;
+-   $SSE$: variabilidad residual.
+
+## Coeficiente de determinación $R^2$
+
+$$
+R^2 = 1 - \frac{SSE}{SST}
+$$
+
+Representa la proporción de variabilidad de la respuesta explicada por el modelo.
+
+```{r}
+summary(modelo_simple)$r.squared
+summary(modelo_simple)$adj.r.squared
+```
+
+### Interpretación
+
+-   Un $R^2$ alto indica mejor ajuste dentro de la muestra.
+-   No implica causalidad.
+-   No garantiza buena predicción fuera de muestra.
+-   En modelos múltiples, conviene mirar también el $R^2$ ajustado, que penaliza por número de variables.
+
+# Inferencia sobre coeficientes
+
+Cada coeficiente se suele contrastar mediante:
+
+$$
+H_0: \beta_j = 0
+\quad \text{frente a} \quad
+H_1: \beta_j \neq 0
+$$
+
+```{r}
+confint(modelo_simple)
+```
+
+### Interpretación
+
+Los intervalos de confianza aportan más información que el simple valor-*p*:
+
+-   si el intervalo de un coeficiente no contiene el 0, hay evidencia de efecto;
+-   además, el intervalo permite valorar la magnitud plausible del efecto.
+
+# Predicción con el modelo simple
+
+## Predicción puntual
+
+```{r}
+nuevo_inmueble <- data.frame(CONSTRUCTEDAREA = 188)
+predict(modelo_simple, newdata = nuevo_inmueble)
+```
+
+### Interpretación
+
+El modelo proporciona el valor esperado de `PRICE` para un inmueble con 188 $m^{2}$.
+
+## Intervalo de confianza e intervalo de predicción
+
+```{r}
+predict(modelo_simple, newdata = nuevo_inmueble, interval = "confidence")
+predict(modelo_simple, newdata = nuevo_inmueble, interval = "prediction")
+```
+
+### Interpretación
+
+-   El **intervalo de confianza** se refiere a la media esperada.
+-   El **intervalo de predicción** se refiere a una nueva observación individual.
+
+El segundo es más ancho porque incorpora la variabilidad individual adicional.
+
+# Regresión lineal múltiple
+
+En la práctica rara vez basta con una sola variable. Extendemos el modelo a varios predictores:
+
+$$
+mpg_i = \beta_0 + \beta_1 wt_i + \beta_2 hp_i + \beta_3 qsec_i + \varepsilon_i
+$$
+
+## Ajuste del modelo múltiple
+
+```{r}
+modelo_multiple <- lm(PRICE ~ CONSTRUCTEDAREA + ROOMNUMBER + BATHNUMBER, data = dades)
+summary(modelo_multiple)
+```
+
+### Interpretación
+
+Ahora cada coeficiente se interpreta **manteniendo constantes las demás variables**.
+
+Por ejemplo, el coeficiente de `PRICE` representa el cambio esperado en `CONSTRUCTEDAREA` por unidad de peso **a igualdad de número de habitaciones (`ROOMNUMBER`) y número de baños (`BATHNUMBER`)**.
+
+Este matiz es absolutamente esencial en regresión múltiple.
+
+## 11.2 Comparación entre modelo simple y múltiple
+
+```{r}
+summary(modelo_simple)$r.squared
+summary(modelo_multiple)$r.squared
+summary(modelo_multiple)$adj.r.squared
+```
+
+### Interpretación
+
+Al añadir variables, $R^2$ no disminuye. Por eso conviene observar también el $R^2$ ajustado y, si el objetivo es predicción, evaluar el rendimiento fuera de muestra.
+
+# Interpretación de coeficientes en presencia de varias variables
+
+Supongamos un modelo:
+
+$$
+\widehat{Y} = \hat\beta_0 + \hat\beta_1 X_1 + \hat\beta_2 X_2
+$$
+
+La interpretación correcta de $\hat\beta_1$ no es “el efecto aislado de $X_1$ en cualquier circunstancia”, sino el cambio esperado en la respuesta cuando $X_1$ aumenta una unidad y $X_2$ se mantiene constante.
+
+Esto explica por qué un coeficiente puede cambiar mucho al añadir o quitar variables: el contexto del modelo también cambia.
+
+# Variables cualitativas en modelos lineales
+
+Los modelos lineales también admiten variables categóricas mediante codificación dummy.
+
+## Modelo con si dispone terraza o no (`HASTERRACE`)
+
+```{r}
+modelo_factor <- lm(PRICE ~ CONSTRUCTEDAREA + ROOMNUMBER + BATHNUMBER + HASTERRACE, data = dades)
+summary(modelo_factor)
+```
+
+### Interpretación
+
+Al tratar `HASTERRACE` como factor, R crea automáticamente una categoría de referencia.
+
+Si la referencia es `no`, entonces el coeficiente asociado a `sí` indica cuánto cambia el `PRICE` esperado para inmuebles con terraza respecto a sin terraza, manteniendo constante el peso.
+
+## Medias ajustadas por grupo
+
+```{r}
+aggregate(PRICE ~ HASTERRACE, data = dades, mean)
+```
+
+### Interpretación
+
+Comparar medias por grupo ayuda a contextualizar el efecto categórico, aunque el modelo lineal ajusta esa diferencia junto a otras variables incluidas.
+
+# Interacciones
+
+A veces el efecto de una variable depende del nivel de otra. Esto se representa con una interacción.
+
+## Ajuste de un modelo con interacción
+
+```{r}
+modelo_interaccion <- lm(PRICE ~ CONSTRUCTEDAREA * HASTERRACE + ROOMNUMBER + BATHNUMBER, data = dades)
+summary(modelo_interaccion)
+```
+
+### Interpretación
+
+El término `CONSTRUCTEDAREA * HASTERRACE` equivale a incluir:
+
+-   efecto principal de `CONSTRUCTEDAREA`;
+-   efecto principal de `HASTERRACE`;
+-   interacción `CONSTRUCTEDAREA:HASTERRACE`.
+
+Si la interacción es relevante, significa que la pendiente de `CONSTRUCTEDAREA` no es la misma para inmuebles con terraza que sin ella.
+
+# Visualización de la interacción
+
+```{r}
+plot(PRICE ~ CONSTRUCTEDAREA, data = dades,
+     col = c("red", "blue")[dades$HASTERRACE],
+     pch = 19,
+     xlab = "metros cuadrados",
+     ylab = "Precio",
+     main = "Interacción entre metros cuadrados y disponibilidad de terraza")
+legend("topright", legend = levels(dades$HASTERRACE), col = c("red", "blue"), pch = 19)
+
+abline(lm(PRICE ~ CONSTRUCTEDAREA, data = dades, subset = HASTERRACE == "no"), col = "red", lwd = 2)
+abline(lm(PRICE ~ CONSTRUCTEDAREA, data = dades, subset = HASTERRACE == "sí"), col = "blue", lwd = 2)
+```
+
+### Interpretación
+
+Si las rectas tienen pendientes claramente distintas, la interacción es plausible. En términos sustantivos: el impacto de los metros cuadrados sobre el precio depende de si dispone o no terrazas. 
+
+# Multicolinealidad
+
+La multicolinealidad aparece cuando varios predictores aportan información redundante.
+
+## Detección mediante correlaciones
+
+```{r}
+cor(dades[, varNum])
+```
+
+## Factor de inflación de la varianza (VIF)
+
+Este estadístico indica el incremenot de la varianza estimada del coeficiente de regresión de una determinada variable explicatiava como consecuencia de la colinealidad con las demás. 
+
+```{r}
+if (!require(car)) install.packages("car")
+library(car)
+
+car::vif(modelo_multiple)
+```
+
+### Interpretación
+
+Un VIF alto indica que un coeficiente está siendo estimado con poca estabilidad por culpa de la colinealidad. Regla práctica habitual:
+
+-   VIF cercano a 1: sin problema importante;
+-   VIF entre 5 y 10: posible preocupación;
+-   VIF superior a 10: problema serio.
+
+En Data Mining, la multicolinealidad no siempre destruye la predicción, pero sí puede volver poco fiables las interpretaciones individuales.
+
+# Selección de variables
+
+En contextos con muchos predictores, interesa decidir qué variables dejar en el modelo.
+
+## Modelo completo
+
+```{r}
+modelo_completo <- lm(PRICE ~ ., data = dades)
+summary(modelo_completo)
+```
+
+## Selección paso a paso por AIC
+
+```{r}
+modelo_step <- step(modelo_completo, trace = 1)
+summary(modelo_step)
+```
+
+### Interpretación
+
+El procedimiento `step()` busca un compromiso entre ajuste y complejidad usando el criterio AIC. Debe usarse con prudencia:
+
+-   puede ser útil como herramienta exploratoria;
+-   no sustituye criterio sustantivo;
+-   puede ser inestable en muestras pequeñas.
+
+En docencia conviene remarcar que “selección automática” no significa “verdad científica”.
+
+# Comparación formal entre modelos anidados
+
+Podemos comparar modelos anidados mediante ANOVA.
+
+```{r}
+anova(modelo_simple, modelo_multiple)
+```
+
+### Interpretación
+
+Este contraste evalúa si el modelo más complejo explica una reducción significativa del error respecto al modelo más simple. Si la mejora es estadísticamente relevante, hay evidencia a favor del modelo ampliado.
+
+
+# Evaluación predictiva: train/test
+
+En Data Mining interesa mucho evaluar fuera de muestra.
+
+## Partición entrenamiento/prueba
+
+```{r}
+set.seed(1994)
+
+trainIndex <- caret::createDataPartition(dades$PRICE, p = .8, 
+                                         list = FALSE, 
+                                         times = 1)
+
+train <- dades[ trainIndex,]
+test  <- dades[-trainIndex,]
+
+modelo_train <- lm(modelo_step$call$formula, data = train)
+pred_test <- predict(modelo_train, newdata = test)
+
+(rmse <- sqrt(mean((test$PRICE - pred_test)^2)))
+(mae  <- mean(abs(test$PRICE - pred_test)))
+```
+
+### Interpretación
+
+-   **RMSE** penaliza más los errores grandes.
+-   **MAE** es más robusto e interpretable como error medio absoluto.
+
+Estas métricas son más relevantes para predicción que el $R^2$ de entrenamiento.
+
+# Validación cruzada
+
+Con muestras pequeñas, una sola partición train/test puede ser inestable. Una alternativa mejor es la validación cruzada.
+
+```{r}
+set.seed(1994)
+control <- trainControl(method = "cv", number = 5)
+
+modelo_cv <- train(modelo_step$call$formula, data = dades,
+  method = "lm", trControl = control)
+
+modelo_cv
+```
+
+### Interpretación
+
+La validación cruzada estima el rendimiento promedio repitiendo ajustes sobre diferentes subconjuntos. Esto reduce la dependencia de una única partición aleatoria.
+
+# Transformaciones y no linealidad
+
+No siempre la relación es estrictamente lineal. A veces puede mejorar con transformaciones o términos polinómicos.
+
+## Término cuadrático
+
+```{r}
+modelo_cuadratico <- lm(PRICE ~ CONSTRUCTEDAREA + I(CONSTRUCTEDAREA^2), data = dades)
+summary(modelo_cuadratico)
+```
+
+### Interpretación
+
+El término `I(CONSTRUCTEDAREA^2)` permite capturar curvatura. El modelo sigue siendo lineal en parámetros. Si el coeficiente cuadrático es relevante, la relación media entre `CONSTRUCTEDAREA` y `PRICE` no es una recta pura.
+
+## Tranformación de Box-Cox
+
+A veces hay variables que no cumplen la normalidad pedida. Es por ello que va bien realizar transformaciones logarítimicas de ellas pasando de modelos lineales a modelos log-lineales o modelos log-log. 
+
+En nuestro caso, vamos a transformar la variable `PRICE`. Para ello, se ha de introducir el `log(PRICE)` en el modelo.
+
+```{r}
+modelo_logNormal <- lm(log(PRICE) ~ CONSTRUCTEDAREA + I(CONSTRUCTEDAREA^2), data = dades)
+summary(modelo_cuadratico)
+```
+
+## Comparación con el modelo lineal simple
+
+```{r}
+anova(modelo_simple, modelo_cuadratico)
+```
+
+### Interpretación
+
+Si el modelo cuadrático mejora significativamente, la linealidad simple podría ser insuficiente.
+
+# Outliers, leverage e influencia
+
+No todas las observaciones pesan igual. Algunas tienen capacidad de alterar mucho el ajuste.
+
+## Distancia de Cook
+
+```{r}
+cooks <- cooks.distance(modelo_multiple)
+head(cooks, n = 20)
+```
+
+## Visualización de observaciones influyentes
+
+```{r}
+# Crear dataframe
+df_cooks <- data.frame(
+  index = 1:length(cooks),
+  cooks = cooks
+)
+
+# Umbral típico
+threshold <- 4 / nrow(dades)
+
+ggplot(df_cooks, aes(x = index, y = cooks)) +
+  geom_segment(aes(xend = index, yend = 0), alpha = 0.6) +
+  geom_hline(yintercept = threshold, color = "red", linetype = "dashed") +
+  labs(
+    title = "Distancia de Cook",
+    x = "Observación",
+    y = "Cook's Distance"
+  ) +
+  theme_minimal()
+```
+
+### Interpretación
+
+Observaciones con distancia de Cook elevada merecen revisión. No significa que deban eliminarse automáticamente, sino que tienen gran influencia y conviene entender por qué.
+
+```{r}
+ggplot(df_cooks, aes(x = index, y = cooks)) +
+  geom_segment(aes(xend = index, yend = 0), alpha = 0.6) +
+  
+  # Puntos influyentes
+  geom_point(data = subset(df_cooks, cooks > threshold),
+             aes(x = index, y = cooks),
+             color = "red", size = 2) +
+  
+  geom_hline(yintercept = threshold, color = "red", linetype = "dashed") +
+  
+  labs(
+    title = "Detección de observaciones influyentes (Cook's Distance)",
+    subtitle = "Puntos en rojo superan el umbral 4/n",
+    x = "Observación",
+    y = "Cook's Distance"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+df_cooks_sorted <- df_cooks[order(-df_cooks$cooks), ]
+
+ggplot(df_cooks_sorted[1:50, ], aes(x = reorder(index, -cooks), y = cooks)) +
+  geom_col() +
+  geom_hline(yintercept = threshold, color = "red", linetype = "dashed") +
+  labs(
+    title = "Top 50 observaciones más influyentes",
+    x = "Observación",
+    y = "Cook's Distance"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle=45))
+```
+
+# Lectura crítica de un modelo lineal
+
+Cuando se termine un ajuste, no se debería limitar a copiar la salida de `summary()`. Debería responder, como mínimo, a estas preguntas:
+
+1.  ¿Cuál es la variable respuesta?
+2.  ¿Qué predictores se han incluido y por qué?
+3.  ¿Cómo se interpreta cada coeficiente?
+4.  ¿El signo de los coeficientes tiene sentido sustantivo?
+5.  ¿Qué capacidad explicativa tiene el modelo?
+6.  ¿Se cumplen razonablemente los supuestos?
+7.  ¿Sirve más para explicar o para predecir?
+8.  ¿Existen observaciones influyentes o problemas de colinealidad?
+
+# Errores habituales de los estudiantes
+
+## Confundir asociación con causalidad
+
+Un coeficiente significativo no demuestra causalidad. Solo indica asociación condicionada al modelo ajustado.
+
+## Interpretar el intercepto de forma mecánica
+
+A veces el valor `X = 0` carece de sentido real. En ese caso, el intercepto existe matemáticamente, pero su interpretación sustantiva puede ser irrelevante.
+
+## Creer que un valor-*p* pequeño implica “modelo bueno”
+
+La significación de coeficientes no garantiza buen ajuste ni buena predicción.
+
+## Elegir el modelo solo por $R^2$
+
+Un modelo con mucho sobreajuste puede tener alto $R^2$ en entrenamiento y mal rendimiento fuera de muestra.
+
+## Ignorar el tipo de variable
+
+Tratar categorías como numéricas o viceversa puede invalidar la interpretación.
+
+# Bibliografia 
+
+- <https://cdr-book.github.io/cap-lm.html>
+
+- <https://rstudio-pubs-static.s3.amazonaws.com/1372759_e7b2b9cf5cb542ecb3f571cc4ec8b8a3.html>
+
+- <https://rpubs.com/michelleintanh/LBB_P4DS_michelle>
