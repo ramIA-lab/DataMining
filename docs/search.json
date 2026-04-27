@@ -2364,5 +2364,306 @@
     "title": "Modelos Lineales Generalizados",
     "section": "14.4 Qué mirar en Cook",
     "text": "14.4 Qué mirar en Cook\n\nvalores bajos: observaciones sin influencia relevante\nvalores altos: observaciones influyentes\npuntos por encima de 4/n: candidatos a revisión"
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html",
+    "href": "material/06_AssociationRules/AssociationRules.html",
+    "title": "Reglas de Asociación",
+    "section": "",
+    "text": "Las reglas de asociación son una familia de técnicas de machine learning no supervisado orientadas a descubrir patrones de coocurrencia en conjuntos de transacciones. Su formulación clásica aparece en el análisis de la cesta de la compra (market basket analysis), aunque su utilidad va mucho más allá del supermercado.\nUna regla de asociación tiene la forma:\n\\[\nX \\Rightarrow Y\n\\]\ndonde:\n\n\\(X\\) es el antecedente de la regla, también llamado left-hand side o LHS;\n\\(Y\\) es el consecuente de la regla, también llamado right-hand side o RHS;\n\\(X\\) e \\(Y\\) son conjuntos de items;\nnormalmente se exige que \\(X \\cap Y = \\emptyset\\).\n\nLa lectura informal es:\n\nSi una transacción contiene los items de \\(X\\), entonces tiende a contener también los items de \\(Y\\).\n\nPor ejemplo:\n\\[\n\\{\\text{pan}, \\text{mantequilla}\\} \\Rightarrow \\{\\text{mermelada}\\}\n\\]\nse interpreta como:\n\nLas cestas que contienen pan y mantequilla suelen contener también mermelada.\n\nEs importante remarcar desde el principio que una regla de asociación no implica causalidad. Una regla puede ser útil para detectar relaciones, perfiles o recomendaciones, pero no permite afirmar que comprar pan y mantequilla cause la compra de mermelada.\nAquesta web està creada por Dante Conti y Sergi Ramírez, (c) 2026"
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#transacción",
+    "href": "material/06_AssociationRules/AssociationRules.html#transacción",
+    "title": "Reglas de Asociación",
+    "section": "4.1 Transacción",
+    "text": "4.1 Transacción\nUna transacción es un conjunto de eventos o items que aparecen juntos bajo una misma unidad de análisis.\nEjemplos:\n\nuna cesta de compra;\nuna sesión de navegación web;\nun conjunto de síntomas de un paciente;\nlas asignaturas matriculadas por un estudiante;\nlas características presentes en un inmueble;\nlas acciones realizadas por un usuario en una aplicación.\n\nFormalmente, si tenemos \\(n\\) transacciones, podemos escribir:\n\\[\nT = \\{t_1, t_2, \\dots, t_n\\}\n\\]\nCada transacción \\(t_i\\) es un subconjunto del conjunto total de items \\(I\\):\n\\[\nt_i \\subseteq I\n\\]"
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#item",
+    "href": "material/06_AssociationRules/AssociationRules.html#item",
+    "title": "Reglas de Asociación",
+    "section": "4.2 Item",
+    "text": "4.2 Item\nUn item es un elemento individual que puede aparecer o no aparecer en una transacción.\nPor ejemplo, en una base de datos de supermercado:\n\\[\nI = \\{\\text{leche}, \\text{pan}, \\text{huevos}, \\text{cerveza}, \\text{pañales}, \\dots\\}\n\\]"
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#itemset",
+    "href": "material/06_AssociationRules/AssociationRules.html#itemset",
+    "title": "Reglas de Asociación",
+    "section": "4.3 Itemset",
+    "text": "4.3 Itemset\nUn itemset es un conjunto de uno o más items.\nEjemplo:\n\\[\n\\{\\text{leche}, \\text{pan}\\}\n\\]\nSi un itemset tiene \\(k\\) items, se denomina k-itemset.\n\n\\(\\{\\text{leche}\\}\\) es un 1-itemset.\n\\(\\{\\text{leche}, \\text{pan}\\}\\) es un 2-itemset.\n\\(\\{\\text{leche}, \\text{pan}, \\text{huevos}\\}\\) es un 3-itemset."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#regla-de-asociación",
+    "href": "material/06_AssociationRules/AssociationRules.html#regla-de-asociación",
+    "title": "Reglas de Asociación",
+    "section": "4.4 Regla de asociación",
+    "text": "4.4 Regla de asociación\nUna regla de asociación divide un itemset en dos partes:\n\\[\nX \\Rightarrow Y\n\\]\nEjemplo:\n\\[\n\\{\\text{pasta}, \\text{tomate}\\} \\Rightarrow \\{\\text{queso}\\}\n\\]\nAquí:\n\n\\(X = \\{\\text{pasta}, \\text{tomate}\\}\\) es el antecedente;\n\\(Y = \\{\\text{queso}\\}\\) es el consecuente.\n\nLa regla no dice que siempre que alguien compre pasta y tomate vaya a comprar queso. Dice que, en los datos observados, la presencia de pasta y tomate se asocia con una mayor frecuencia de queso."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#soporte",
+    "href": "material/06_AssociationRules/AssociationRules.html#soporte",
+    "title": "Reglas de Asociación",
+    "section": "6.1 Soporte",
+    "text": "6.1 Soporte\nEl soporte de un itemset \\(X\\) es la proporción de transacciones que contienen \\(X\\).\n\\[\n\\text{support}(X) = \\frac{\\#\\{t_i: X \\subseteq t_i\\}}{n}\n\\]\nPara una regla \\(X \\Rightarrow Y\\), el soporte se calcula sobre el itemset conjunto \\(X \\cup Y\\):\n\\[\n\\text{support}(X \\Rightarrow Y) = \\text{support}(X \\cup Y)\n\\]\n\n6.1.1 Interpretación\nSi una regla tiene soporte 0.08, significa que el 8% de todas las transacciones contienen simultáneamente el antecedente y el consecuente.\nEl soporte responde a la pregunta:\n\n¿En cuántas transacciones aparece este patrón completo?\n\n\n\n6.1.2 Advertencia\nUn soporte muy alto suele producir reglas demasiado generales. Un soporte muy bajo puede producir reglas interesantes pero poco robustas.\nPor ejemplo, una regla con soporte 0.001 puede parecer espectacular, pero si la base de datos tiene 1.000 transacciones, solo aparece en una transacción."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#confianza",
+    "href": "material/06_AssociationRules/AssociationRules.html#confianza",
+    "title": "Reglas de Asociación",
+    "section": "6.2 Confianza",
+    "text": "6.2 Confianza\nLa confianza de una regla \\(X \\Rightarrow Y\\) mide la proporción de transacciones que contienen \\(Y\\) entre aquellas que contienen \\(X\\).\n\\[\n\\text{confidence}(X \\Rightarrow Y) = \\frac{\\text{support}(X \\cup Y)}{\\text{support}(X)}\n\\]\nTambién puede interpretarse como una probabilidad condicional empírica:\n\\[\n\\text{confidence}(X \\Rightarrow Y) = P(Y \\mid X)\n\\]\n\n6.2.1 Interpretación\nSi una regla tiene confianza 0.75, significa que el 75% de las transacciones que contienen \\(X\\) también contienen \\(Y\\).\nLa confianza responde a la pregunta:\n\nCuando aparece el antecedente, ¿con qué frecuencia aparece también el consecuente?\n\n\n\n6.2.2 Advertencia\nLa confianza puede ser engañosa cuando el consecuente es muy frecuente.\nPor ejemplo, si el 80% de los clientes compran pan, muchas reglas de la forma:\n\\[\nX \\Rightarrow \\{\\text{pan}\\}\n\\]\npueden tener confianza alta simplemente porque el pan aparece en casi todas las cestas."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#lift",
+    "href": "material/06_AssociationRules/AssociationRules.html#lift",
+    "title": "Reglas de Asociación",
+    "section": "6.3 Lift",
+    "text": "6.3 Lift\nEl lift compara la confianza observada con la frecuencia esperada del consecuente si antecedente y consecuente fueran independientes.\n\\[\n\\text{lift}(X \\Rightarrow Y) = \\frac{\\text{confidence}(X \\Rightarrow Y)}{\\text{support}(Y)}\n\\]\nEquivalente:\n\\[\n\\text{lift}(X \\Rightarrow Y) = \\frac{\\text{support}(X \\cup Y)}{\\text{support}(X)\\text{support}(Y)}\n\\]\n\n6.3.1 Interpretación\n\n\\(\\text{lift} = 1\\): no hay asociación aparente entre \\(X\\) e \\(Y\\).\n\\(\\text{lift} &gt; 1\\): \\(X\\) e \\(Y\\) aparecen juntos más de lo esperado bajo independencia.\n\\(\\text{lift} &lt; 1\\): \\(X\\) e \\(Y\\) aparecen juntos menos de lo esperado bajo independencia.\n\nSi una regla tiene lift 2.4, significa que el consecuente aparece 2.4 veces más a menudo cuando aparece el antecedente que lo que cabría esperar si no hubiera relación.\n\n\n6.3.2 Interpretación práctica\nEl lift suele ser más útil que la confianza para detectar reglas realmente interesantes, porque corrige parcialmente el efecto de consecuentes muy frecuentes."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#leverage",
+    "href": "material/06_AssociationRules/AssociationRules.html#leverage",
+    "title": "Reglas de Asociación",
+    "section": "6.4 Leverage",
+    "text": "6.4 Leverage\nEl leverage mide la diferencia absoluta entre el soporte observado de \\(X \\cup Y\\) y el soporte esperado bajo independencia.\n\\[\n\\text{leverage}(X \\Rightarrow Y) = \\text{support}(X \\cup Y) - \\text{support}(X)\\text{support}(Y)\n\\]\n\n6.4.1 Interpretación\n\nleverage = 0: independencia aproximada;\nleverage &gt; 0: coocurrencia mayor de la esperada;\nleverage &lt; 0: coocurrencia menor de la esperada.\n\nA diferencia del lift, el leverage mide una diferencia absoluta. Esto ayuda a distinguir reglas con lift muy alto pero soporte ínfimo de reglas con impacto real en muchas transacciones."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#conviction",
+    "href": "material/06_AssociationRules/AssociationRules.html#conviction",
+    "title": "Reglas de Asociación",
+    "section": "6.5 Conviction",
+    "text": "6.5 Conviction\nLa conviction mide hasta qué punto el antecedente implica el consecuente en comparación con lo que se esperaría por azar.\n\\[\n\\text{conviction}(X \\Rightarrow Y) = \\frac{1 - \\text{support}(Y)}{1 - \\text{confidence}(X \\Rightarrow Y)}\n\\]\n\n6.5.1 Interpretación\n\nconviction cercana a 1: poca evidencia de implicación;\nconviction alta: la regla falla menos de lo esperado bajo independencia;\nconviction infinita: confianza igual a 1.\n\nEs una métrica asimétrica: la conviction de \\(X \\Rightarrow Y\\) no tiene por qué coincidir con la de \\(Y \\Rightarrow X\\)."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#coverage",
+    "href": "material/06_AssociationRules/AssociationRules.html#coverage",
+    "title": "Reglas de Asociación",
+    "section": "6.6 Coverage",
+    "text": "6.6 Coverage\nLa coverage de una regla es el soporte del antecedente:\n\\[\n\\text{coverage}(X \\Rightarrow Y) = \\text{support}(X)\n\\]\n\n6.6.1 Interpretación\nIndica a qué proporción de transacciones se puede aplicar la regla.\nUna regla con mucha confianza pero coverage muy bajo puede ser precisa, pero aplicable a muy pocos casos."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#count",
+    "href": "material/06_AssociationRules/AssociationRules.html#count",
+    "title": "Reglas de Asociación",
+    "section": "6.7 Count",
+    "text": "6.7 Count\nEl count es el número absoluto de transacciones que contienen \\(X \\cup Y\\).\n\\[\n\\text{count}(X \\Rightarrow Y) = n \\cdot \\text{support}(X \\cup Y)\n\\]\nEs especialmente útil para evitar sobreinterpretar reglas basadas en muy pocos casos."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#etapas-del-algoritmo",
+    "href": "material/06_AssociationRules/AssociationRules.html#etapas-del-algoritmo",
+    "title": "Reglas de Asociación",
+    "section": "8.1 Etapas del algoritmo",
+    "text": "8.1 Etapas del algoritmo\nEl procedimiento general es:\n\nIdentificar los 1-itemsets frecuentes.\nGenerar candidatos de tamaño 2.\nEliminar candidatos con subconjuntos infrecuentes.\nCalcular soporte y conservar solo los frecuentes.\nRepetir el proceso para tamaños mayores.\nA partir de los itemsets frecuentes, generar reglas.\nFiltrar las reglas por confianza mínima u otras métricas."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#ventajas",
+    "href": "material/06_AssociationRules/AssociationRules.html#ventajas",
+    "title": "Reglas de Asociación",
+    "section": "8.2 Ventajas",
+    "text": "8.2 Ventajas\n\nEs conceptualmente sencillo.\nProduce reglas interpretables.\nEstá ampliamente implementado.\nPermite restricciones por soporte, confianza, longitud y apariencia."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#limitaciones",
+    "href": "material/06_AssociationRules/AssociationRules.html#limitaciones",
+    "title": "Reglas de Asociación",
+    "section": "8.3 Limitaciones",
+    "text": "8.3 Limitaciones\n\nPuede generar muchísimos candidatos.\nRequiere varios escaneos de la base de datos.\nPuede ser costoso con muchos items.\nPuede producir reglas redundantes o triviales.\nEs sensible a la elección de soporte y confianza mínimos."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#diferencia-práctica-con-apriori",
+    "href": "material/06_AssociationRules/AssociationRules.html#diferencia-práctica-con-apriori",
+    "title": "Reglas de Asociación",
+    "section": "9.1 Diferencia práctica con Apriori",
+    "text": "9.1 Diferencia práctica con Apriori\n\nApriori trabaja de forma más explícita con generación de candidatos.\nEclat suele ser eficiente para itemsets frecuentes usando intersecciones de identificadores.\nEclat genera itemsets frecuentes, no reglas directamente. Después se pueden derivar reglas a partir de esos itemsets."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#número-de-transacciones-e-items",
+    "href": "material/06_AssociationRules/AssociationRules.html#número-de-transacciones-e-items",
+    "title": "Reglas de Asociación",
+    "section": "12.1 Número de transacciones e items",
+    "text": "12.1 Número de transacciones e items\n\n\nMostrar código\nn_transacciones &lt;- length(Groceries)\nn_items &lt;- length(itemLabels(Groceries))\n\nn_transacciones\n\n\n[1] 9835\n\n\nMostrar código\nn_items\n\n\n[1] 169\n\n\n\n12.1.1 Interpretación\nTenemos 9835 transacciones y 169 items distintos. Esto ya anticipa un problema combinatorio: el número potencial de itemsets crece muy rápidamente con el número de items."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#primeras-transacciones",
+    "href": "material/06_AssociationRules/AssociationRules.html#primeras-transacciones",
+    "title": "Reglas de Asociación",
+    "section": "12.2 Primeras transacciones",
+    "text": "12.2 Primeras transacciones\n\n\nMostrar código\ninspect(Groceries[1:5])\n\n\n    items                     \n[1] {citrus fruit,            \n     semi-finished bread,     \n     margarine,               \n     ready soups}             \n[2] {tropical fruit,          \n     yogurt,                  \n     coffee}                  \n[3] {whole milk}              \n[4] {pip fruit,               \n     yogurt,                  \n     cream cheese ,           \n     meat spreads}            \n[5] {other vegetables,        \n     whole milk,              \n     condensed milk,          \n     long life bakery product}\n\n\n\n12.2.1 Interpretación\nCada línea representa una cesta de compra. Los elementos entre llaves son los productos comprados conjuntamente."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#tamaño-de-las-cestas",
+    "href": "material/06_AssociationRules/AssociationRules.html#tamaño-de-las-cestas",
+    "title": "Reglas de Asociación",
+    "section": "12.3 Tamaño de las cestas",
+    "text": "12.3 Tamaño de las cestas\n\n\nMostrar código\ntamanyos_cesta &lt;- size(Groceries)\n\nsummary(tamanyos_cesta)\n\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n  1.000   2.000   3.000   4.409   6.000  32.000 \n\n\n\n\nMostrar código\nggplot(data.frame(tamanyo = tamanyos_cesta), aes(x = tamanyo)) +\n  geom_histogram(binwidth = 1, boundary = 0, color = \"white\") +\n  labs(\n    title = \"Distribución del tamaño de las cestas\",\n    subtitle = \"Número de items por transacción\",\n    x = \"Número de items en la cesta\",\n    y = \"Número de transacciones\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\n\n12.3.1 Interpretación\nEste gráfico permite identificar si las compras suelen ser pequeñas o grandes. Si la mayoría de cestas tienen pocos productos, será más difícil encontrar reglas largas con soporte suficiente."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#items-más-frecuentes",
+    "href": "material/06_AssociationRules/AssociationRules.html#items-más-frecuentes",
+    "title": "Reglas de Asociación",
+    "section": "13.1 Items más frecuentes",
+    "text": "13.1 Items más frecuentes\n\n\nMostrar código\nitemFrequencyPlot(\n  Groceries,\n  topN = 20,\n  type = \"relative\",\n  main = \"Top 20 items más frecuentes\",\n  ylab = \"Soporte relativo\"\n)\n\n\n\n\n\n\n\n\n\n\n13.1.1 Interpretación\nLos items más frecuentes suelen aparecer en muchas reglas. Esto puede ser útil, pero también peligroso: productos muy habituales pueden generar reglas de alta confianza pero poco informativas."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#tabla-de-frecuencia-de-items",
+    "href": "material/06_AssociationRules/AssociationRules.html#tabla-de-frecuencia-de-items",
+    "title": "Reglas de Asociación",
+    "section": "13.2 Tabla de frecuencia de items",
+    "text": "13.2 Tabla de frecuencia de items\n\n\nMostrar código\nfreq_items &lt;- itemFrequency(Groceries, type = \"relative\") |&gt;\n  sort(decreasing = TRUE) |&gt;\n  head(20)\n\nfreq_items_tbl &lt;- tibble(\n  item = names(freq_items),\n  soporte = as.numeric(freq_items)\n)\n\nfreq_items_tbl |&gt;\n  mutate(soporte = percent(soporte, accuracy = 0.01)) |&gt;\n  kable(caption = \"Top 20 items por soporte relativo\") |&gt;\n  kable_styling(full_width = FALSE)\n\n\n\nTop 20 items por soporte relativo\n\n\nitem\nsoporte\n\n\n\n\nwhole milk\n25.55%\n\n\nother vegetables\n19.35%\n\n\nrolls/buns\n18.39%\n\n\nsoda\n17.44%\n\n\nyogurt\n13.95%\n\n\nbottled water\n11.05%\n\n\nroot vegetables\n10.90%\n\n\ntropical fruit\n10.49%\n\n\nshopping bags\n9.85%\n\n\nsausage\n9.40%\n\n\npastry\n8.90%\n\n\ncitrus fruit\n8.28%\n\n\nbottled beer\n8.05%\n\n\nnewspapers\n7.98%\n\n\ncanned beer\n7.77%\n\n\npip fruit\n7.56%\n\n\nfruit/vegetable juice\n7.23%\n\n\nwhipped/sour cream\n7.17%\n\n\nbrown bread\n6.49%\n\n\ndomestic eggs\n6.34%\n\n\n\n\n\n\n\n\n13.2.1 Interpretación\nEl soporte de un item individual indica la proporción de cestas donde aparece. Por ejemplo, si whole milk tiene soporte aproximado 0.26, significa que aparece en torno al 26% de las transacciones."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#primera-ejecución",
+    "href": "material/06_AssociationRules/AssociationRules.html#primera-ejecución",
+    "title": "Reglas de Asociación",
+    "section": "14.1 Primera ejecución",
+    "text": "14.1 Primera ejecución\nAplicamos Apriori con parámetros relativamente conservadores.\n\n\nMostrar código\nreglas_1 &lt;- apriori(\n  Groceries,\n  parameter = list(\n    supp = 0.01,\n    conf = 0.5,\n    minlen = 2\n  )\n)\n\n\nApriori\n\nParameter specification:\n confidence minval smax arem  aval originalSupport maxtime support minlen\n        0.5    0.1    1 none FALSE            TRUE       5    0.01      2\n maxlen target  ext\n     10  rules TRUE\n\nAlgorithmic control:\n filter tree heap memopt load sort verbose\n    0.1 TRUE TRUE  FALSE TRUE    2    TRUE\n\nAbsolute minimum support count: 98 \n\nset item appearances ...[0 item(s)] done [0.00s].\nset transactions ...[169 item(s), 9835 transaction(s)] done [0.00s].\nsorting and recoding items ... [88 item(s)] done [0.00s].\ncreating transaction tree ... done [0.00s].\nchecking subsets of size 1 2 3 4 done [0.00s].\nwriting ... [15 rule(s)] done [0.00s].\ncreating S4 object  ... done [0.00s].\n\n\nMostrar código\nreglas_1\n\n\nset of 15 rules \n\n\n\n14.1.1 Interpretación\nLos parámetros significan:\n\nsupp = 0.01: la regla debe aparecer en al menos el 1% de las transacciones;\nconf = 0.5: al menos el 50% de las transacciones con el antecedente deben contener el consecuente;\nminlen = 2: la regla debe tener al menos dos items en total.\n\n\n\nMostrar código\nsummary(reglas_1)\n\n\nset of 15 rules\n\nrule length distribution (lhs + rhs):sizes\n 3 \n15 \n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n      3       3       3       3       3       3 \n\nsummary of quality measures:\n    support          confidence        coverage            lift      \n Min.   :0.01007   Min.   :0.5000   Min.   :0.01729   Min.   :1.984  \n 1st Qu.:0.01174   1st Qu.:0.5151   1st Qu.:0.02089   1st Qu.:2.036  \n Median :0.01230   Median :0.5245   Median :0.02430   Median :2.203  \n Mean   :0.01316   Mean   :0.5411   Mean   :0.02454   Mean   :2.299  \n 3rd Qu.:0.01403   3rd Qu.:0.5718   3rd Qu.:0.02598   3rd Qu.:2.432  \n Max.   :0.02227   Max.   :0.5862   Max.   :0.04342   Max.   :3.030  \n     count      \n Min.   : 99.0  \n 1st Qu.:115.5  \n Median :121.0  \n Mean   :129.4  \n 3rd Qu.:138.0  \n Max.   :219.0  \n\nmining info:\n      data ntransactions support confidence\n Groceries          9835    0.01        0.5\n                                                                             call\n apriori(data = Groceries, parameter = list(supp = 0.01, conf = 0.5, minlen = 2))\n\n\n\n\n14.1.2 Interpretación\nLa salida resume:\n\ndistribución del número de items por regla;\nresumen de soporte, confianza, coverage, lift y count;\nreglas generadas.\n\nUn número muy bajo de reglas puede indicar parámetros demasiado exigentes. Un número muy alto puede indicar parámetros demasiado permisivos."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#reglas-ordenadas-por-lift",
+    "href": "material/06_AssociationRules/AssociationRules.html#reglas-ordenadas-por-lift",
+    "title": "Reglas de Asociación",
+    "section": "15.1 Reglas ordenadas por lift",
+    "text": "15.1 Reglas ordenadas por lift\n\n\nMostrar código\nreglas_lift &lt;- sort(reglas_1, by = \"lift\", decreasing = TRUE)\ninspect(head(reglas_lift, 10))\n\n\n     lhs                                  rhs                support   \n[1]  {citrus fruit, root vegetables}   =&gt; {other vegetables} 0.01037112\n[2]  {tropical fruit, root vegetables} =&gt; {other vegetables} 0.01230300\n[3]  {root vegetables, rolls/buns}     =&gt; {other vegetables} 0.01220132\n[4]  {root vegetables, yogurt}         =&gt; {other vegetables} 0.01291307\n[5]  {curd, yogurt}                    =&gt; {whole milk}       0.01006609\n[6]  {other vegetables, butter}        =&gt; {whole milk}       0.01148958\n[7]  {tropical fruit, root vegetables} =&gt; {whole milk}       0.01199797\n[8]  {root vegetables, yogurt}         =&gt; {whole milk}       0.01453991\n[9]  {other vegetables, domestic eggs} =&gt; {whole milk}       0.01230300\n[10] {yogurt, whipped/sour cream}      =&gt; {whole milk}       0.01087951\n     confidence coverage   lift     count\n[1]  0.5862069  0.01769192 3.029608 102  \n[2]  0.5845411  0.02104728 3.020999 121  \n[3]  0.5020921  0.02430097 2.594890 120  \n[4]  0.5000000  0.02582613 2.584078 127  \n[5]  0.5823529  0.01728521 2.279125  99  \n[6]  0.5736041  0.02003050 2.244885 113  \n[7]  0.5700483  0.02104728 2.230969 118  \n[8]  0.5629921  0.02582613 2.203354 143  \n[9]  0.5525114  0.02226741 2.162336 121  \n[10] 0.5245098  0.02074225 2.052747 107  \n\n\n\n15.1.1 Interpretación\nOrdenar por lift ayuda a encontrar asociaciones más fuertes que las esperadas por independencia. Sin embargo, una regla con lift alto pero soporte bajo puede ser poco robusta."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#reglas-ordenadas-por-confianza",
+    "href": "material/06_AssociationRules/AssociationRules.html#reglas-ordenadas-por-confianza",
+    "title": "Reglas de Asociación",
+    "section": "15.2 Reglas ordenadas por confianza",
+    "text": "15.2 Reglas ordenadas por confianza\n\n\nMostrar código\nreglas_confianza &lt;- sort(reglas_1, by = \"confidence\", decreasing = TRUE)\ninspect(head(reglas_confianza, 10))\n\n\n     lhs                                  rhs                support   \n[1]  {citrus fruit, root vegetables}   =&gt; {other vegetables} 0.01037112\n[2]  {tropical fruit, root vegetables} =&gt; {other vegetables} 0.01230300\n[3]  {curd, yogurt}                    =&gt; {whole milk}       0.01006609\n[4]  {other vegetables, butter}        =&gt; {whole milk}       0.01148958\n[5]  {tropical fruit, root vegetables} =&gt; {whole milk}       0.01199797\n[6]  {root vegetables, yogurt}         =&gt; {whole milk}       0.01453991\n[7]  {other vegetables, domestic eggs} =&gt; {whole milk}       0.01230300\n[8]  {yogurt, whipped/sour cream}      =&gt; {whole milk}       0.01087951\n[9]  {root vegetables, rolls/buns}     =&gt; {whole milk}       0.01270971\n[10] {pip fruit, other vegetables}     =&gt; {whole milk}       0.01352313\n     confidence coverage   lift     count\n[1]  0.5862069  0.01769192 3.029608 102  \n[2]  0.5845411  0.02104728 3.020999 121  \n[3]  0.5823529  0.01728521 2.279125  99  \n[4]  0.5736041  0.02003050 2.244885 113  \n[5]  0.5700483  0.02104728 2.230969 118  \n[6]  0.5629921  0.02582613 2.203354 143  \n[7]  0.5525114  0.02226741 2.162336 121  \n[8]  0.5245098  0.02074225 2.052747 107  \n[9]  0.5230126  0.02430097 2.046888 125  \n[10] 0.5175097  0.02613116 2.025351 133  \n\n\n\n15.2.1 Interpretación\nOrdenar por confianza responde a la pregunta:\n\nDado el antecedente, ¿cuáles son los consecuentes más probables?\n\nPero hay que verificar si el consecuente no es simplemente un item muy frecuente."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#reglas-ordenadas-por-soporte",
+    "href": "material/06_AssociationRules/AssociationRules.html#reglas-ordenadas-por-soporte",
+    "title": "Reglas de Asociación",
+    "section": "15.3 Reglas ordenadas por soporte",
+    "text": "15.3 Reglas ordenadas por soporte\n\n\nMostrar código\nreglas_soporte &lt;- sort(reglas_1, by = \"support\", decreasing = TRUE)\ninspect(head(reglas_soporte, 10))\n\n\n     lhs                                       rhs                support   \n[1]  {other vegetables, yogurt}             =&gt; {whole milk}       0.02226741\n[2]  {tropical fruit, yogurt}               =&gt; {whole milk}       0.01514997\n[3]  {other vegetables, whipped/sour cream} =&gt; {whole milk}       0.01464159\n[4]  {root vegetables, yogurt}              =&gt; {whole milk}       0.01453991\n[5]  {pip fruit, other vegetables}          =&gt; {whole milk}       0.01352313\n[6]  {root vegetables, yogurt}              =&gt; {other vegetables} 0.01291307\n[7]  {root vegetables, rolls/buns}          =&gt; {whole milk}       0.01270971\n[8]  {other vegetables, domestic eggs}      =&gt; {whole milk}       0.01230300\n[9]  {tropical fruit, root vegetables}      =&gt; {other vegetables} 0.01230300\n[10] {root vegetables, rolls/buns}          =&gt; {other vegetables} 0.01220132\n     confidence coverage   lift     count\n[1]  0.5128806  0.04341637 2.007235 219  \n[2]  0.5173611  0.02928317 2.024770 149  \n[3]  0.5070423  0.02887646 1.984385 144  \n[4]  0.5629921  0.02582613 2.203354 143  \n[5]  0.5175097  0.02613116 2.025351 133  \n[6]  0.5000000  0.02582613 2.584078 127  \n[7]  0.5230126  0.02430097 2.046888 125  \n[8]  0.5525114  0.02226741 2.162336 121  \n[9]  0.5845411  0.02104728 3.020999 121  \n[10] 0.5020921  0.02430097 2.594890 120  \n\n\n\n15.3.1 Interpretación\nOrdenar por soporte prioriza patrones que afectan a muchas transacciones. Son reglas con mayor cobertura, aunque no necesariamente las más sorprendentes."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#gráfico-soporte-confianza-coloreado-por-lift",
+    "href": "material/06_AssociationRules/AssociationRules.html#gráfico-soporte-confianza-coloreado-por-lift",
+    "title": "Reglas de Asociación",
+    "section": "17.1 Gráfico soporte-confianza coloreado por lift",
+    "text": "17.1 Gráfico soporte-confianza coloreado por lift\n\n\nMostrar código\nplot(\n  reglas_1,\n  method = \"scatterplot\",\n  measure = c(\"support\", \"confidence\"),\n  shading = \"lift\"\n)\n\n\n\n\n\n\n\n\n\n\n17.1.1 Interpretación\nCada punto representa una regla.\n\nEje X: soporte.\nEje Y: confianza.\nColor: lift.\n\nLas reglas más interesantes suelen combinar:\n\nsoporte no demasiado bajo;\nconfianza alta;\nlift mayor que 1.\n\nNo obstante, no existe un único criterio universal. La elección depende del problema."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#gráfico-de-dos-medidas-con-jitter",
+    "href": "material/06_AssociationRules/AssociationRules.html#gráfico-de-dos-medidas-con-jitter",
+    "title": "Reglas de Asociación",
+    "section": "17.2 Gráfico de dos medidas con jitter",
+    "text": "17.2 Gráfico de dos medidas con jitter\n\n\nMostrar código\nplot(\n  reglas_1,\n  method = \"two-key plot\"\n)\n\n\n\n\n\n\n\n\n\n\n17.2.1 Interpretación\nEste gráfico resume varias métricas simultáneamente. Es útil cuando hay muchas reglas y queremos identificar regiones de interés."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#grafo-de-reglas",
+    "href": "material/06_AssociationRules/AssociationRules.html#grafo-de-reglas",
+    "title": "Reglas de Asociación",
+    "section": "17.3 Grafo de reglas",
+    "text": "17.3 Grafo de reglas\n\n\nMostrar código\nreglas_top_lift &lt;- head(sort(reglas_1, by = \"lift\", decreasing = TRUE), 20)\n\nplot(\n  reglas_top_lift,\n  method = \"graph\",\n  engine = \"htmlwidget\"\n)\n\n\n\n\n\n\n\n17.3.1 Interpretación\nEl grafo permite ver qué items aparecen conectados por reglas. Es especialmente útil para presentaciones o exploración inicial, pero puede volverse ilegible si se muestran demasiadas reglas."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#reglas-con-un-consecuente-concreto",
+    "href": "material/06_AssociationRules/AssociationRules.html#reglas-con-un-consecuente-concreto",
+    "title": "Reglas de Asociación",
+    "section": "18.1 Reglas con un consecuente concreto",
+    "text": "18.1 Reglas con un consecuente concreto\nSupongamos que nos interesa estudiar qué productos conducen a la compra de whole milk.\n\n\nMostrar código\nreglas_whole_milk &lt;- apriori(\n  Groceries,\n  parameter = list(\n    supp = 0.005,\n    conf = 0.3,\n    minlen = 2\n  ),\n  appearance = list(\n    rhs = \"whole milk\",\n    default = \"lhs\"\n  )\n)\n\n\nApriori\n\nParameter specification:\n confidence minval smax arem  aval originalSupport maxtime support minlen\n        0.3    0.1    1 none FALSE            TRUE       5   0.005      2\n maxlen target  ext\n     10  rules TRUE\n\nAlgorithmic control:\n filter tree heap memopt load sort verbose\n    0.1 TRUE TRUE  FALSE TRUE    2    TRUE\n\nAbsolute minimum support count: 49 \n\nset item appearances ...[1 item(s)] done [0.00s].\nset transactions ...[169 item(s), 9835 transaction(s)] done [0.00s].\nsorting and recoding items ... [120 item(s)] done [0.00s].\ncreating transaction tree ... done [0.00s].\nchecking subsets of size 1 2 3 4 done [0.00s].\nwriting ... [212 rule(s)] done [0.00s].\ncreating S4 object  ... done [0.00s].\n\n\nMostrar código\nreglas_whole_milk &lt;- sort(reglas_whole_milk, by = \"lift\", decreasing = TRUE)\ninspect(head(reglas_whole_milk, 15))\n\n\n     lhs                        rhs              support confidence    coverage     lift count\n[1]  {tropical fruit,                                                                         \n      root vegetables,                                                                        \n      yogurt}                =&gt; {whole milk} 0.005693950  0.7000000 0.008134215 2.739554    56\n[2]  {pip fruit,                                                                              \n      root vegetables,                                                                        \n      other vegetables}      =&gt; {whole milk} 0.005490595  0.6750000 0.008134215 2.641713    54\n[3]  {butter,                                                                                 \n      whipped/sour cream}    =&gt; {whole milk} 0.006710727  0.6600000 0.010167768 2.583008    66\n[4]  {pip fruit,                                                                              \n      whipped/sour cream}    =&gt; {whole milk} 0.005998983  0.6483516 0.009252669 2.537421    59\n[5]  {butter,                                                                                 \n      yogurt}                =&gt; {whole milk} 0.009354347  0.6388889 0.014641586 2.500387    92\n[6]  {root vegetables,                                                                        \n      butter}                =&gt; {whole milk} 0.008235892  0.6377953 0.012913066 2.496107    81\n[7]  {tropical fruit,                                                                         \n      curd}                  =&gt; {whole milk} 0.006507372  0.6336634 0.010269446 2.479936    64\n[8]  {pip fruit,                                                                              \n      other vegetables,                                                                       \n      yogurt}                =&gt; {whole milk} 0.005083884  0.6250000 0.008134215 2.446031    50\n[9]  {pip fruit,                                                                              \n      domestic eggs}         =&gt; {whole milk} 0.005388917  0.6235294 0.008642603 2.440275    53\n[10] {tropical fruit,                                                                         \n      butter}                =&gt; {whole milk} 0.006202339  0.6224490 0.009964413 2.436047    61\n[11] {domestic eggs,                                                                          \n      margarine}             =&gt; {whole milk} 0.005185562  0.6219512 0.008337570 2.434099    51\n[12] {butter,                                                                                 \n      domestic eggs}         =&gt; {whole milk} 0.005998983  0.6210526 0.009659380 2.430582    59\n[13] {tropical fruit,                                                                         \n      other vegetables,                                                                       \n      yogurt}                =&gt; {whole milk} 0.007625826  0.6198347 0.012302999 2.425816    75\n[14] {other vegetables,                                                                       \n      yogurt,                                                                                 \n      fruit/vegetable juice} =&gt; {whole milk} 0.005083884  0.6172840 0.008235892 2.415833    50\n[15] {tropical fruit,                                                                         \n      domestic eggs}         =&gt; {whole milk} 0.006914082  0.6071429 0.011387900 2.376144    68\n\n\n\n18.1.1 Interpretación\nAquí forzamos que whole milk aparezca en el consecuente. Esto transforma el análisis en una pregunta más dirigida:\n\n¿Qué combinaciones de productos se asocian con la presencia de leche?\n\nEsto es útil cuando el negocio tiene un item objetivo: un producto, servicio, conversión o comportamiento."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#reglas-donde-aparece-un-item-en-cualquier-lado",
+    "href": "material/06_AssociationRules/AssociationRules.html#reglas-donde-aparece-un-item-en-cualquier-lado",
+    "title": "Reglas de Asociación",
+    "section": "18.2 Reglas donde aparece un item en cualquier lado",
+    "text": "18.2 Reglas donde aparece un item en cualquier lado\n\n\nMostrar código\nreglas_yogurt &lt;- subset(reglas_1, items %in% \"yogurt\")\nreglas_yogurt &lt;- sort(reglas_yogurt, by = \"lift\", decreasing = TRUE)\ninspect(head(reglas_yogurt, 10))\n\n\n    lhs                             rhs                support    confidence\n[1] {root vegetables, yogurt}    =&gt; {other vegetables} 0.01291307 0.5000000 \n[2] {curd, yogurt}               =&gt; {whole milk}       0.01006609 0.5823529 \n[3] {root vegetables, yogurt}    =&gt; {whole milk}       0.01453991 0.5629921 \n[4] {yogurt, whipped/sour cream} =&gt; {whole milk}       0.01087951 0.5245098 \n[5] {tropical fruit, yogurt}     =&gt; {whole milk}       0.01514997 0.5173611 \n[6] {other vegetables, yogurt}   =&gt; {whole milk}       0.02226741 0.5128806 \n    coverage   lift     count\n[1] 0.02582613 2.584078 127  \n[2] 0.01728521 2.279125  99  \n[3] 0.02582613 2.203354 143  \n[4] 0.02074225 2.052747 107  \n[5] 0.02928317 2.024770 149  \n[6] 0.04341637 2.007235 219  \n\n\n\n18.2.1 Interpretación\nEste filtro permite estudiar el ecosistema de un item, independientemente de si aparece como antecedente o consecuente."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#reglas-con-lift-alto-y-soporte-mínimo-razonable",
+    "href": "material/06_AssociationRules/AssociationRules.html#reglas-con-lift-alto-y-soporte-mínimo-razonable",
+    "title": "Reglas de Asociación",
+    "section": "18.3 Reglas con lift alto y soporte mínimo razonable",
+    "text": "18.3 Reglas con lift alto y soporte mínimo razonable\n\n\nMostrar código\nreglas_interesantes &lt;- subset(\n  reglas_1,\n  subset = lift &gt; 2 & support &gt; 0.01 & confidence &gt; 0.5\n)\n\nlength(reglas_interesantes)\n\n\n[1] 13\n\n\nMostrar código\ninspect(sort(reglas_interesantes, by = \"lift\", decreasing = TRUE))\n\n\n     lhs                                  rhs                support   \n[1]  {citrus fruit, root vegetables}   =&gt; {other vegetables} 0.01037112\n[2]  {tropical fruit, root vegetables} =&gt; {other vegetables} 0.01230300\n[3]  {root vegetables, rolls/buns}     =&gt; {other vegetables} 0.01220132\n[4]  {curd, yogurt}                    =&gt; {whole milk}       0.01006609\n[5]  {other vegetables, butter}        =&gt; {whole milk}       0.01148958\n[6]  {tropical fruit, root vegetables} =&gt; {whole milk}       0.01199797\n[7]  {root vegetables, yogurt}         =&gt; {whole milk}       0.01453991\n[8]  {other vegetables, domestic eggs} =&gt; {whole milk}       0.01230300\n[9]  {yogurt, whipped/sour cream}      =&gt; {whole milk}       0.01087951\n[10] {root vegetables, rolls/buns}     =&gt; {whole milk}       0.01270971\n[11] {pip fruit, other vegetables}     =&gt; {whole milk}       0.01352313\n[12] {tropical fruit, yogurt}          =&gt; {whole milk}       0.01514997\n[13] {other vegetables, yogurt}        =&gt; {whole milk}       0.02226741\n     confidence coverage   lift     count\n[1]  0.5862069  0.01769192 3.029608 102  \n[2]  0.5845411  0.02104728 3.020999 121  \n[3]  0.5020921  0.02430097 2.594890 120  \n[4]  0.5823529  0.01728521 2.279125  99  \n[5]  0.5736041  0.02003050 2.244885 113  \n[6]  0.5700483  0.02104728 2.230969 118  \n[7]  0.5629921  0.02582613 2.203354 143  \n[8]  0.5525114  0.02226741 2.162336 121  \n[9]  0.5245098  0.02074225 2.052747 107  \n[10] 0.5230126  0.02430097 2.046888 125  \n[11] 0.5175097  0.02613116 2.025351 133  \n[12] 0.5173611  0.02928317 2.024770 149  \n[13] 0.5128806  0.04341637 2.007235 219  \n\n\n\n18.3.1 Interpretación\nEste tipo de filtrado combina varias dimensiones:\n\nsoporte para asegurar presencia mínima;\nconfianza para asegurar fiabilidad condicional;\nlift para asegurar asociación no trivial."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#formato-cesta-o-basket",
+    "href": "material/06_AssociationRules/AssociationRules.html#formato-cesta-o-basket",
+    "title": "Reglas de Asociación",
+    "section": "23.1 Formato cesta o basket",
+    "text": "23.1 Formato cesta o basket\nCada fila contiene una transacción completa.\n\n\nMostrar código\ndatos_basket &lt;- data.frame(\n  transaccion = c(1, 2, 3, 4, 5),\n  item_1 = c(\"pan\", \"pan\", \"leche\", \"pan\", \"queso\"),\n  item_2 = c(\"leche\", \"queso\", \"huevos\", \"huevos\", \"pan\"),\n  item_3 = c(\"huevos\", NA, NA, \"queso\", NA)\n)\n\ndatos_basket\n\n\n\n  \n\n\n\n\n\nMostrar código\nlista_basket &lt;- datos_basket |&gt;\n  select(-transaccion) |&gt;\n  apply(1, function(x) na.omit(as.character(x)))\n\ntrans_basket &lt;- as(lista_basket, \"transactions\")\ninspect(trans_basket)\n\n\n    items               \n[1] {huevos, leche, pan}\n[2] {pan, queso}        \n[3] {huevos, leche}     \n[4] {huevos, pan, queso}\n[5] {pan, queso}"
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#formato-largo-o-single",
+    "href": "material/06_AssociationRules/AssociationRules.html#formato-largo-o-single",
+    "title": "Reglas de Asociación",
+    "section": "23.2 Formato largo o single",
+    "text": "23.2 Formato largo o single\nCada fila representa un item dentro de una transacción.\n\n\nMostrar código\ndatos_single &lt;- tibble(\n  id_compra = c(1, 1, 1, 2, 2, 3, 3, 4, 4, 4),\n  item = c(\"pan\", \"leche\", \"huevos\", \"pan\", \"queso\", \"leche\", \"huevos\", \"pan\", \"huevos\", \"queso\")\n)\n\ndatos_single\n\n\n\n  \n\n\n\n\n\nMostrar código\nlista_single &lt;- split(datos_single$item, datos_single$id_compra)\ntrans_single &lt;- as(lista_single, \"transactions\")\ninspect(trans_single)\n\n\n    items                transactionID\n[1] {huevos, leche, pan} 1            \n[2] {pan, queso}         2            \n[3] {huevos, leche}      3            \n[4] {huevos, pan, queso} 4            \n\n\n\n23.2.1 Interpretación\nEl formato largo es muy común cuando los datos proceden de una base de datos relacional. Cada compra puede tener varias filas, una por producto."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#cómo-elegir-soporte-mínimo",
+    "href": "material/06_AssociationRules/AssociationRules.html#cómo-elegir-soporte-mínimo",
+    "title": "Reglas de Asociación",
+    "section": "28.1 Cómo elegir soporte mínimo",
+    "text": "28.1 Cómo elegir soporte mínimo\nDepende del tamaño de la base de datos y del objetivo.\nSi hay pocas transacciones, un soporte demasiado bajo genera reglas basadas en pocos casos. Si hay millones de transacciones, un soporte del 0.1% puede seguir representando miles de casos.\nUna regla práctica es traducir soporte a número absoluto:\n\\[\n\\text{count mínimo} = n \\cdot \\text{support mínimo}\n\\]\nPor ejemplo, con 10.000 transacciones:\n\nsoporte 0.01 equivale a 100 transacciones;\nsoporte 0.005 equivale a 50 transacciones;\nsoporte 0.001 equivale a 10 transacciones."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#cómo-elegir-confianza-mínima",
+    "href": "material/06_AssociationRules/AssociationRules.html#cómo-elegir-confianza-mínima",
+    "title": "Reglas de Asociación",
+    "section": "28.2 Cómo elegir confianza mínima",
+    "text": "28.2 Cómo elegir confianza mínima\nLa confianza debe compararse con el soporte del consecuente.\nUna confianza del 60% puede parecer alta, pero si el consecuente aparece globalmente en el 80% de las transacciones, la regla no es interesante.\nPor eso conviene revisar también lift y leverage."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#cómo-presentar-resultados",
+    "href": "material/06_AssociationRules/AssociationRules.html#cómo-presentar-resultados",
+    "title": "Reglas de Asociación",
+    "section": "28.3 Cómo presentar resultados",
+    "text": "28.3 Cómo presentar resultados\nEn una presentación o informe, no conviene mostrar 200 reglas. Es mejor seleccionar entre 5 y 15 reglas representativas y explicar:\n\nregla;\nsoporte;\nconfianza;\nlift;\nnúmero de casos;\ninterpretación;\nposible acción."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#confundir-confianza-con-causalidad",
+    "href": "material/06_AssociationRules/AssociationRules.html#confundir-confianza-con-causalidad",
+    "title": "Reglas de Asociación",
+    "section": "30.1 Confundir confianza con causalidad",
+    "text": "30.1 Confundir confianza con causalidad\nUna regla con confianza alta no significa que el antecedente cause el consecuente."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#ignorar-el-soporte",
+    "href": "material/06_AssociationRules/AssociationRules.html#ignorar-el-soporte",
+    "title": "Reglas de Asociación",
+    "section": "30.2 Ignorar el soporte",
+    "text": "30.2 Ignorar el soporte\nUna regla con confianza 100% puede estar basada en muy pocas transacciones."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#ignorar-la-frecuencia-del-consecuente",
+    "href": "material/06_AssociationRules/AssociationRules.html#ignorar-la-frecuencia-del-consecuente",
+    "title": "Reglas de Asociación",
+    "section": "30.3 Ignorar la frecuencia del consecuente",
+    "text": "30.3 Ignorar la frecuencia del consecuente\nSi el consecuente es muy frecuente, muchas reglas tendrán confianza alta aunque no sean interesantes."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#mostrar-demasiadas-reglas",
+    "href": "material/06_AssociationRules/AssociationRules.html#mostrar-demasiadas-reglas",
+    "title": "Reglas de Asociación",
+    "section": "30.4 Mostrar demasiadas reglas",
+    "text": "30.4 Mostrar demasiadas reglas\nEl objetivo no es generar la mayor cantidad posible de reglas, sino encontrar patrones útiles."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#no-filtrar-reglas-redundantes",
+    "href": "material/06_AssociationRules/AssociationRules.html#no-filtrar-reglas-redundantes",
+    "title": "Reglas de Asociación",
+    "section": "30.5 No filtrar reglas redundantes",
+    "text": "30.5 No filtrar reglas redundantes\nMuchas reglas pueden ser variaciones mínimas de otras reglas más simples."
+  },
+  {
+    "objectID": "material/06_AssociationRules/AssociationRules.html#no-validar-estabilidad",
+    "href": "material/06_AssociationRules/AssociationRules.html#no-validar-estabilidad",
+    "title": "Reglas de Asociación",
+    "section": "30.6 No validar estabilidad",
+    "text": "30.6 No validar estabilidad\nLos patrones pueden cambiar con el tiempo, por temporada, promociones o cambios de catálogo."
+  },
+  {
+    "objectID": "material/06_AssociationRules/association_rules.html",
+    "href": "material/06_AssociationRules/association_rules.html",
+    "title": "Descargar desde canvas: contenido completo incluido en la interfaz.",
+    "section": "",
+    "text": "Descargar desde canvas: contenido completo incluido en la interfaz.\n\n\n\n\nAquesta web està creada por Dante Conti y Sergi Ramírez, (c) 2026"
   }
 ]
