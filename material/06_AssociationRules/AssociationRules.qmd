@@ -504,6 +504,10 @@ El objeto `Groceries` es de clase `transactions`. Esto significa que no es un `d
 class(Groceries)
 summary(Groceries)
 ```
+```{r}
+itemInfo(Groceries)
+```
+
 
 ### Interpretación
 
@@ -522,7 +526,7 @@ La **densidad** indica qué proporción de la matriz transacción-item contiene 
 ## Número de transacciones e items
 
 ```{r}
-(n_transacciones <- length(Groceries)
+n_transacciones <- length(Groceries)
 n_items <- length(itemLabels(Groceries))
 
 n_transacciones
@@ -771,6 +775,17 @@ plot(
 
 El grafo permite ver qué items aparecen conectados por reglas. Es especialmente útil para presentaciones o exploración inicial, pero puede volverse ilegible si se muestran demasiadas reglas.
 
+## Gráfico agrupado
+
+```{r}
+plot(reglas_top_lift, method = "grouped")
+
+```
+
+### Interpretación
+
+El gráfico permite ver relaciones existentes agrupadas por el consecuente. 
+
 # Filtrado de reglas
 
 ## Reglas con un consecuente concreto
@@ -968,6 +983,34 @@ inspect(head(sort(itemsets_eclat, by = "support", decreasing = TRUE), 15))
 ### Interpretación
 
 Eclat devuelve itemsets frecuentes. Si el objetivo es encontrar combinaciones frecuentes sin generar reglas direccionales, Eclat puede ser una alternativa adecuada.
+
+## Conversión en diferentes tipos de objetos 
+
+```{r}
+top5 <- sort(itemsets_eclat)[1:5]
+inspect(top5)
+```
+
+
+### Obtención del itemset en lista
+
+```{r}
+as(items(top5), "list")
+```
+
+### Obtención del itemset en formato matriz binaria
+
+```{r}
+as(items(top5), "matrix")
+```
+
+### Conjuntos de elementos como una matriz dispersa
+
+Por razones de eficiencia, la matriz ngCMatrix que se obtiene está transpuesta.
+
+```{r}
+as(items(top5), "ngCMatrix")
+```
 
 # Creación de datos transaccionales desde cero
 
