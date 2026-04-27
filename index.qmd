@@ -46,7 +46,7 @@ number-sections: true
 
 ## Asociation Rules
 
-[Asociation Rules]()
+[Asociation Rules](material/06_AssociationRules/AssociationRules.html)
 
 ## Decisions Trees, Bagging and Ensamble Methods
 

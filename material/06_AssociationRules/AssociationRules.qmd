@@ -1,0 +1,1408 @@
+---
+title: "Reglas de Asociación"
+subtitle: "Apriori, Eclat, métricas de interés e interpretación"
+author: "Dante Conti, Sergi Ramirez, (c) IDEAI"
+date: "`r Sys.Date()`"
+date-modified: "`r Sys.Date()`"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: show
+    code-summary: "Mostrar código"
+    code-tools: true
+    embed-resources: true
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+# Introducción
+
+Las **reglas de asociación** son una familia de técnicas de *machine learning* no supervisado orientadas a descubrir **patrones de coocurrencia** en conjuntos de transacciones. Su formulación clásica aparece en el análisis de la cesta de la compra (*market basket analysis*), aunque su utilidad va mucho más allá del supermercado.
+
+Una regla de asociación tiene la forma:
+
+$$
+X \Rightarrow Y
+$$
+
+donde:
+
+- $X$ es el **antecedente** de la regla, también llamado *left-hand side* o **LHS**;
+- $Y$ es el **consecuente** de la regla, también llamado *right-hand side* o **RHS**;
+- $X$ e $Y$ son conjuntos de items;
+- normalmente se exige que $X \cap Y = \emptyset$.
+
+La lectura informal es:
+
+> Si una transacción contiene los items de $X$, entonces tiende a contener también los items de $Y$.
+
+Por ejemplo:
+
+$$
+\{\text{pan}, \text{mantequilla}\} \Rightarrow \{\text{mermelada}\}
+$$
+
+se interpreta como:
+
+> Las cestas que contienen pan y mantequilla suelen contener también mermelada.
+
+Es importante remarcar desde el principio que una regla de asociación **no implica causalidad**. Una regla puede ser útil para detectar relaciones, perfiles o recomendaciones, pero no permite afirmar que comprar pan y mantequilla cause la compra de mermelada.
+
+# Objetivos de aprendizaje
+
+Al finalizar este tema, deberías de ser capaz de:
+
+- entender qué es una transacción, un item, un itemset y una regla de asociación;
+- diferenciar entre análisis supervisado y no supervisado en el contexto de reglas;
+- calcular e interpretar **soporte**, **confianza**, **lift**, **leverage**, **conviction** y **coverage**;
+- comprender el principio Apriori y su papel en la reducción del espacio de búsqueda;
+- aplicar el algoritmo **Apriori** en R mediante el paquete `arules`;
+- aplicar el algoritmo **Eclat** para extraer itemsets frecuentes;
+- visualizar reglas mediante `arulesViz`;
+- filtrar, ordenar y podar reglas redundantes;
+- interpretar reglas desde una perspectiva estadística y de negocio;
+- preparar datos transaccionales desde formatos habituales;
+- discretizar variables numéricas para poder usarlas en reglas de asociación;
+- detectar problemas frecuentes: demasiadas reglas, reglas triviales, reglas espurias y sesgo hacia items muy frecuentes.
+
+# Perspectiva de Data Mining
+
+Las reglas de asociación pertenecen al ámbito del **aprendizaje no supervisado** porque no parten de una variable respuesta que se quiera predecir. El objetivo no es construir un modelo predictivo $f(X)$, sino descubrir relaciones internas en los datos.
+
+En Data Mining se usan para:
+
+- **recomendación de productos**: clientes que compran A también suelen comprar B;
+- **diseño de tienda**: colocar juntos productos que tienden a aparecer en la misma cesta;
+- **venta cruzada** (*cross-selling*): sugerir complementos relevantes;
+- **detección de patrones de comportamiento**: navegación web, uso de servicios, rutas de clientes;
+- **segmentación descriptiva**: identificar combinaciones de características habituales;
+- **auditoría o fraude**: detectar combinaciones poco habituales o sospechosas;
+- **bioinformática**: estudiar coocurrencia de atributos, genes o síntomas;
+- **educación**: analizar patrones de respuestas, errores frecuentes o rutas de aprendizaje.
+
+A diferencia de otros métodos no supervisados como el clustering, las reglas de asociación no agrupan individuos. En lugar de eso, producen una lista de patrones interpretables.
+
+# Conceptos básicos
+
+## Transacción
+
+Una **transacción** es un conjunto de eventos o items que aparecen juntos bajo una misma unidad de análisis.
+
+Ejemplos:
+
+- una cesta de compra;
+- una sesión de navegación web;
+- un conjunto de síntomas de un paciente;
+- las asignaturas matriculadas por un estudiante;
+- las características presentes en un inmueble;
+- las acciones realizadas por un usuario en una aplicación.
+
+Formalmente, si tenemos $n$ transacciones, podemos escribir:
+
+$$
+T = \{t_1, t_2, \dots, t_n\}
+$$
+
+Cada transacción $t_i$ es un subconjunto del conjunto total de items $I$:
+
+$$
+t_i \subseteq I
+$$
+
+## Item
+
+Un **item** es un elemento individual que puede aparecer o no aparecer en una transacción.
+
+Por ejemplo, en una base de datos de supermercado:
+
+$$
+I = \{\text{leche}, \text{pan}, \text{huevos}, \text{cerveza}, \text{pañales}, \dots\}
+$$
+
+## Itemset
+
+Un **itemset** es un conjunto de uno o más items.
+
+Ejemplo:
+
+$$
+\{\text{leche}, \text{pan}\}
+$$
+
+Si un itemset tiene $k$ items, se denomina **k-itemset**.
+
+- $\{\text{leche}\}$ es un 1-itemset.
+- $\{\text{leche}, \text{pan}\}$ es un 2-itemset.
+- $\{\text{leche}, \text{pan}, \text{huevos}\}$ es un 3-itemset.
+
+## Regla de asociación
+
+Una regla de asociación divide un itemset en dos partes:
+
+$$
+X \Rightarrow Y
+$$
+
+Ejemplo:
+
+$$
+\{\text{pasta}, \text{tomate}\} \Rightarrow \{\text{queso}\}
+$$
+
+Aquí:
+
+- $X = \{\text{pasta}, \text{tomate}\}$ es el antecedente;
+- $Y = \{\text{queso}\}$ es el consecuente.
+
+La regla no dice que siempre que alguien compre pasta y tomate vaya a comprar queso. Dice que, en los datos observados, la presencia de pasta y tomate se asocia con una mayor frecuencia de queso.
+
+# Representación de datos transaccionales
+
+Las reglas de asociación trabajan con datos binarios de presencia/ausencia.
+
+Cada transacción se puede representar como una fila y cada item como una columna:
+
+| Transacción | pan | leche | huevos | queso |
+|------------:|----:|------:|-------:|------:|
+| T1          | 1   | 1     | 0      | 0     |
+| T2          | 1   | 0     | 1      | 1     |
+| T3          | 0   | 1     | 1      | 0     |
+| T4          | 1   | 1     | 1      | 1     |
+
+El valor 1 indica que el item aparece en la transacción. El valor 0 indica que no aparece.
+
+En R, el paquete `arules` almacena esta información como una **matriz dispersa** (*sparse matrix*), mucho más eficiente que una matriz densa cuando hay muchos items y cada transacción contiene solo unos pocos.
+
+# Métricas de evaluación de reglas
+
+Una vez generadas las reglas, necesitamos criterios para decidir cuáles son relevantes. Las métricas más importantes son:
+
+- soporte;
+- confianza;
+- lift;
+- leverage;
+- conviction;
+- coverage;
+- count.
+
+## Soporte
+
+El **soporte** de un itemset $X$ es la proporción de transacciones que contienen $X$.
+
+$$
+\text{support}(X) = \frac{\#\{t_i: X \subseteq t_i\}}{n}
+$$
+
+Para una regla $X \Rightarrow Y$, el soporte se calcula sobre el itemset conjunto $X \cup Y$:
+
+$$
+\text{support}(X \Rightarrow Y) = \text{support}(X \cup Y)
+$$
+
+### Interpretación
+
+Si una regla tiene soporte 0.08, significa que el 8% de todas las transacciones contienen simultáneamente el antecedente y el consecuente.
+
+El soporte responde a la pregunta:
+
+> ¿En cuántas transacciones aparece este patrón completo?
+
+### Advertencia
+
+Un soporte muy alto suele producir reglas demasiado generales. Un soporte muy bajo puede producir reglas interesantes pero poco robustas.
+
+Por ejemplo, una regla con soporte 0.001 puede parecer espectacular, pero si la base de datos tiene 1.000 transacciones, solo aparece en una transacción.
+
+## Confianza
+
+La **confianza** de una regla $X \Rightarrow Y$ mide la proporción de transacciones que contienen $Y$ entre aquellas que contienen $X$.
+
+$$
+\text{confidence}(X \Rightarrow Y) = \frac{\text{support}(X \cup Y)}{\text{support}(X)}
+$$
+
+También puede interpretarse como una probabilidad condicional empírica:
+
+$$
+\text{confidence}(X \Rightarrow Y) = P(Y \mid X)
+$$
+
+### Interpretación
+
+Si una regla tiene confianza 0.75, significa que el 75% de las transacciones que contienen $X$ también contienen $Y$.
+
+La confianza responde a la pregunta:
+
+> Cuando aparece el antecedente, ¿con qué frecuencia aparece también el consecuente?
+
+### Advertencia
+
+La confianza puede ser engañosa cuando el consecuente es muy frecuente.
+
+Por ejemplo, si el 80% de los clientes compran pan, muchas reglas de la forma:
+
+$$
+X \Rightarrow \{\text{pan}\}
+$$
+
+pueden tener confianza alta simplemente porque el pan aparece en casi todas las cestas.
+
+## Lift
+
+El **lift** compara la confianza observada con la frecuencia esperada del consecuente si antecedente y consecuente fueran independientes.
+
+$$
+\text{lift}(X \Rightarrow Y) = \frac{\text{confidence}(X \Rightarrow Y)}{\text{support}(Y)}
+$$
+
+Equivalente:
+
+$$
+\text{lift}(X \Rightarrow Y) = \frac{\text{support}(X \cup Y)}{\text{support}(X)\text{support}(Y)}
+$$
+
+### Interpretación
+
+- $\text{lift} = 1$: no hay asociación aparente entre $X$ e $Y$.
+- $\text{lift} > 1$: $X$ e $Y$ aparecen juntos más de lo esperado bajo independencia.
+- $\text{lift} < 1$: $X$ e $Y$ aparecen juntos menos de lo esperado bajo independencia.
+
+Si una regla tiene lift 2.4, significa que el consecuente aparece 2.4 veces más a menudo cuando aparece el antecedente que lo que cabría esperar si no hubiera relación.
+
+### Interpretación práctica
+
+El lift suele ser más útil que la confianza para detectar reglas realmente interesantes, porque corrige parcialmente el efecto de consecuentes muy frecuentes.
+
+## Leverage
+
+El **leverage** mide la diferencia absoluta entre el soporte observado de $X \cup Y$ y el soporte esperado bajo independencia.
+
+$$
+\text{leverage}(X \Rightarrow Y) = \text{support}(X \cup Y) - \text{support}(X)\text{support}(Y)
+$$
+
+### Interpretación
+
+- leverage = 0: independencia aproximada;
+- leverage > 0: coocurrencia mayor de la esperada;
+- leverage < 0: coocurrencia menor de la esperada.
+
+A diferencia del lift, el leverage mide una diferencia absoluta. Esto ayuda a distinguir reglas con lift muy alto pero soporte ínfimo de reglas con impacto real en muchas transacciones.
+
+## Conviction
+
+La **conviction** mide hasta qué punto el antecedente implica el consecuente en comparación con lo que se esperaría por azar.
+
+$$
+\text{conviction}(X \Rightarrow Y) = \frac{1 - \text{support}(Y)}{1 - \text{confidence}(X \Rightarrow Y)}
+$$
+
+### Interpretación
+
+- conviction cercana a 1: poca evidencia de implicación;
+- conviction alta: la regla falla menos de lo esperado bajo independencia;
+- conviction infinita: confianza igual a 1.
+
+Es una métrica asimétrica: la conviction de $X \Rightarrow Y$ no tiene por qué coincidir con la de $Y \Rightarrow X$.
+
+## Coverage
+
+La **coverage** de una regla es el soporte del antecedente:
+
+$$
+\text{coverage}(X \Rightarrow Y) = \text{support}(X)
+$$
+
+### Interpretación
+
+Indica a qué proporción de transacciones se puede aplicar la regla.
+
+Una regla con mucha confianza pero coverage muy bajo puede ser precisa, pero aplicable a muy pocos casos.
+
+## Count
+
+El **count** es el número absoluto de transacciones que contienen $X \cup Y$.
+
+$$
+\text{count}(X \Rightarrow Y) = n \cdot \text{support}(X \cup Y)
+$$
+
+Es especialmente útil para evitar sobreinterpretar reglas basadas en muy pocos casos.
+
+# Ejemplo manual con pocas transacciones
+
+Antes de usar R, conviene entender las métricas a mano.
+
+Supongamos las siguientes transacciones:
+
+| Transacción | Items                  |
+|------------:|------------------------|
+| T1          | pan, leche, huevos     |
+| T2          | pan, leche             |
+| T3          | pan, queso             |
+| T4          | leche, huevos          |
+| T5          | pan, leche, queso      |
+| T6          | pan, huevos            |
+| T7          | leche, queso           |
+| T8          | pan, leche, huevos     |
+
+Analicemos la regla:
+
+$$
+\{\text{pan}\} \Rightarrow \{\text{leche}\}
+$$
+
+Tenemos:
+
+- número total de transacciones: 8;
+- transacciones con pan: T1, T2, T3, T5, T6, T8 = 6;
+- transacciones con leche: T1, T2, T4, T5, T7, T8 = 6;
+- transacciones con pan y leche: T1, T2, T5, T8 = 4.
+
+Por tanto:
+
+$$
+\text{support}(pan \Rightarrow leche) = \frac{4}{8} = 0.5
+$$
+
+$$
+\text{confidence}(pan \Rightarrow leche) = \frac{4/8}{6/8} = \frac{4}{6} = 0.667
+$$
+
+$$
+\text{lift}(pan \Rightarrow leche) = \frac{0.667}{6/8} = 0.889
+$$
+
+### Interpretación
+
+Aunque la confianza es relativamente alta, el lift es menor que 1. Esto indica que la presencia de pan no aumenta la probabilidad de leche; de hecho, la reduce ligeramente respecto a la frecuencia global de leche.
+
+Este ejemplo muestra por qué no conviene ordenar reglas solo por confianza.
+
+# Algoritmo Apriori
+
+El algoritmo **Apriori** es uno de los métodos clásicos para descubrir itemsets frecuentes y generar reglas de asociación.
+
+Su idea central es el principio de **monotonía descendente** o **downward closure**:
+
+> Si un itemset no es frecuente, entonces ninguno de sus superconjuntos puede ser frecuente.
+
+Por ejemplo, si:
+
+$$
+\{A, B\}
+$$
+
+no alcanza el soporte mínimo, entonces ningún itemset que lo contenga podrá alcanzar el soporte mínimo:
+
+$$
+\{A, B, C\}, \{A, B, D\}, \{A, B, C, D\}, \dots
+$$
+
+Esto permite podar una gran parte del espacio de búsqueda.
+
+## Etapas del algoritmo
+
+El procedimiento general es:
+
+1. Identificar los 1-itemsets frecuentes.
+2. Generar candidatos de tamaño 2.
+3. Eliminar candidatos con subconjuntos infrecuentes.
+4. Calcular soporte y conservar solo los frecuentes.
+5. Repetir el proceso para tamaños mayores.
+6. A partir de los itemsets frecuentes, generar reglas.
+7. Filtrar las reglas por confianza mínima u otras métricas.
+
+## Ventajas
+
+- Es conceptualmente sencillo.
+- Produce reglas interpretables.
+- Está ampliamente implementado.
+- Permite restricciones por soporte, confianza, longitud y apariencia.
+
+## Limitaciones
+
+- Puede generar muchísimos candidatos.
+- Requiere varios escaneos de la base de datos.
+- Puede ser costoso con muchos items.
+- Puede producir reglas redundantes o triviales.
+- Es sensible a la elección de soporte y confianza mínimos.
+
+# Algoritmo Eclat
+
+El algoritmo **Eclat** también busca itemsets frecuentes, pero utiliza una representación vertical de las transacciones.
+
+En lugar de guardar cada transacción con sus items, guarda cada item junto con las transacciones donde aparece.
+
+Ejemplo:
+
+| Item | Transacciones |
+|------|---------------|
+| pan  | T1, T2, T3    |
+| leche| T1, T2, T4    |
+| queso| T3, T4        |
+
+Para calcular el soporte de un itemset, Eclat intersecta conjuntos de identificadores de transacción.
+
+Por ejemplo:
+
+$$
+\{pan, leche\} = T(pan) \cap T(leche)
+$$
+
+## Diferencia práctica con Apriori
+
+- Apriori trabaja de forma más explícita con generación de candidatos.
+- Eclat suele ser eficiente para itemsets frecuentes usando intersecciones de identificadores.
+- Eclat genera itemsets frecuentes, no reglas directamente. Después se pueden derivar reglas a partir de esos itemsets.
+
+# Preparación del entorno en R
+
+```{r}
+# Cargamos las librerías necesarias.
+# Se incluyen paquetes para:
+# - manipulación de datos
+# - extracción de reglas de asociación
+# - visualización de reglas
+# - tablas y gráficos
+
+list.of.packages <- c("arules", "arulesViz", "dplyr", "tidyr", "stringr", "ggplot2",
+  "tibble", "purrr", "knitr", "kableExtra", "scales", "forcats", "RColorBrewer")
+
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
+if (length(new.packages) > 0) {
+  install.packages(new.packages)
+}
+
+invisible(lapply(list.of.packages, require, character.only = TRUE))
+rm(list.of.packages, new.packages)
+```
+
+# Conjunto de datos: Groceries
+
+Trabajaremos con el conjunto de datos `Groceries`, incluido en el paquete `arules`.
+
+Este dataset contiene transacciones de supermercado. Cada fila es una cesta de compra y cada item es un producto presente en esa cesta.
+
+```{r}
+data("Groceries")
+Groceries
+```
+
+### Interpretación
+
+El objeto `Groceries` es de clase `transactions`. Esto significa que no es un `data.frame` clásico, sino una estructura optimizada para almacenar información de presencia/ausencia de items.
+
+```{r}
+class(Groceries)
+summary(Groceries)
+```
+
+### Interpretación
+
+La salida de `summary()` permite ver:
+
+- número de transacciones;
+- número de items distintos;
+- densidad de la matriz;
+- distribución del tamaño de las cestas;
+- items más frecuentes.
+
+La **densidad** indica qué proporción de la matriz transacción-item contiene unos. En datos de supermercado suele ser baja, porque cada cliente compra solo unos pocos productos del catálogo total.
+
+# Exploración inicial de las transacciones
+
+## Número de transacciones e items
+
+```{r}
+(n_transacciones <- length(Groceries)
+n_items <- length(itemLabels(Groceries))
+
+n_transacciones
+n_items
+```
+
+### Interpretación
+
+Tenemos `r n_transacciones` transacciones y `r n_items` items distintos. Esto ya anticipa un problema combinatorio: el número potencial de itemsets crece muy rápidamente con el número de items.
+
+## Primeras transacciones
+
+```{r}
+inspect(Groceries[1:5])
+```
+
+### Interpretación
+
+Cada línea representa una cesta de compra. Los elementos entre llaves son los productos comprados conjuntamente.
+
+## Tamaño de las cestas
+
+```{r}
+tamanyos_cesta <- size(Groceries)
+
+summary(tamanyos_cesta)
+```
+
+```{r}
+ggplot(data.frame(tamanyo = tamanyos_cesta), aes(x = tamanyo)) +
+  geom_histogram(binwidth = 1, boundary = 0, color = "white") +
+  labs(
+    title = "Distribución del tamaño de las cestas",
+    subtitle = "Número de items por transacción",
+    x = "Número de items en la cesta",
+    y = "Número de transacciones"
+  ) +
+  theme_minimal()
+```
+
+### Interpretación
+
+Este gráfico permite identificar si las compras suelen ser pequeñas o grandes. Si la mayoría de cestas tienen pocos productos, será más difícil encontrar reglas largas con soporte suficiente.
+
+# Frecuencia de items
+
+## Items más frecuentes
+
+```{r}
+itemFrequencyPlot(
+  Groceries,
+  topN = 20,
+  type = "relative",
+  main = "Top 20 items más frecuentes",
+  ylab = "Soporte relativo"
+)
+```
+
+### Interpretación
+
+Los items más frecuentes suelen aparecer en muchas reglas. Esto puede ser útil, pero también peligroso: productos muy habituales pueden generar reglas de alta confianza pero poco informativas.
+
+## Tabla de frecuencia de items
+
+```{r}
+freq_items <- itemFrequency(Groceries, type = "relative") |>
+  sort(decreasing = TRUE) |>
+  head(20)
+
+freq_items_tbl <- tibble(
+  item = names(freq_items),
+  soporte = as.numeric(freq_items)
+)
+
+freq_items_tbl |>
+  mutate(soporte = percent(soporte, accuracy = 0.01)) |>
+  kable(caption = "Top 20 items por soporte relativo") |>
+  kable_styling(full_width = FALSE)
+```
+
+### Interpretación
+
+El soporte de un item individual indica la proporción de cestas donde aparece. Por ejemplo, si `whole milk` tiene soporte aproximado 0.26, significa que aparece en torno al 26% de las transacciones.
+
+# Extracción de reglas con Apriori
+
+## Primera ejecución
+
+Aplicamos Apriori con parámetros relativamente conservadores.
+
+```{r}
+reglas_1 <- apriori(
+  Groceries,
+  parameter = list(
+    supp = 0.01,
+    conf = 0.5,
+    minlen = 2
+  )
+)
+
+reglas_1
+```
+
+### Interpretación
+
+Los parámetros significan:
+
+- `supp = 0.01`: la regla debe aparecer en al menos el 1% de las transacciones;
+- `conf = 0.5`: al menos el 50% de las transacciones con el antecedente deben contener el consecuente;
+- `minlen = 2`: la regla debe tener al menos dos items en total.
+
+```{r}
+summary(reglas_1)
+```
+
+### Interpretación
+
+La salida resume:
+
+- distribución del número de items por regla;
+- resumen de soporte, confianza, coverage, lift y count;
+- reglas generadas.
+
+Un número muy bajo de reglas puede indicar parámetros demasiado exigentes. Un número muy alto puede indicar parámetros demasiado permisivos.
+
+# Inspección de reglas
+
+## Reglas ordenadas por lift
+
+```{r}
+reglas_lift <- sort(reglas_1, by = "lift", decreasing = TRUE)
+inspect(head(reglas_lift, 10))
+```
+
+### Interpretación
+
+Ordenar por lift ayuda a encontrar asociaciones más fuertes que las esperadas por independencia. Sin embargo, una regla con lift alto pero soporte bajo puede ser poco robusta.
+
+## Reglas ordenadas por confianza
+
+```{r}
+reglas_confianza <- sort(reglas_1, by = "confidence", decreasing = TRUE)
+inspect(head(reglas_confianza, 10))
+```
+
+### Interpretación
+
+Ordenar por confianza responde a la pregunta:
+
+> Dado el antecedente, ¿cuáles son los consecuentes más probables?
+
+Pero hay que verificar si el consecuente no es simplemente un item muy frecuente.
+
+## Reglas ordenadas por soporte
+
+```{r}
+reglas_soporte <- sort(reglas_1, by = "support", decreasing = TRUE)
+inspect(head(reglas_soporte, 10))
+```
+
+### Interpretación
+
+Ordenar por soporte prioriza patrones que afectan a muchas transacciones. Son reglas con mayor cobertura, aunque no necesariamente las más sorprendentes.
+
+# Conversión de reglas a tabla
+
+Para analizar reglas de manera más cómoda, se pueden convertir a `data.frame`.
+
+```{r}
+reglas_df <- as(reglas_1, "data.frame") |>
+  as_tibble()
+
+head(reglas_df)
+```
+
+```{r}
+reglas_df |>
+  arrange(desc(lift)) |>
+  slice(1:15) |>
+  mutate(
+    support = round(support, 4),
+    confidence = round(confidence, 4),
+    coverage = round(coverage, 4),
+    lift = round(lift, 4),
+    count = round(count, 0)
+  ) |>
+  kable(caption = "Top 15 reglas ordenadas por lift") |>
+  kable_styling(full_width = FALSE)
+```
+
+# Visualización de reglas
+
+## Gráfico soporte-confianza coloreado por lift
+
+```{r}
+plot(
+  reglas_1,
+  method = "scatterplot",
+  measure = c("support", "confidence"),
+  shading = "lift"
+)
+```
+
+### Interpretación
+
+Cada punto representa una regla.
+
+- Eje X: soporte.
+- Eje Y: confianza.
+- Color: lift.
+
+Las reglas más interesantes suelen combinar:
+
+- soporte no demasiado bajo;
+- confianza alta;
+- lift mayor que 1.
+
+No obstante, no existe un único criterio universal. La elección depende del problema.
+
+## Gráfico de dos medidas con jitter
+
+```{r}
+plot(
+  reglas_1,
+  method = "two-key plot"
+)
+```
+
+### Interpretación
+
+Este gráfico resume varias métricas simultáneamente. Es útil cuando hay muchas reglas y queremos identificar regiones de interés.
+
+## Grafo de reglas
+
+```{r}
+reglas_top_lift <- head(sort(reglas_1, by = "lift", decreasing = TRUE), 20)
+
+plot(
+  reglas_top_lift,
+  method = "graph",
+  engine = "htmlwidget"
+)
+```
+
+### Interpretación
+
+El grafo permite ver qué items aparecen conectados por reglas. Es especialmente útil para presentaciones o exploración inicial, pero puede volverse ilegible si se muestran demasiadas reglas.
+
+# Filtrado de reglas
+
+## Reglas con un consecuente concreto
+
+Supongamos que nos interesa estudiar qué productos conducen a la compra de `whole milk`.
+
+```{r}
+reglas_whole_milk <- apriori(
+  Groceries,
+  parameter = list(
+    supp = 0.005,
+    conf = 0.3,
+    minlen = 2
+  ),
+  appearance = list(
+    rhs = "whole milk",
+    default = "lhs"
+  )
+)
+
+reglas_whole_milk <- sort(reglas_whole_milk, by = "lift", decreasing = TRUE)
+inspect(head(reglas_whole_milk, 15))
+```
+
+### Interpretación
+
+Aquí forzamos que `whole milk` aparezca en el consecuente. Esto transforma el análisis en una pregunta más dirigida:
+
+> ¿Qué combinaciones de productos se asocian con la presencia de leche?
+
+Esto es útil cuando el negocio tiene un item objetivo: un producto, servicio, conversión o comportamiento.
+
+## Reglas donde aparece un item en cualquier lado
+
+```{r}
+reglas_yogurt <- subset(reglas_1, items %in% "yogurt")
+reglas_yogurt <- sort(reglas_yogurt, by = "lift", decreasing = TRUE)
+inspect(head(reglas_yogurt, 10))
+```
+
+### Interpretación
+
+Este filtro permite estudiar el ecosistema de un item, independientemente de si aparece como antecedente o consecuente.
+
+## Reglas con lift alto y soporte mínimo razonable
+
+```{r}
+reglas_interesantes <- subset(
+  reglas_1,
+  subset = lift > 2 & support > 0.01 & confidence > 0.5
+)
+
+length(reglas_interesantes)
+inspect(sort(reglas_interesantes, by = "lift", decreasing = TRUE))
+```
+
+### Interpretación
+
+Este tipo de filtrado combina varias dimensiones:
+
+- soporte para asegurar presencia mínima;
+- confianza para asegurar fiabilidad condicional;
+- lift para asegurar asociación no trivial.
+
+# Reglas redundantes
+
+Una regla es redundante si no aporta información adicional respecto a otra regla más general.
+
+Por ejemplo:
+
+$$
+\{A\} \Rightarrow \{C\}
+$$
+
+puede hacer redundante a:
+
+$$
+\{A, B\} \Rightarrow \{C\}
+$$
+
+si ambas tienen métricas muy similares y la segunda solo añade complejidad.
+
+```{r}
+reglas_redundantes <- is.redundant(reglas_1)
+table(reglas_redundantes)
+```
+
+```{r}
+reglas_no_redundantes <- reglas_1[!reglas_redundantes]
+
+length(reglas_1)
+length(reglas_no_redundantes)
+```
+
+```{r}
+inspect(head(sort(reglas_no_redundantes, by = "lift", decreasing = TRUE), 15))
+```
+
+### Interpretación
+
+Eliminar reglas redundantes ayuda a producir un conjunto más manejable y más interpretable. En un informe ejecutivo, es preferible presentar pocas reglas robustas y accionables que cientos de reglas similares.
+
+# Comparación de umbrales
+
+La elección de soporte y confianza afecta mucho al número de reglas generadas.
+
+```{r}
+param_grid <- expand.grid(
+  soporte = c(0.001, 0.005, 0.01, 0.02),
+  confianza = c(0.2, 0.4, 0.6, 0.8)
+)
+
+conteo_reglas <- param_grid |>
+  mutate(
+    n_reglas = map2_int(soporte, confianza, function(s, c) {
+      reglas_tmp <- apriori(
+        Groceries,
+        parameter = list(supp = s, conf = c, minlen = 2),
+        control = list(verbose = FALSE)
+      )
+      length(reglas_tmp)
+    })
+  )
+
+conteo_reglas
+```
+
+```{r}
+ggplot(conteo_reglas, aes(x = soporte, y = n_reglas, color = factor(confianza))) +
+  geom_line() +
+  geom_point(size = 2) +
+  scale_x_continuous(labels = percent_format(accuracy = 0.1)) +
+  labs(
+    title = "Efecto del soporte y la confianza en el número de reglas",
+    x = "Soporte mínimo",
+    y = "Número de reglas",
+    color = "Confianza mínima"
+  ) +
+  theme_minimal()
+```
+
+### Interpretación
+
+Al aumentar el soporte mínimo, normalmente disminuye el número de reglas. Al aumentar la confianza mínima, también disminuye el número de reglas. La elección de estos umbrales es una decisión analítica que debe equilibrar:
+
+- interpretabilidad;
+- robustez;
+- número de reglas;
+- objetivo de negocio;
+- tamaño de la base de datos.
+
+# Extracción de itemsets frecuentes
+
+Antes de generar reglas, muchas veces interesa estudiar solo los itemsets frecuentes.
+
+```{r}
+itemsets_frecuentes <- apriori(
+  Groceries,
+  parameter = list(
+    target = "frequent itemsets",
+    supp = 0.02,
+    minlen = 1
+  )
+)
+
+itemsets_frecuentes
+```
+
+```{r}
+inspect(head(sort(itemsets_frecuentes, by = "support", decreasing = TRUE), 20))
+```
+
+### Interpretación
+
+Los itemsets frecuentes muestran grupos de productos que aparecen conjuntamente de forma habitual. No tienen dirección causal ni antecedente-consecuente: simplemente indican coocurrencia.
+
+# Eclat en R
+
+```{r}
+itemsets_eclat <- eclat(
+  Groceries,
+  parameter = list(
+    supp = 0.02,
+    minlen = 2
+  )
+)
+
+itemsets_eclat
+```
+
+```{r}
+inspect(head(sort(itemsets_eclat, by = "support", decreasing = TRUE), 15))
+```
+
+### Interpretación
+
+Eclat devuelve itemsets frecuentes. Si el objetivo es encontrar combinaciones frecuentes sin generar reglas direccionales, Eclat puede ser una alternativa adecuada.
+
+# Creación de datos transaccionales desde cero
+
+En la práctica, los datos no siempre vienen en formato `transactions`. Veamos dos formatos habituales.
+
+## Formato cesta o basket
+
+Cada fila contiene una transacción completa.
+
+```{r}
+datos_basket <- data.frame(
+  transaccion = c(1, 2, 3, 4, 5),
+  item_1 = c("pan", "pan", "leche", "pan", "queso"),
+  item_2 = c("leche", "queso", "huevos", "huevos", "pan"),
+  item_3 = c("huevos", NA, NA, "queso", NA)
+)
+
+datos_basket
+```
+
+```{r}
+lista_basket <- datos_basket |>
+  select(-transaccion) |>
+  apply(1, function(x) na.omit(as.character(x)))
+
+trans_basket <- as(lista_basket, "transactions")
+inspect(trans_basket)
+```
+
+## Formato largo o single
+
+Cada fila representa un item dentro de una transacción.
+
+```{r}
+datos_single <- tibble(
+  id_compra = c(1, 1, 1, 2, 2, 3, 3, 4, 4, 4),
+  item = c("pan", "leche", "huevos", "pan", "queso", "leche", "huevos", "pan", "huevos", "queso")
+)
+
+datos_single
+```
+
+```{r}
+lista_single <- split(datos_single$item, datos_single$id_compra)
+trans_single <- as(lista_single, "transactions")
+inspect(trans_single)
+```
+
+### Interpretación
+
+El formato largo es muy común cuando los datos proceden de una base de datos relacional. Cada compra puede tener varias filas, una por producto.
+
+# Reglas sobre variables categóricas
+
+Las reglas de asociación también pueden aplicarse a datos tabulares categóricos, no solo a cestas de compra.
+
+Vamos a construir un ejemplo artificial con clientes.
+
+```{r}
+set.seed(123)
+
+clientes <- tibble(
+  edad = sample(c("joven", "adulto", "senior"), 500, replace = TRUE, prob = c(0.35, 0.45, 0.20)),
+  canal = sample(c("web", "tienda", "app"), 500, replace = TRUE, prob = c(0.45, 0.35, 0.20)),
+  segmento = sample(c("bajo", "medio", "alto"), 500, replace = TRUE, prob = c(0.40, 0.40, 0.20)),
+  compra_premium = sample(c("no", "si"), 500, replace = TRUE, prob = c(0.75, 0.25)),
+  usa_cupon = sample(c("no", "si"), 500, replace = TRUE, prob = c(0.65, 0.35))
+)
+
+# Introducimos una asociación artificial:
+clientes <- clientes |>
+  mutate(
+    compra_premium = ifelse(edad == "adulto" & canal == "app" & segmento == "alto", "si", compra_premium)
+  )
+
+head(clientes)
+```
+
+Para convertir un `data.frame` categórico a transacciones, cada variable-nivel se convierte en un item.
+
+```{r}
+clientes_trans <- as(clientes, "transactions")
+clientes_trans
+inspect(clientes_trans[1:5])
+```
+
+```{r}
+reglas_clientes <- apriori(
+  clientes_trans,
+  parameter = list(
+    supp = 0.03,
+    conf = 0.5,
+    minlen = 2
+  ),
+  appearance = list(
+    rhs = "compra_premium=si",
+    default = "lhs"
+  )
+)
+
+reglas_clientes <- sort(reglas_clientes, by = "lift", decreasing = TRUE)
+inspect(head(reglas_clientes, 15))
+```
+
+### Interpretación
+
+Este análisis responde a una pregunta de perfilado:
+
+> ¿Qué combinaciones de atributos se asocian con la compra premium?
+
+Este enfoque puede ser útil para segmentación descriptiva, pero no sustituye a un modelo supervisado si el objetivo principal es predecir.
+
+# Discretización de variables numéricas
+
+Los algoritmos de reglas de asociación trabajan con items discretos. Si tenemos variables numéricas, debemos convertirlas en intervalos.
+
+```{r}
+set.seed(321)
+
+datos_num <- tibble(
+  edad = round(rnorm(400, mean = 42, sd = 12)),
+  gasto = round(rlnorm(400, meanlog = 3.5, sdlog = 0.5), 1),
+  visitas = rpois(400, lambda = 4),
+  canal = sample(c("web", "tienda", "app"), 400, replace = TRUE)
+)
+
+datos_num <- datos_num |>
+  mutate(
+    gasto_alto = ifelse(gasto > quantile(gasto, 0.75), "si", "no")
+  )
+
+head(datos_num)
+```
+
+```{r}
+datos_discretos <- datos_num |>
+  mutate(
+    edad_grupo = cut(
+      edad,
+      breaks = c(-Inf, 30, 50, Inf),
+      labels = c("edad_joven", "edad_media", "edad_alta")
+    ),
+    gasto_grupo = cut(
+      gasto,
+      breaks = quantile(gasto, probs = c(0, 0.33, 0.66, 1)),
+      include.lowest = TRUE,
+      labels = c("gasto_bajo", "gasto_medio", "gasto_alto_intervalo")
+    ),
+    visitas_grupo = cut(
+      visitas,
+      breaks = c(-Inf, 2, 5, Inf),
+      labels = c("visitas_bajas", "visitas_medias", "visitas_altas")
+    )
+  ) |>
+  select(edad_grupo, gasto_grupo, visitas_grupo, canal, gasto_alto)
+
+head(datos_discretos)
+```
+
+```{r}
+trans_discretas <- as(datos_discretos, "transactions")
+
+reglas_gasto <- apriori(
+  trans_discretas,
+  parameter = list(
+    supp = 0.03,
+    conf = 0.5,
+    minlen = 2
+  ),
+  appearance = list(
+    rhs = "gasto_alto=si",
+    default = "lhs"
+  )
+)
+
+reglas_gasto <- sort(reglas_gasto, by = "lift", decreasing = TRUE)
+inspect(head(reglas_gasto, 10))
+```
+
+### Interpretación
+
+La discretización transforma variables continuas en categorías interpretables. Sin embargo, la elección de cortes puede afectar mucho a las reglas obtenidas.
+
+Buenas prácticas:
+
+- usar cortes con sentido de negocio cuando existan;
+- evitar crear demasiados intervalos;
+- comprobar que cada intervalo tenga suficientes observaciones;
+- comparar resultados con diferentes discretizaciones.
+
+# Diagnóstico de reglas
+
+Una regla interesante debería cumplir varias condiciones:
+
+1. **Soporte suficiente**: aparece en un número razonable de casos.
+2. **Confianza adecuada**: el consecuente aparece a menudo dado el antecedente.
+3. **Lift mayor que 1**: hay asociación positiva frente a independencia.
+4. **Interpretabilidad**: la regla se puede explicar de forma clara.
+5. **Accionabilidad**: se puede tomar una decisión a partir de ella.
+6. **No trivialidad**: no refleja algo evidente o tautológico.
+7. **Estabilidad**: se mantiene en diferentes muestras o periodos.
+
+# Validación mediante partición train/test
+
+Aunque las reglas de asociación son no supervisadas, podemos evaluar si las reglas descubiertas en una muestra siguen teniendo sentido en otra.
+
+```{r}
+set.seed(123)
+
+idx_train <- sample(seq_along(Groceries), size = round(0.7 * length(Groceries)))
+groceries_train <- Groceries[idx_train]
+groceries_test <- Groceries[-idx_train]
+
+reglas_train <- apriori(
+  groceries_train,
+  parameter = list(
+    supp = 0.01,
+    conf = 0.5,
+    minlen = 2
+  ),
+  control = list(verbose = FALSE)
+)
+
+reglas_train <- sort(reglas_train, by = "lift", decreasing = TRUE)
+reglas_train_top <- head(reglas_train, 20)
+
+inspect(reglas_train_top)
+```
+
+```{r}
+# Evaluación aproximada de calidad en test mediante interestMeasure
+medidas_test <- interestMeasure(
+  reglas_train_top,
+  transactions = groceries_test,
+  measure = c("support", "confidence", "lift", "count")
+)
+
+medidas_train <- quality(reglas_train_top)[, c("support", "confidence", "lift", "count")]
+
+comparacion <- bind_cols(
+  regla = labels(reglas_train_top),
+  train_support = medidas_train$support,
+  train_confidence = medidas_train$confidence,
+  train_lift = medidas_train$lift,
+  test_support = medidas_test$support,
+  test_confidence = medidas_test$confidence,
+  test_lift = medidas_test$lift
+)
+
+comparacion |>
+  mutate(across(where(is.numeric), ~ round(.x, 4))) |>
+  kable(caption = "Comparación de reglas entre train y test") |>
+  kable_styling(full_width = FALSE)
+```
+
+### Interpretación
+
+Si una regla tiene lift alto en train pero desaparece en test, puede tratarse de un patrón inestable. En aplicaciones reales, esta validación temporal o por particiones es muy recomendable.
+
+# Recomendaciones prácticas
+
+## Cómo elegir soporte mínimo
+
+Depende del tamaño de la base de datos y del objetivo.
+
+Si hay pocas transacciones, un soporte demasiado bajo genera reglas basadas en pocos casos. Si hay millones de transacciones, un soporte del 0.1% puede seguir representando miles de casos.
+
+Una regla práctica es traducir soporte a número absoluto:
+
+$$
+\text{count mínimo} = n \cdot \text{support mínimo}
+$$
+
+Por ejemplo, con 10.000 transacciones:
+
+- soporte 0.01 equivale a 100 transacciones;
+- soporte 0.005 equivale a 50 transacciones;
+- soporte 0.001 equivale a 10 transacciones.
+
+## Cómo elegir confianza mínima
+
+La confianza debe compararse con el soporte del consecuente.
+
+Una confianza del 60% puede parecer alta, pero si el consecuente aparece globalmente en el 80% de las transacciones, la regla no es interesante.
+
+Por eso conviene revisar también lift y leverage.
+
+## Cómo presentar resultados
+
+En una presentación o informe, no conviene mostrar 200 reglas. Es mejor seleccionar entre 5 y 15 reglas representativas y explicar:
+
+- regla;
+- soporte;
+- confianza;
+- lift;
+- número de casos;
+- interpretación;
+- posible acción.
+
+# Ejemplo de informe interpretativo
+
+Supongamos que encontramos una regla:
+
+$$
+\{\text{yogurt}, \text{tropical fruit}\} \Rightarrow \{\text{whole milk}\}
+$$
+
+con:
+
+- soporte = 0.015;
+- confianza = 0.52;
+- lift = 2.05;
+- count = 148.
+
+La interpretación sería:
+
+> El 1.5% de todas las cestas contienen simultáneamente yogurt, fruta tropical y leche. Entre las cestas que contienen yogurt y fruta tropical, el 52% también contienen leche. Además, la compra de leche es aproximadamente 2.05 veces más frecuente en estas cestas que lo que cabría esperar si no hubiera asociación entre los productos.
+
+Posible acción:
+
+> Se podría probar una recomendación automática de leche cuando el cliente añada yogurt y fruta tropical al carrito, o situar estos productos en zonas próximas si el objetivo es aumentar venta cruzada.
+
+Precaución:
+
+> La regla no demuestra causalidad. Antes de tomar decisiones permanentes, convendría validar el patrón en otro periodo o mediante un experimento A/B.
+
+# Errores frecuentes
+
+## Confundir confianza con causalidad
+
+Una regla con confianza alta no significa que el antecedente cause el consecuente.
+
+## Ignorar el soporte
+
+Una regla con confianza 100% puede estar basada en muy pocas transacciones.
+
+## Ignorar la frecuencia del consecuente
+
+Si el consecuente es muy frecuente, muchas reglas tendrán confianza alta aunque no sean interesantes.
+
+## Mostrar demasiadas reglas
+
+El objetivo no es generar la mayor cantidad posible de reglas, sino encontrar patrones útiles.
+
+## No filtrar reglas redundantes
+
+Muchas reglas pueden ser variaciones mínimas de otras reglas más simples.
+
+## No validar estabilidad
+
+Los patrones pueden cambiar con el tiempo, por temporada, promociones o cambios de catálogo.
+
+# Ejercicio guiado 1
+
+Con el dataset `Groceries`:
+
+1. Genera reglas con soporte mínimo 0.005 y confianza mínima 0.4.
+2. Ordena las reglas por lift.
+3. Filtra las reglas donde el consecuente sea `whole milk`.
+4. Elimina reglas redundantes.
+5. Selecciona las 10 mejores reglas.
+6. Interpreta soporte, confianza y lift de las 3 primeras.
+
+```{r}
+reglas_ejercicio <- apriori(
+  Groceries,
+  parameter = list(
+    supp = 0.005,
+    conf = 0.4,
+    minlen = 2
+  ),
+  appearance = list(
+    rhs = "whole milk",
+    default = "lhs"
+  )
+)
+
+reglas_ejercicio <- reglas_ejercicio[!is.redundant(reglas_ejercicio)]
+reglas_ejercicio <- sort(reglas_ejercicio, by = "lift", decreasing = TRUE)
+
+inspect(head(reglas_ejercicio, 10))
+```
+
+# Ejercicio guiado 2
+
+Estudia qué productos están relacionados con `yogurt`.
+
+```{r}
+reglas_yogurt_2 <- apriori(
+  Groceries,
+  parameter = list(
+    supp = 0.005,
+    conf = 0.3,
+    minlen = 2
+  )
+)
+
+reglas_yogurt_2 <- subset(reglas_yogurt_2, items %in% "yogurt")
+reglas_yogurt_2 <- reglas_yogurt_2[!is.redundant(reglas_yogurt_2)]
+reglas_yogurt_2 <- sort(reglas_yogurt_2, by = "lift", decreasing = TRUE)
+
+inspect(head(reglas_yogurt_2, 15))
+```
+
+### Preguntas
+
+- ¿Aparece `yogurt` más a menudo en el antecedente o en el consecuente?
+- ¿Qué reglas tienen mayor lift?
+- ¿Alguna regla parece trivial?
+- ¿Qué acción comercial se podría derivar?
+
+# Resumen final
+
+Las reglas de asociación son una herramienta potente para descubrir patrones de coocurrencia en datos transaccionales o categóricos. Su principal fortaleza es la **interpretabilidad**: producen reglas fáciles de comunicar.
+
+Sin embargo, deben utilizarse con cuidado. El analista debe evitar interpretar automáticamente las reglas como relaciones causales y debe considerar simultáneamente varias métricas.
+
+Las ideas clave son:
+
+- el soporte mide frecuencia global del patrón;
+- la confianza mide frecuencia condicional;
+- el lift compara la regla con lo esperado bajo independencia;
+- el leverage mide diferencia absoluta frente a independencia;
+- la coverage indica cuántos casos activa el antecedente;
+- Apriori usa poda para reducir el espacio de búsqueda;
+- Eclat usa representación vertical e intersecciones;
+- la visualización y el filtrado son esenciales para interpretar resultados;
+- la validación en otra muestra ayuda a detectar reglas inestables.
+
+# Bibliografía y recursos recomendados
+
+- Agrawal, R., Imieliński, T., & Swami, A. (1993). *Mining association rules between sets of items in large databases*. Proceedings of the ACM SIGMOD International Conference on Management of Data.
+- Hahsler, M., Grün, B., & Hornik, K. (2005). *arules: A computational environment for mining association rules and frequent item sets*. Journal of Statistical Software.
+- Hahsler, M. (2017). *arulesViz: Interactive visualization of association rules with R*. The R Journal.
+- Han, J., Pei, J., & Yin, Y. (2000). *Mining frequent patterns without candidate generation*. ACM SIGMOD.
+- Zaki, M. J. (2000). *Scalable algorithms for association mining*. IEEE Transactions on Knowledge and Data Engineering.
+- Amat Rodrigo, J. (2018). *Reglas de asociación y algoritmo Apriori con R*. Ciencia de Datos.
+
