@@ -4,8 +4,6 @@ toc: true
 number-sections: true
 ---
 
-[Introducció de l'assignatura]()
-
 # Topics
 
 ## Data Sciences Tools
@@ -50,21 +48,17 @@ number-sections: true
 
 ## Decisions Trees, Bagging and Ensamble Methods
 
-[Decisions Trees]()
+[Decisions Trees](docs/material/07_DecisionTrees_Bagging_Boosting/Decision_Tree.html)
 
-[Random Forest]()
+[Random Forest](docs/material/07_DecisionTrees_Bagging_Boosting/)
 
 [Bagging Methods]()
 
 ## Discriminant models and Non Parametric Discriminant
 
-[Naives Bayes]()
+[Naives Bayes y k-Nearest Neighbour (KNN)]()
 
-[k-Nearest Neighbour]()
-
-[Linear Discriminant Analysis (LDA)]()
-
-[Cuadratic Discriminant Analysis (QDA)]()
+[Linear Discriminant Analysis (LDA) y Cuadratic Discriminant Analysis (QDA)]()
 
 ## Support Vector Machine (SVM)
 
