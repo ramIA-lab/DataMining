@@ -56,7 +56,7 @@ number-sections: true
 
 ## Discriminant models and Non Parametric Discriminant
 
-[Naives Bayes y k-Nearest Neighbour (KNN)]()
+[Naives Bayes y k-Nearest Neighbour (KNN)](docs/material/08_Discriminant _models_Non_Parametric/KnnNB.html)
 
 [Linear Discriminant Analysis (LDA) y Cuadratic Discriminant Analysis (QDA)]()
 
