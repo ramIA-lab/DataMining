@@ -58,7 +58,7 @@ number-sections: true
 
 [Naives Bayes y k-Nearest Neighbour (KNN)](docs/material/08_Discriminant _models_Non_Parametric/KnnNB.html)
 
-[Linear Discriminant Analysis (LDA) y Cuadratic Discriminant Analysis (QDA)]()
+[Linear Discriminant Analysis (LDA) y Cuadratic Discriminant Analysis (QDA)](docs/material/08_Discriminant _models_Non_Parametric/LDA_QDA.html)
 
 ## Support Vector Machine (SVM)
 

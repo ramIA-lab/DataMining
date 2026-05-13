@@ -1,0 +1,1182 @@
+---
+title: "Discriminant Analysis"
+subtitle: "Linear Discriminant Analysis (LDA) y Quadratic Discriminant Analysis (QDA)"
+author: Dante Conti, Sergi Ramirez, (c) IDEAI
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: show
+    code-summary: "Mostrar código"
+    embed-resources: true
+    code-tools: true
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+## Definición del problema
+
+### Contexto
+
+En este documento trabajaremos con una base de datos clásica de clasificación: **Wine Recognition Dataset**. Cada fila representa una muestra de vino procedente de una de tres variedades distintas. El objetivo es construir modelos capaces de clasificar correctamente la variedad del vino a partir de medidas químicas.
+
+El fichero original `LDA.R` desarrolla un flujo completo de **Linear Discriminant Analysis (LDA)** en R. En este documento se mantiene esa lógica, se amplía la explicación docente, se organiza el material siguiendo la estructura del ejemplo `KnnNB.qmd` y se añade una sección completa de **Quadratic Discriminant Analysis (QDA)**.
+
+Las variables de la base de datos son:
+
+- **Wine**: clase o variedad del vino. Es la variable respuesta.
+- **Alcohol**: contenido de alcohol.
+- **Malic.acid**: ácido málico.
+- **Ash**: cenizas.
+- **Acl**: alcalinidad de las cenizas.
+- **Mg**: magnesio.
+- **Phenols**: fenoles totales.
+- **Flavanoids**: flavonoides.
+- **Nonflavanoid.phenols**: fenoles no flavonoides.
+- **Proanth**: proantocianinas.
+- **Color.int**: intensidad del color.
+- **Hue**: tonalidad.
+- **OD**: medida de dilución óptica.
+- **Proline**: prolina.
+
+### Objetivo
+
+El objetivo es enseñar cómo funcionan LDA y QDA desde un punto de vista aplicado:
+
+1. Cargar y preparar una base de datos de clasificación multiclase.
+2. Dividir los datos en entrenamiento y test.
+3. Ajustar un modelo LDA.
+4. Interpretar las funciones discriminantes lineales.
+5. Visualizar las clases en el espacio discriminante.
+6. Clasificar observaciones nuevas.
+7. Evaluar el modelo con matriz de confusión y accuracy.
+8. Ajustar un modelo QDA.
+9. Comparar LDA y QDA desde el punto de vista conceptual y predictivo.
+
+## Fundamentos teóricos
+
+### Idea general del análisis discriminante
+
+El **análisis discriminante** es una familia de métodos supervisados de clasificación. Partimos de observaciones etiquetadas, es decir, observaciones para las que conocemos la clase real. A partir de esas observaciones, el modelo aprende una regla de clasificación que después se usa para asignar clase a nuevas observaciones.
+
+En este caso queremos predecir:
+
+\[
+Y \in \{1, 2, 3\}
+\]
+
+usando un vector de variables predictoras:
+
+\[
+X = (X_1, X_2, \ldots, X_p)
+\]
+
+La pregunta central es:
+
+> Dadas las características químicas de un vino, ¿a qué clase pertenece?
+
+### LDA: Linear Discriminant Analysis
+
+LDA asume que las variables predictoras siguen una distribución normal multivariante dentro de cada grupo y que todos los grupos comparten la misma matriz de covarianzas.
+
+De forma simplificada:
+
+\[
+X \mid Y = k \sim \mathcal{N}(\mu_k, \Sigma)
+\]
+
+Donde:
+
+- \(\mu_k\) es el vector de medias del grupo \(k\).
+- \(\Sigma\) es la matriz de covarianzas común para todos los grupos.
+
+La consecuencia práctica es que las fronteras de decisión entre clases son **lineales**. Por eso el método se llama análisis discriminante **lineal**.
+
+### QDA: Quadratic Discriminant Analysis
+
+QDA relaja una de las hipótesis fuertes de LDA. En QDA se permite que cada clase tenga su propia matriz de covarianzas:
+
+\[
+X \mid Y = k \sim \mathcal{N}(\mu_k, \Sigma_k)
+\]
+
+Donde:
+
+- \(\mu_k\) es el vector de medias del grupo \(k\).
+- \(\Sigma_k\) es la matriz de covarianzas específica del grupo \(k\).
+
+La consecuencia práctica es que las fronteras de decisión pueden ser **cuadráticas**. QDA es más flexible que LDA, pero también necesita más datos para estimar correctamente más parámetros.
+
+### Diferencias entre LDA y QDA
+
+| Aspecto | LDA | QDA |
+|---|---|---|
+| Covarianzas | Comunes para todas las clases | Una covarianza por clase |
+| Frontera de decisión | Lineal | Cuadrática |
+| Flexibilidad | Menor | Mayor |
+| Riesgo de sobreajuste | Menor | Mayor |
+| Requisitos de datos | Menos exigente | Más exigente |
+| Interpretabilidad | Alta | Media |
+
+En general:
+
+- Si las clases tienen estructuras de dispersión parecidas, **LDA** suele ser una buena opción.
+- Si las clases tienen estructuras de dispersión muy distintas y hay suficientes datos, **QDA** puede capturar mejor la separación.
+
+## Carga y preparación de datos
+
+La base de datos se carga desde una URL pública. Para que el documento sea reproducible, todo el proceso de carga, transformación y partición se incluye dentro del propio `.qmd`.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: cargar-librerias-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Librerías necesarias
+# ==============================================================================
+
+# MASS contiene las funciones lda() y qda().
+library(MASS)
+
+# caret se utilizará para crear la partición train/test y calcular matrices
+# de confusión de forma cómoda.
+library(caret)
+
+# ggplot2 se usará para visualizaciones más docentes.
+library(ggplot2)
+
+# dplyr se usará para manipulación sencilla de datos.
+library(dplyr)
+
+# klaR permite dibujar regiones de decisión con partimat().
+# Si no está instalado, se omite la parte correspondiente más adelante.
+if (requireNamespace("klaR", quietly = TRUE)) {
+  library(klaR)
+}
+
+# biotools permite realizar el test de Box's M para comparar matrices de
+# covarianzas entre grupos. Si no está instalado, se omite esa parte.
+if (requireNamespace("biotools", quietly = TRUE)) {
+  library(biotools)
+}
+```
+
+```{r}
+#| label: cargar-datos-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Carga de la base de datos Wine
+# ==============================================================================
+
+url <- "https://gist.githubusercontent.com/tijptjik/9408623/raw/b237fa5848349a14a14e5d4107dc7897c21951f5/wine.csv"
+
+wine <- read.csv(url, sep = ",", stringsAsFactors = TRUE)
+
+# Comprobamos los nombres de las variables.
+names(wine)
+
+# La variable Wine es la clase del problema. Nos aseguramos de que sea factor.
+wine$Wine <- as.factor(wine$Wine)
+
+# Vista inicial de la base de datos.
+str(wine)
+summary(wine)
+head(wine)
+```
+
+## Python
+
+```{python}
+#| label: cargar-datos-python
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Carga de la base de datos Wine en Python
+# ==============================================================================
+
+import pandas as pd
+import numpy as np
+
+url = "https://gist.githubusercontent.com/tijptjik/9408623/raw/b237fa5848349a14a14e5d4107dc7897c21951f5/wine.csv"
+
+wine_py = pd.read_csv(url)
+
+# Convertimos la variable objetivo a tipo categórico.
+wine_py["Wine"] = wine_py["Wine"].astype("category")
+
+print(wine_py.head())
+print(wine_py.info())
+```
+:::
+
+## Análisis exploratorio inicial
+
+Antes de ajustar cualquier modelo conviene inspeccionar si las clases están razonablemente separadas en algunas variables y si hay diferencias claras en las medias.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: exploratorio-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Número de observaciones por clase.
+table(wine$Wine)
+
+# Medias por grupo para algunas variables relevantes.
+wine %>%
+  group_by(Wine) %>%
+  summarise(
+    Alcohol_media = mean(Alcohol),
+    Flavanoids_media = mean(Flavanoids),
+    Color_int_media = mean(Color.int),
+    Proline_media = mean(Proline),
+    .groups = "drop"
+  )
+```
+
+```{r}
+#| label: graficos-exploratorios-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Boxplot de Alcohol por clase.
+ggplot(wine, aes(x = Wine, y = Alcohol, fill = Wine)) +
+  geom_boxplot(alpha = 0.75) +
+  theme_minimal() +
+  labs(
+    title = "Distribución de Alcohol por clase de vino",
+    x = "Clase de vino",
+    y = "Alcohol"
+  ) +
+  theme(legend.position = "none")
+
+# Relación entre flavonoides y prolina.
+ggplot(wine, aes(x = Flavanoids, y = Proline, color = Wine)) +
+  geom_point(size = 2, alpha = 0.85) +
+  theme_minimal() +
+  labs(
+    title = "Separación visual de clases usando dos variables",
+    x = "Flavanoids",
+    y = "Proline"
+  )
+```
+
+## Python
+
+```{python}
+#| label: exploratorio-python
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Resumen de frecuencias por clase.
+print(wine_py["Wine"].value_counts())
+
+# Medias por grupo.
+print(
+    wine_py.groupby("Wine", observed=True)[["Alcohol", "Flavanoids", "Color.int", "Proline"]]
+    .mean()
+)
+```
+:::
+
+## Partición en entrenamiento y test
+
+La partición train/test sirve para estimar el rendimiento del modelo sobre observaciones que no se han utilizado durante el ajuste. En este documento usaremos una partición estratificada para conservar la proporción de clases.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: particion-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Partición train/test
+# ==============================================================================
+
+set.seed(123)
+
+# createDataPartition mantiene aproximadamente la proporción de cada clase.
+trainIndex <- createDataPartition(wine$Wine, p = 0.8, list = FALSE, times = 1)
+
+train <- wine[trainIndex, ]
+test  <- wine[-trainIndex, ]
+
+# Comprobamos el tamaño de cada conjunto.
+dim(train)
+dim(test)
+
+# Comprobamos la distribución de clases.
+prop.table(table(train$Wine))
+prop.table(table(test$Wine))
+```
+
+## Python
+
+```{python}
+#| label: particion-python
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.model_selection import train_test_split
+
+X_py = wine_py.drop(columns=["Wine"])
+y_py = wine_py["Wine"]
+
+X_train_py, X_test_py, y_train_py, y_test_py = train_test_split(
+    X_py,
+    y_py,
+    test_size=0.2,
+    random_state=123,
+    stratify=y_py
+)
+
+print(X_train_py.shape)
+print(X_test_py.shape)
+print(y_train_py.value_counts(normalize=True))
+print(y_test_py.value_counts(normalize=True))
+```
+:::
+
+## LDA
+
+### Ajuste del modelo LDA
+
+El modelo LDA se ajusta con la función `lda()` del paquete `MASS`. La fórmula `Wine ~ .` indica que queremos predecir `Wine` usando todas las demás variables como predictoras.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: ajustar-lda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Ajuste del modelo LDA
+# ==============================================================================
+
+wine_lda <- lda(Wine ~ ., data = train)
+
+# Mostramos el objeto del modelo.
+wine_lda
+```
+
+```{r}
+#| label: interpretar-lda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Elementos principales del objeto LDA
+# ==============================================================================
+
+# 1) Probabilidades a priori: proporción de cada clase en train.
+wine_lda$prior
+
+# 2) Medias de grupo: centro de cada clase para cada variable.
+wine_lda$means
+
+# 3) Coeficientes de las funciones discriminantes.
+# En un problema con K clases, como máximo hay K - 1 funciones discriminantes.
+wine_lda$scaling
+
+# 4) Proporción de traza: importancia relativa de cada función discriminante.
+wine_lda$svd^2 / sum(wine_lda$svd^2)
+```
+
+## Python
+
+```{python}
+#| label: ajustar-lda-python
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
+# ==============================================================================
+# Ajuste del modelo LDA en Python
+# ==============================================================================
+
+lda_py = LinearDiscriminantAnalysis()
+lda_py.fit(X_train_py, y_train_py)
+
+print("Clases:", lda_py.classes_)
+print("Probabilidades a priori:", lda_py.priors_)
+print("Proporción explicada por cada eje discriminante:", lda_py.explained_variance_ratio_)
+```
+:::
+
+### Proyección en el espacio discriminante
+
+LDA no solo clasifica. También construye nuevas variables llamadas **funciones discriminantes**. Estas funciones son combinaciones lineales de las variables originales y buscan maximizar la separación entre clases.
+
+Como hay tres clases, LDA puede construir como máximo dos funciones discriminantes:
+
+\[
+K - 1 = 3 - 1 = 2
+\]
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: proyeccion-lda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Proyección de train sobre los ejes discriminantes
+# ==============================================================================
+
+lda_train_pred <- predict(wine_lda, train[, -1])
+
+# lda_train_pred$x contiene las coordenadas LD1 y LD2.
+head(lda_train_pred$x)
+
+# Añadimos las coordenadas al dataset de entrenamiento para graficar.
+train_lda_plot <- train
+train_lda_plot$LD1 <- lda_train_pred$x[, 1]
+train_lda_plot$LD2 <- lda_train_pred$x[, 2]
+
+head(train_lda_plot[, c("Wine", "LD1", "LD2")])
+```
+
+```{r}
+#| label: grafico-proyeccion-lda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Representación de las observaciones en el espacio discriminante.
+ggplot(train_lda_plot, aes(x = LD1, y = LD2, color = Wine)) +
+  geom_point(size = 2.5, alpha = 0.85) +
+  theme_minimal() +
+  labs(
+    title = "LDA: proyección de los vinos en el espacio discriminante",
+    subtitle = "LD1 y LD2 son combinaciones lineales de las variables químicas",
+    x = "Primera función discriminante: LD1",
+    y = "Segunda función discriminante: LD2"
+  )
+```
+
+```{r}
+#| label: lda-base-plot-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Gráfico base de MASS. Es útil para visualizar la separación por clases.
+plot(wine_lda, main = "Representación de los vinos en el espacio factorial LDA")
+```
+
+## Python
+
+```{python}
+#| label: proyeccion-lda-python
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Proyección de train sobre los ejes discriminantes en Python
+# ==============================================================================
+
+X_train_lda_py = lda_py.transform(X_train_py)
+
+lda_train_df_py = pd.DataFrame(X_train_lda_py, columns=["LD1", "LD2"])
+lda_train_df_py["Wine"] = y_train_py.reset_index(drop=True)
+
+print(lda_train_df_py.head())
+```
+:::
+
+### Histogramas discriminantes
+
+Los histogramas discriminantes muestran cómo se distribuyen las clases sobre cada eje LD. Son útiles para interpretar si una función discriminante separa bien las categorías.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: histogramas-lda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Histogramas de las funciones discriminantes
+# ==============================================================================
+
+# LD1 suele capturar la mayor parte de la separación.
+ldahist(lda_train_pred$x[, 1], g = train$Wine, ymax = 1)
+
+# LD2 captura separación adicional entre clases.
+ldahist(lda_train_pred$x[, 2], g = train$Wine, ymax = 1)
+```
+
+## Python
+
+```{python}
+#| label: histogramas-lda-python
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# En Python construiríamos histogramas por clase usando matplotlib.
+# Se deja el código listo para ejecutarse en un entorno Jupyter/Quarto.
+
+import matplotlib.pyplot as plt
+
+for clase in lda_train_df_py["Wine"].cat.categories:
+    subset = lda_train_df_py[lda_train_df_py["Wine"] == clase]
+    plt.hist(subset["LD1"], alpha=0.5, label=f"Clase {clase}")
+
+plt.title("Histograma de LD1 por clase")
+plt.xlabel("LD1")
+plt.ylabel("Frecuencia")
+plt.legend()
+plt.show()
+
+for clase in lda_train_df_py["Wine"].cat.categories:
+    subset = lda_train_df_py[lda_train_df_py["Wine"] == clase]
+    plt.hist(subset["LD2"], alpha=0.5, label=f"Clase {clase}")
+
+plt.title("Histograma de LD2 por clase")
+plt.xlabel("LD2")
+plt.ylabel("Frecuencia")
+plt.legend()
+plt.show()
+```
+:::
+
+### Clasificación con `predict()`
+
+Aunque el script original muestra una clasificación manual basada en reglas sobre LD1 y LD2, en la práctica habitual se utiliza `predict()`. Esta función devuelve:
+
+- La clase predicha.
+- Las probabilidades posteriores de pertenecer a cada clase.
+- Las coordenadas de cada observación en el espacio discriminante.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: prediccion-lda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Predicción sobre test
+# ==============================================================================
+
+lda_test_pred <- predict(wine_lda, newdata = test[, -1])
+
+# Clase predicha para las primeras observaciones.
+head(lda_test_pred$class)
+
+# Probabilidades posteriores para las primeras observaciones.
+head(lda_test_pred$posterior)
+
+# Coordenadas LD1 y LD2 para test.
+head(lda_test_pred$x)
+```
+
+```{r}
+#| label: evaluacion-lda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Matriz de confusión y accuracy para LDA
+# ==============================================================================
+
+MC_lda <- table(
+  Real = test$Wine,
+  Predicho = lda_test_pred$class
+)
+
+MC_lda
+
+accuracy_lda <- sum(diag(MC_lda)) / sum(MC_lda)
+accuracy_lda
+
+# Versión con caret.
+confusionMatrix(
+  data = lda_test_pred$class,
+  reference = test$Wine
+)
+```
+
+## Python
+
+```{python}
+#| label: prediccion-lda-python
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+
+# ==============================================================================
+# Predicción sobre test con LDA en Python
+# ==============================================================================
+
+y_pred_lda_py = lda_py.predict(X_test_py)
+y_prob_lda_py = lda_py.predict_proba(X_test_py)
+
+print("Matriz de confusión LDA:")
+print(confusion_matrix(y_test_py, y_pred_lda_py))
+
+print("Accuracy LDA:", accuracy_score(y_test_py, y_pred_lda_py))
+
+print(classification_report(y_test_py, y_pred_lda_py))
+```
+:::
+
+### Clasificación manual basada en reglas LDA
+
+El fichero `LDA.R` incluía una regla manual construida a partir de LD1 y LD2. Esta idea es didácticamente interesante porque ayuda a entender que LDA transforma los datos a un espacio donde las clases pueden separarse mejor.
+
+En este ejemplo se mantiene esa lógica, pero debe entenderse como una regla aproximada dependiente de la base de datos y de la partición train/test.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: regla-manual-lda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Regla manual basada en LD1 y LD2
+# ==============================================================================
+
+# Añadimos LD1 y LD2 al conjunto test.
+test_regla <- test
+test_regla$LD1 <- lda_test_pred$x[, 1]
+test_regla$LD2 <- lda_test_pred$x[, 2]
+
+# Regla inspirada en el script original:
+# - Si LD2 < 0, asignamos clase 2.
+# - Si LD2 >= 0 y LD1 < 0, asignamos clase 1.
+# - En caso contrario, asignamos clase 3.
+#
+# IMPORTANTE: esta regla no es universal. Funciona solo si la geometría del
+# espacio discriminante tiene una estructura compatible con estos cortes.
+
+test_regla$Regla <- NA
+
+for (i in 1:nrow(test_regla)) {
+  if (test_regla[i, "LD2"] < 0) {
+    test_regla[i, "Regla"] <- "2"
+  } else {
+    if (test_regla[i, "LD1"] < 0) {
+      test_regla[i, "Regla"] <- "1"
+    } else {
+      test_regla[i, "Regla"] <- "3"
+    }
+  }
+}
+
+test_regla$Regla <- factor(test_regla$Regla, levels = levels(test$Wine))
+
+MC_regla <- table(
+  Real = test_regla$Wine,
+  Predicho = test_regla$Regla
+)
+
+MC_regla
+
+accuracy_regla <- sum(diag(MC_regla)) / sum(MC_regla)
+accuracy_regla
+```
+:::
+
+### Visualización de fronteras de decisión LDA
+
+Para representar fronteras de decisión en dos dimensiones, seleccionamos unas pocas variables. No podemos dibujar una frontera en 13 dimensiones directamente, por eso esta visualización es una simplificación didáctica.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: fronteras-lda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Fronteras de decisión LDA con algunas variables
+# ==============================================================================
+
+# partimat() es útil para docencia porque muestra regiones de clasificación.
+# Solo se ejecuta si el paquete klaR está instalado.
+
+if (requireNamespace("klaR", quietly = TRUE)) {
+  partimat(
+    Wine ~ Alcohol + Acl + Mg + Proline,
+    data = wine,
+    method = "lda",
+    prec = 200,
+    image.colors = c("darkgoldenrod1", "snow2", "skyblue2"),
+    col.mean = "firebrick"
+  )
+} else {
+  message("El paquete 'klaR' no está instalado. Se omite partimat().")
+}
+```
+:::
+
+## Comprobación de supuestos
+
+LDA y QDA son métodos basados en supuestos probabilísticos. En la práctica, no siempre se cumplen perfectamente, pero conviene conocerlos.
+
+### Supuestos principales de LDA
+
+1. Las variables predictoras son cuantitativas.
+2. Las clases son conocidas en entrenamiento.
+3. Dentro de cada clase, las variables siguen aproximadamente una normal multivariante.
+4. Las matrices de covarianzas de los grupos son aproximadamente iguales.
+
+### Test de igualdad de matrices de covarianzas
+
+El test de Box's M contrasta si las matrices de covarianzas de los grupos pueden considerarse iguales. Es especialmente relevante para decidir entre LDA y QDA.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: boxm-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Test de Box's M
+# ==============================================================================
+
+# H0: las matrices de covarianzas de los grupos son iguales.
+# H1: al menos una matriz de covarianzas difiere.
+#
+# Si el p-valor es pequeño, hay evidencia contra la igualdad de covarianzas.
+# Esto puede sugerir que QDA es más adecuado que LDA, siempre que haya datos
+# suficientes para estimar las matrices por grupo.
+
+if (requireNamespace("biotools", quietly = TRUE)) {
+  biotools::boxM(train[, -1], train$Wine)
+} else {
+  message("El paquete 'biotools' no está instalado. Se omite boxM().")
+}
+```
+:::
+
+## QDA
+
+### Ajuste del modelo QDA
+
+QDA se ajusta también con el paquete `MASS`, usando la función `qda()`. La sintaxis es muy parecida a `lda()`, pero el modelo estimado es distinto porque permite una matriz de covarianzas diferente para cada clase.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: ajustar-qda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Ajuste del modelo QDA
+# ==============================================================================
+
+wine_qda <- qda(Wine ~ ., data = train)
+
+wine_qda
+```
+
+```{r}
+#| label: interpretar-qda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Elementos principales del objeto QDA
+# ==============================================================================
+
+# Probabilidades a priori de cada clase.
+wine_qda$prior
+
+# Medias de grupo.
+wine_qda$means
+```
+
+## Python
+
+```{python}
+#| label: ajustar-qda-python
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+
+# ==============================================================================
+# Ajuste del modelo QDA en Python
+# ==============================================================================
+
+qda_py = QuadraticDiscriminantAnalysis()
+qda_py.fit(X_train_py, y_train_py)
+
+print("Clases:", qda_py.classes_)
+print("Probabilidades a priori:", qda_py.priors_)
+```
+:::
+
+### Predicción y evaluación QDA
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: prediccion-qda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Predicción con QDA sobre test
+# ==============================================================================
+
+qda_test_pred <- predict(wine_qda, newdata = test[, -1])
+
+# Clase predicha para las primeras observaciones.
+head(qda_test_pred$class)
+
+# Probabilidades posteriores.
+head(qda_test_pred$posterior)
+```
+
+```{r}
+#| label: evaluacion-qda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Matriz de confusión y accuracy para QDA
+# ==============================================================================
+
+MC_qda <- table(
+  Real = test$Wine,
+  Predicho = qda_test_pred$class
+)
+
+MC_qda
+
+accuracy_qda <- sum(diag(MC_qda)) / sum(MC_qda)
+accuracy_qda
+
+confusionMatrix(
+  data = qda_test_pred$class,
+  reference = test$Wine
+)
+```
+
+## Python
+
+```{python}
+#| label: prediccion-qda-python
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Predicción sobre test con QDA en Python
+# ==============================================================================
+
+y_pred_qda_py = qda_py.predict(X_test_py)
+y_prob_qda_py = qda_py.predict_proba(X_test_py)
+
+print("Matriz de confusión QDA:")
+print(confusion_matrix(y_test_py, y_pred_qda_py))
+
+print("Accuracy QDA:", accuracy_score(y_test_py, y_pred_qda_py))
+
+print(classification_report(y_test_py, y_pred_qda_py))
+```
+:::
+
+### Visualización de fronteras de decisión QDA
+
+Igual que antes, visualizamos fronteras usando un subconjunto de variables. En QDA las fronteras pueden curvarse porque cada clase tiene su propia matriz de covarianzas.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: fronteras-qda-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Fronteras de decisión QDA con algunas variables
+# ==============================================================================
+
+if (requireNamespace("klaR", quietly = TRUE)) {
+  partimat(
+    Wine ~ Alcohol + Acl + Mg + Proline,
+    data = wine,
+    method = "qda",
+    prec = 200,
+    image.colors = c("darkgoldenrod1", "snow2", "skyblue2"),
+    col.mean = "firebrick"
+  )
+} else {
+  message("El paquete 'klaR' no está instalado. Se omite partimat().")
+}
+```
+:::
+
+## Comparación final entre LDA y QDA
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: comparacion-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+# ==============================================================================
+# Comparación de rendimiento entre LDA y QDA
+# ==============================================================================
+
+resultados <- data.frame(
+  Modelo = c("LDA", "QDA", "Regla manual sobre LD1/LD2"),
+  Accuracy = c(accuracy_lda, accuracy_qda, accuracy_regla),
+  Error = c(1 - accuracy_lda, 1 - accuracy_qda, 1 - accuracy_regla)
+)
+
+resultados
+```
+
+```{r}
+#| label: grafico-comparacion-r
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+ggplot(resultados, aes(x = Modelo, y = Accuracy, fill = Modelo)) +
+  geom_col(alpha = 0.85) +
+  ylim(0, 1) +
+  theme_minimal() +
+  labs(
+    title = "Comparación de accuracy entre modelos",
+    x = "Modelo",
+    y = "Accuracy en test"
+  ) +
+  theme(legend.position = "none")
+```
+
+## Python
+
+```{python}
+#| label: comparacion-python
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+resultados_py = pd.DataFrame({
+    "Modelo": ["LDA", "QDA"],
+    "Accuracy": [
+        accuracy_score(y_test_py, y_pred_lda_py),
+        accuracy_score(y_test_py, y_pred_qda_py)
+    ]
+})
+
+resultados_py["Error"] = 1 - resultados_py["Accuracy"]
+print(resultados_py)
+```
+:::
+
+## Interpretación docente de los resultados
+
+En este problema, la base de datos Wine suele presentar una separación bastante clara entre las tres clases. Por eso LDA puede funcionar muy bien: las funciones discriminantes capturan direcciones lineales que separan eficazmente los grupos.
+
+QDA puede obtener un rendimiento igual o incluso superior si las clases tienen dispersión distinta. Sin embargo, al estimar una matriz de covarianzas para cada clase, QDA necesita más información y puede ser menos estable en bases de datos pequeñas o con muchas variables.
+
+Desde una perspectiva docente, conviene remarcar:
+
+- LDA es más interpretable porque ofrece funciones discriminantes lineales.
+- QDA es más flexible porque permite fronteras no lineales.
+- La elección entre LDA y QDA no debe hacerse solo por accuracy, sino también por estabilidad, interpretabilidad y validez de los supuestos.
+- En problemas con muchas variables y pocas observaciones, QDA puede fallar o sobreajustar.
+- Si las covarianzas entre clases son parecidas, LDA suele ser preferible.
+
+## Ejercicios propuestos
+
+### Ejercicio 1
+
+Repite el ajuste de LDA usando solo las variables:
+
+- `Alcohol`
+- `Flavanoids`
+- `Color.int`
+- `Proline`
+
+Compara el accuracy con el modelo que utiliza todas las variables.
+
+### Ejercicio 2
+
+Ajusta QDA con el mismo subconjunto de variables del ejercicio anterior. Compara:
+
+- Matriz de confusión de LDA.
+- Matriz de confusión de QDA.
+- Accuracy de LDA.
+- Accuracy de QDA.
+
+### Ejercicio 3
+
+Cambia la semilla de la partición train/test y observa si los resultados se mantienen estables.
+
+### Ejercicio 4
+
+Interpreta los coeficientes de `wine_lda$scaling`. ¿Qué variables parecen contribuir más a la separación de las clases?
+
+### Ejercicio 5
+
+Estandariza las variables antes de aplicar LDA y compara los coeficientes. Reflexiona sobre por qué la escala afecta a la interpretación de los pesos discriminantes.
+
+## Código de cierre reproducible
+
+Este bloque resume el flujo mínimo necesario para entrenar y evaluar LDA y QDA en R.
+
+```{r}
+#| label: resumen-final-r
+#| echo: true
+#| eval: false
+#| warning: false
+#| message: false
+#| error: false
+
+library(MASS)
+library(caret)
+
+url <- "https://gist.githubusercontent.com/tijptjik/9408623/raw/b237fa5848349a14a14e5d4107dc7897c21951f5/wine.csv"
+wine <- read.csv(url, sep = ",", stringsAsFactors = TRUE)
+wine$Wine <- as.factor(wine$Wine)
+
+set.seed(123)
+trainIndex <- createDataPartition(wine$Wine, p = 0.8, list = FALSE)
+train <- wine[trainIndex, ]
+test <- wine[-trainIndex, ]
+
+modelo_lda <- lda(Wine ~ ., data = train)
+pred_lda <- predict(modelo_lda, newdata = test[, -1])
+table(test$Wine, pred_lda$class)
+
+modelo_qda <- qda(Wine ~ ., data = train)
+pred_qda <- predict(modelo_qda, newdata = test[, -1])
+table(test$Wine, pred_qda$class)
+```
