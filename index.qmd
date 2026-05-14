@@ -62,7 +62,7 @@ number-sections: true
 
 ## Support Vector Machine (SVM)
 
-[Support Vector Machine (SVM)]()
+[Support Vector Machine (SVM)](material/09_SupportVectorMachine/SVM.html)
 
 ## Neuronal Networks (NN)
 

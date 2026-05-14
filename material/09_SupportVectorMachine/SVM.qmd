@@ -1,0 +1,1026 @@
+---
+title: "Support Vector Machine (SVM)"
+author: "Dante Conti, Sergi Ramirez, (c) IDEAI"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: show
+    code-summary: "Mostrar código"
+    code-tools: true
+    embed-resources: true
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+# 1. Objetivo del notebook
+
+Este notebook construye modelos de **Support Vector Machine (SVM)** para clasificación binaria, mostrando la implementación en **R** y en **Python** dentro de cada apartado.
+
+La idea no es tener una pestaña global de R y otra de Python, sino que cada bloque del flujo tenga sus propias pestañas:
+
+- preparación de datos,
+- exploración,
+- partición train/test,
+- SVM lineal,
+- SVM radial,
+- SVM polinomial,
+- evaluación,
+- visualización de fronteras,
+- predicción de un nuevo registro.
+
+Además, después de cada bloque se incluye una interpretación para entender qué significa cada salida.
+
+# 2. Paquetes necesarios
+
+::: {.panel-tabset}
+
+## R
+
+```{r paquetes-r}
+paquetes <- c(
+  "caret", "kernlab", "e1071", "dplyr", "ggplot2", "pROC",
+  "yardstick", "tibble", "tidyr", "purrr"
+)
+
+instalar_si_falta <- function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    install.packages(pkg, dependencies = TRUE)
+  }
+}
+
+invisible(lapply(paquetes, instalar_si_falta))
+
+library(caret)
+library(kernlab)
+library(e1071)
+library(dplyr)
+library(ggplot2)
+library(pROC)
+library(yardstick)
+library(tibble)
+library(tidyr)
+library(purrr)
+
+set.seed(123)
+```
+
+## Python
+
+```{python paquetes-python}
+import sys
+import subprocess
+import importlib.util
+
+paquetes = ["numpy", "pandas", "matplotlib", "sklearn"]
+
+for pkg in paquetes:
+    if importlib.util.find_spec(pkg) is None:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", pkg])
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.datasets import make_classification, make_circles
+from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.metrics import (
+    confusion_matrix, classification_report, accuracy_score,
+    precision_score, recall_score, f1_score, roc_auc_score,
+    RocCurveDisplay
+)
+
+np.random.seed(123)
+```
+
+:::
+
+**Interpretación.**  
+Aquí solo se cargan las librerías. En R se usa principalmente `caret`, que permite entrenar modelos con validación cruzada de forma muy cómoda. En Python se usa `scikit-learn`, que es el estándar para este tipo de modelos. En ambos casos es importante usar `set.seed()` o `np.random.seed()` para que los resultados sean reproducibles.
+
+# 3. Carga y preparación de datos
+
+En este notebook se usan datos simulados de riesgo de crédito. Esto hace que el documento sea totalmente ejecutable sin depender de ningún CSV externo.
+
+La variable objetivo es binaria:
+
+- `Bad`: cliente de mayor riesgo.
+- `Good`: cliente de menor riesgo.
+
+::: {.panel-tabset}
+
+## R
+
+```{r carga-datos-r}
+set.seed(123)
+
+n <- 1000
+
+datos <- tibble(
+  edad = round(rnorm(n, mean = 42, sd = 12)),
+  ingresos = round(rlnorm(n, meanlog = 10.4, sdlog = 0.45)),
+  deuda = round(rlnorm(n, meanlog = 8.7, sdlog = 0.65)),
+  antiguedad_laboral = pmax(0, round(rnorm(n, mean = 7, sd = 5))),
+  num_productos = sample(1:5, n, replace = TRUE),
+  historial = sample(c("Bueno", "Regular", "Malo"), n, replace = TRUE, prob = c(0.55, 0.30, 0.15)),
+  vivienda = sample(c("Propia", "Alquiler", "Familia"), n, replace = TRUE, prob = c(0.45, 0.40, 0.15))
+)
+
+score_riesgo <-
+  -0.000035 * datos$ingresos +
+  0.00018 * datos$deuda -
+  0.08 * datos$antiguedad_laboral +
+  0.23 * datos$num_productos +
+  ifelse(datos$historial == "Malo", 1.4, ifelse(datos$historial == "Regular", 0.55, -0.45)) +
+  ifelse(datos$vivienda == "Alquiler", 0.25, 0) +
+  rnorm(n, 0, 0.9)
+
+prob_bad <- 1 / (1 + exp(-score_riesgo))
+datos$Class <- factor(ifelse(runif(n) < prob_bad, "Bad", "Good"), levels = c("Bad", "Good"))
+
+objetivo <- "Class"
+
+datos <- datos %>%
+  mutate(
+    historial = factor(historial),
+    vivienda = factor(vivienda)
+  )
+
+glimpse(datos)
+```
+
+## Python
+
+```{python carga-datos-python}
+np.random.seed(123)
+
+n = 1000
+edad = np.round(np.random.normal(42, 12, n)).astype(int)
+ingresos = np.round(np.random.lognormal(10.4, 0.45, n)).astype(int)
+deuda = np.round(np.random.lognormal(8.7, 0.65, n)).astype(int)
+antiguedad_laboral = np.maximum(0, np.round(np.random.normal(7, 5, n))).astype(int)
+num_productos = np.random.choice([1, 2, 3, 4, 5], size=n, replace=True)
+historial = np.random.choice(["Bueno", "Regular", "Malo"], size=n, p=[0.55, 0.30, 0.15])
+vivienda = np.random.choice(["Propia", "Alquiler", "Familia"], size=n, p=[0.45, 0.40, 0.15])
+
+score_riesgo = (
+    -0.000035 * ingresos +
+    0.00018 * deuda -
+    0.08 * antiguedad_laboral +
+    0.23 * num_productos +
+    np.where(historial == "Malo", 1.4, np.where(historial == "Regular", 0.55, -0.45)) +
+    np.where(vivienda == "Alquiler", 0.25, 0) +
+    np.random.normal(0, 0.9, n)
+)
+
+prob_bad = 1 / (1 + np.exp(-score_riesgo))
+Class = np.where(np.random.rand(n) < prob_bad, "Bad", "Good")
+
+datos_py = pd.DataFrame({
+    "edad": edad,
+    "ingresos": ingresos,
+    "deuda": deuda,
+    "antiguedad_laboral": antiguedad_laboral,
+    "num_productos": num_productos,
+    "historial": historial,
+    "vivienda": vivienda,
+    "Class": Class
+})
+
+objetivo_py = "Class"
+
+datos_py.head()
+```
+
+```{python estructura-datos-python}
+datos_py.info()
+```
+
+:::
+
+**Interpretación.**  
+La salida de R (`glimpse`) y la salida de Python (`head` e `info`) permiten comprobar que la base tiene variables numéricas, variables categóricas y una variable objetivo. Esta mezcla es realista: en problemas de scoring o auditoría bancaria suele haber importes, edades, ratios y categorías como historial, producto, segmento o tipo de vivienda.
+
+# 4. Exploración inicial de la variable objetivo
+
+Antes de entrenar un modelo hay que comprobar si la variable objetivo está equilibrada.
+
+::: {.panel-tabset}
+
+## R
+
+```{r exploracion-r}
+cat("Filas:", nrow(datos), "\n")
+cat("Columnas:", ncol(datos), "\n\n")
+
+print(table(datos[[objetivo]]))
+print(round(prop.table(table(datos[[objetivo]])), 3))
+```
+
+```{r grafico-clases-r}
+datos %>%
+  count(Class) %>%
+  ggplot(aes(x = Class, y = n)) +
+  geom_col() +
+  labs(
+    title = "Distribución de la variable objetivo",
+    x = "Clase",
+    y = "Número de observaciones"
+  ) +
+  theme_minimal()
+```
+
+## Python
+
+```{python exploracion-python}
+print("Filas:", datos_py.shape[0])
+print("Columnas:", datos_py.shape[1])
+print("\nFrecuencias absolutas:")
+print(datos_py[objetivo_py].value_counts())
+print("\nFrecuencias relativas:")
+print((datos_py[objetivo_py].value_counts(normalize=True)).round(3))
+```
+
+```{python grafico-clases-python}
+conteo = datos_py[objetivo_py].value_counts().sort_index()
+plt.figure(figsize=(6, 4))
+plt.bar(conteo.index, conteo.values)
+plt.title("Distribución de la variable objetivo")
+plt.xlabel("Clase")
+plt.ylabel("Número de observaciones")
+plt.show()
+```
+
+:::
+
+**Interpretación.**  
+La tabla de frecuencias indica cuántos casos hay de cada clase. Si una clase domina demasiado, la accuracy puede ser engañosa. Por ejemplo, si el 90% fueran `Good`, un modelo que siempre predice `Good` tendría 90% de accuracy pero sería inútil para detectar clientes `Bad`. Por eso más adelante miramos también sensibilidad, especificidad, F1 y AUC.
+
+# 5. Separación entre entrenamiento y test
+
+Separamos los datos en:
+
+- **train**: usado para entrenar y validar internamente.
+- **test**: usado al final para evaluar con datos no vistos.
+
+::: {.panel-tabset}
+
+## R
+
+```{r split-r}
+set.seed(123)
+
+idx_train <- createDataPartition(datos[[objetivo]], p = 0.8, list = FALSE)
+train <- datos[idx_train, ]
+test <- datos[-idx_train, ]
+
+train[[objetivo]] <- factor(train[[objetivo]], levels = c("Bad", "Good"))
+test[[objetivo]] <- factor(test[[objetivo]], levels = c("Bad", "Good"))
+
+clase_positiva <- "Bad"
+clase_negativa <- "Good"
+
+cat("Train:", nrow(train), "filas\n")
+cat("Test:", nrow(test), "filas\n\n")
+print(round(prop.table(table(train[[objetivo]])), 3))
+print(round(prop.table(table(test[[objetivo]])), 3))
+```
+
+## Python
+
+```{python split-python}
+X_py = datos_py.drop(columns=[objetivo_py])
+y_py = datos_py[objetivo_py]
+
+X_py = pd.get_dummies(X_py, drop_first=False)
+
+X_train_py, X_test_py, y_train_py, y_test_py = train_test_split(
+    X_py,
+    y_py,
+    test_size=0.2,
+    random_state=123,
+    stratify=y_py
+)
+
+print("Train:", X_train_py.shape)
+print("Test:", X_test_py.shape)
+print("\nDistribución train:")
+print(y_train_py.value_counts(normalize=True).round(3))
+print("\nDistribución test:")
+print(y_test_py.value_counts(normalize=True).round(3))
+```
+
+:::
+
+**Interpretación.**  
+La distribución de clases en train y test debería ser parecida. Esto es importante porque el modelo se entrena en una muestra y se evalúa en otra. Si el test tuviera una distribución muy distinta, la comparación sería menos fiable.
+
+# 6. Control de entrenamiento y preprocesado
+
+SVM es sensible a la escala. Una variable como `ingresos` puede tener valores de decenas de miles, mientras que `num_productos` tiene valores de 1 a 5. Por eso es obligatorio escalar.
+
+::: {.panel-tabset}
+
+## R
+
+```{r control-r}
+formula_modelo <- as.formula(paste(objetivo, "~ ."))
+
+ctrl <- trainControl(
+  method = "cv",
+  number = 5,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary,
+  savePredictions = "final",
+  verboseIter = FALSE
+)
+
+formula_modelo
+```
+
+## Python
+
+```{python control-python}
+cv_py = StratifiedKFold(n_splits=5, shuffle=True, random_state=123)
+
+print("Validación cruzada estratificada con 5 folds")
+print("Clase positiva para métricas:", "Bad")
+```
+
+:::
+
+**Interpretación.**  
+En R, `trainControl()` configura una validación cruzada de 5 particiones y pide que se optimice con ROC. En Python, `StratifiedKFold` hace lo mismo: divide manteniendo la proporción de clases. El escalado se incorpora dentro de cada pipeline/modelo para evitar fuga de información.
+
+# 7. SVM lineal
+
+El SVM lineal busca una frontera recta, o hiperplano, que separe las clases. Es el modelo más simple y suele ser una buena referencia inicial.
+
+::: {.panel-tabset}
+
+## R
+
+```{r svm-lineal-r}
+set.seed(123)
+
+grid_svm_lineal <- expand.grid(C = c(0.01, 0.1, 1, 10, 100))
+
+modelo_svm_lineal <- train(
+  formula_modelo,
+  data = train,
+  method = "svmLinear",
+  metric = "ROC",
+  trControl = ctrl,
+  preProcess = c("medianImpute", "center", "scale"),
+  tuneGrid = grid_svm_lineal
+)
+
+modelo_svm_lineal
+```
+
+```{r plot-svm-lineal-r}
+if (nrow(modelo_svm_lineal$results) > 1) {
+  plot(modelo_svm_lineal)
+} else {
+  print(modelo_svm_lineal$results)
+}
+```
+
+```{r interpretacion-svm-lineal-r}
+best_lineal_r <- modelo_svm_lineal$bestTune$C
+best_roc_lineal_r <- max(modelo_svm_lineal$results$ROC, na.rm = TRUE)
+cat("Mejor C del SVM lineal:", best_lineal_r, "\n")
+cat("Mejor ROC medio en validación cruzada:", round(best_roc_lineal_r, 4), "\n")
+```
+
+## Python
+
+```{python svm-lineal-python}
+pipe_lineal_py = Pipeline([
+    ("scaler", StandardScaler()),
+    ("svm", SVC(kernel="linear", probability=True, random_state=123))
+])
+
+grid_lineal_py = {
+    "svm__C": [0.01, 0.1, 1, 10, 100]
+}
+
+modelo_svm_lineal_py = GridSearchCV(
+    estimator=pipe_lineal_py,
+    param_grid=grid_lineal_py,
+    scoring="roc_auc",
+    cv=cv_py,
+    n_jobs=-1
+)
+
+modelo_svm_lineal_py.fit(X_train_py, y_train_py)
+
+print("Mejores hiperparámetros:", modelo_svm_lineal_py.best_params_)
+print("Mejor ROC medio CV:", round(modelo_svm_lineal_py.best_score_, 4))
+```
+
+```{python resultados-lineal-python}
+res_lineal_py = pd.DataFrame(modelo_svm_lineal_py.cv_results_)
+res_lineal_py[["param_svm__C", "mean_test_score", "std_test_score"]].sort_values("mean_test_score", ascending=False)
+```
+
+```{python plot-svm-lineal-python}
+plt.figure(figsize=(6, 4))
+plt.plot(res_lineal_py["param_svm__C"].astype(float), res_lineal_py["mean_test_score"], marker="o")
+plt.xscale("log")
+plt.title("SVM lineal - ROC medio según C")
+plt.xlabel("C")
+plt.ylabel("ROC AUC medio CV")
+plt.show()
+```
+
+:::
+
+**Interpretación.**  
+El parámetro `C` controla la penalización por errores. Un `C` bajo permite más margen y acepta más errores; un `C` alto intenta clasificar mejor los datos de entrenamiento, pero puede sobreajustar. Si la curva mejora al subir `C`, el modelo necesitaba más flexibilidad. Si empeora, probablemente está empezando a memorizar ruido.
+
+# 8. SVM radial
+
+El SVM radial usa un kernel RBF. Permite fronteras curvas y suele funcionar mejor cuando la separación entre clases no es lineal.
+
+::: {.panel-tabset}
+
+## R
+
+```{r svm-radial-r}
+set.seed(123)
+
+grid_svm_radial <- expand.grid(
+  sigma = c(0.001, 0.005, 0.01, 0.05, 0.1),
+  C = c(0.25, 0.5, 1, 2, 4)
+)
+
+modelo_svm_radial <- train(
+  formula_modelo,
+  data = train,
+  method = "svmRadial",
+  metric = "ROC",
+  trControl = ctrl,
+  preProcess = c("medianImpute", "center", "scale"),
+  tuneGrid = grid_svm_radial
+)
+
+modelo_svm_radial
+```
+
+```{r plot-svm-radial-r}
+if (nrow(modelo_svm_radial$results) > 1) {
+  plot(modelo_svm_radial)
+} else {
+  print(modelo_svm_radial$results)
+}
+```
+
+```{r interpretacion-svm-radial-r}
+cat("Mejor sigma:", modelo_svm_radial$bestTune$sigma, "\n")
+cat("Mejor C:", modelo_svm_radial$bestTune$C, "\n")
+cat("Mejor ROC medio CV:", round(max(modelo_svm_radial$results$ROC, na.rm = TRUE), 4), "\n")
+```
+
+## Python
+
+```{python svm-radial-python}
+pipe_radial_py = Pipeline([
+    ("scaler", StandardScaler()),
+    ("svm", SVC(kernel="rbf", probability=True, random_state=123))
+])
+
+grid_radial_py = {
+    "svm__C": [0.25, 0.5, 1, 2, 4],
+    "svm__gamma": [0.001, 0.005, 0.01, 0.05, 0.1]
+}
+
+modelo_svm_radial_py = GridSearchCV(
+    estimator=pipe_radial_py,
+    param_grid=grid_radial_py,
+    scoring="roc_auc",
+    cv=cv_py,
+    n_jobs=-1
+)
+
+modelo_svm_radial_py.fit(X_train_py, y_train_py)
+
+print("Mejores hiperparámetros:", modelo_svm_radial_py.best_params_)
+print("Mejor ROC medio CV:", round(modelo_svm_radial_py.best_score_, 4))
+```
+
+```{python resultados-radial-python}
+res_radial_py = pd.DataFrame(modelo_svm_radial_py.cv_results_)
+res_radial_py[["param_svm__C", "param_svm__gamma", "mean_test_score", "std_test_score"]].sort_values("mean_test_score", ascending=False).head(10)
+```
+
+:::
+
+**Interpretación.**  
+En el SVM radial aparecen dos hiperparámetros importantes: `C` y `sigma/gamma`. `gamma` controla cuánto influye cada punto sobre su entorno. Un valor muy pequeño genera fronteras suaves; un valor muy alto puede crear fronteras demasiado retorcidas. Si el radial supera claramente al lineal, significa que probablemente hay relaciones no lineales entre las variables y la clase.
+
+# 9. SVM polinomial
+
+El SVM polinomial permite fronteras curvas mediante combinaciones polinómicas de las variables.
+
+::: {.panel-tabset}
+
+## R
+
+```{r svm-polinomial-r}
+set.seed(123)
+
+grid_svm_poly <- expand.grid(
+  degree = c(2, 3),
+  scale = c(0.001, 0.01, 0.1),
+  C = c(0.25, 1, 4)
+)
+
+modelo_svm_poly <- train(
+  formula_modelo,
+  data = train,
+  method = "svmPoly",
+  metric = "ROC",
+  trControl = ctrl,
+  preProcess = c("medianImpute", "center", "scale"),
+  tuneGrid = grid_svm_poly
+)
+
+modelo_svm_poly
+```
+
+```{r plot-svm-polinomial-r}
+if (nrow(modelo_svm_poly$results) > 1) {
+  plot(modelo_svm_poly)
+} else {
+  print(modelo_svm_poly$results)
+}
+```
+
+```{r interpretacion-svm-polinomial-r}
+print(modelo_svm_poly$bestTune)
+cat("Mejor ROC medio CV:", round(max(modelo_svm_poly$results$ROC, na.rm = TRUE), 4), "\n")
+```
+
+## Python
+
+```{python svm-polinomial-python}
+pipe_poly_py = Pipeline([
+    ("scaler", StandardScaler()),
+    ("svm", SVC(kernel="poly", probability=True, random_state=123))
+])
+
+grid_poly_py = {
+    "svm__C": [0.25, 1, 4],
+    "svm__gamma": [0.001, 0.01, 0.1],
+    "svm__degree": [2, 3],
+    "svm__coef0": [0, 1]
+}
+
+modelo_svm_poly_py = GridSearchCV(
+    estimator=pipe_poly_py,
+    param_grid=grid_poly_py,
+    scoring="roc_auc",
+    cv=cv_py,
+    n_jobs=-1
+)
+
+modelo_svm_poly_py.fit(X_train_py, y_train_py)
+
+print("Mejores hiperparámetros:", modelo_svm_poly_py.best_params_)
+print("Mejor ROC medio CV:", round(modelo_svm_poly_py.best_score_, 4))
+```
+
+```{python resultados-polinomial-python}
+res_poly_py = pd.DataFrame(modelo_svm_poly_py.cv_results_)
+res_poly_py[["param_svm__C", "param_svm__gamma", "param_svm__degree", "param_svm__coef0", "mean_test_score", "std_test_score"]].sort_values("mean_test_score", ascending=False).head(10)
+```
+
+:::
+
+**Interpretación.**  
+El kernel polinomial puede capturar patrones curvos, pero suele ser más sensible a la elección de hiperparámetros. El grado (`degree`) indica la complejidad de las interacciones. Un grado 2 crea relaciones cuadráticas; un grado 3 permite relaciones cúbicas. Si el polinomial no mejora al radial, normalmente se prefiere el radial porque es más flexible y suele ser más estable.
+
+# 10. Comparación de modelos
+
+Comparamos los tres modelos usando el ROC medio de validación cruzada.
+
+::: {.panel-tabset}
+
+## R
+
+```{r comparacion-r}
+roc_lineal <- max(modelo_svm_lineal$results$ROC, na.rm = TRUE)
+roc_radial <- max(modelo_svm_radial$results$ROC, na.rm = TRUE)
+roc_poly <- max(modelo_svm_poly$results$ROC, na.rm = TRUE)
+
+comparacion_r <- tibble(
+  modelo = c("SVM lineal", "SVM radial", "SVM polinomial"),
+  ROC_CV = c(roc_lineal, roc_radial, roc_poly)
+) %>% arrange(desc(ROC_CV))
+
+comparacion_r
+```
+
+```{r grafico-comparacion-r}
+ggplot(comparacion_r, aes(x = reorder(modelo, ROC_CV), y = ROC_CV)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Comparación de modelos SVM",
+    x = "Modelo",
+    y = "ROC AUC medio en CV"
+  ) +
+  theme_minimal()
+```
+
+```{r seleccionar-mejor-r}
+mejor_nombre <- comparacion_r$modelo[1]
+
+if (mejor_nombre == "SVM radial") {
+  mejor_modelo <- modelo_svm_radial
+} else if (mejor_nombre == "SVM polinomial") {
+  mejor_modelo <- modelo_svm_poly
+} else {
+  mejor_modelo <- modelo_svm_lineal
+}
+
+cat("Mejor modelo en R:", mejor_nombre, "\n")
+```
+
+## Python
+
+```{python comparacion-python}
+comparacion_py = pd.DataFrame({
+    "modelo": ["SVM lineal", "SVM radial", "SVM polinomial"],
+    "ROC_CV": [
+        modelo_svm_lineal_py.best_score_,
+        modelo_svm_radial_py.best_score_,
+        modelo_svm_poly_py.best_score_
+    ]
+}).sort_values("ROC_CV", ascending=False)
+
+comparacion_py
+```
+
+```{python grafico-comparacion-python}
+plt.figure(figsize=(7, 4))
+plt.barh(comparacion_py["modelo"], comparacion_py["ROC_CV"])
+plt.gca().invert_yaxis()
+plt.title("Comparación de modelos SVM")
+plt.xlabel("ROC AUC medio en CV")
+plt.ylabel("Modelo")
+plt.show()
+```
+
+```{python seleccionar-mejor-python}
+mejor_nombre_py = comparacion_py.iloc[0]["modelo"]
+
+if mejor_nombre_py == "SVM radial":
+    mejor_modelo_py = modelo_svm_radial_py
+elif mejor_nombre_py == "SVM polinomial":
+    mejor_modelo_py = modelo_svm_poly_py
+else:
+    mejor_modelo_py = modelo_svm_lineal_py
+
+print("Mejor modelo en Python:", mejor_nombre_py)
+```
+
+:::
+
+**Interpretación.**  
+El modelo con mayor ROC medio en validación cruzada es el candidato principal. El ROC AUC mide la capacidad del modelo para ordenar correctamente casos positivos y negativos. Un valor cercano a 0.5 equivale a azar; cuanto más se acerque a 1, mejor separa las clases. La decisión final no debería basarse solo en ROC: también conviene mirar recall de la clase `Bad`, porque en riesgo de crédito normalmente interesa detectar los malos perfiles.
+
+# 11. Evaluación en test
+
+Ahora se evalúa el mejor modelo con datos que no se han usado durante el entrenamiento.
+
+::: {.panel-tabset}
+
+## R
+
+```{r evaluacion-test-r}
+pred_clase <- predict(mejor_modelo, newdata = test)
+pred_prob <- predict(mejor_modelo, newdata = test, type = "prob")
+
+head(pred_prob)
+```
+
+```{r matriz-confusion-r}
+cm_r <- confusionMatrix(
+  data = pred_clase,
+  reference = test[[objetivo]],
+  positive = clase_positiva
+)
+cm_r
+```
+
+```{r metricas-r}
+metricas_df <- tibble(
+  truth = test[[objetivo]],
+  estimate = pred_clase,
+  prob_bad = pred_prob[[clase_positiva]]
+)
+
+metricas_r <- bind_rows(
+  accuracy(metricas_df, truth = truth, estimate = estimate),
+  precision(metricas_df, truth = truth, estimate = estimate, event_level = "first"),
+  recall(metricas_df, truth = truth, estimate = estimate, event_level = "first"),
+  f_meas(metricas_df, truth = truth, estimate = estimate, event_level = "first"),
+  roc_auc(metricas_df, truth = truth, prob_bad, event_level = "first")
+)
+
+metricas_r
+```
+
+## Python
+
+```{python evaluacion-test-python}
+y_pred_py = mejor_modelo_py.predict(X_test_py)
+y_prob_py = mejor_modelo_py.predict_proba(X_test_py)[:, list(mejor_modelo_py.classes_).index("Bad")]
+
+print("Matriz de confusión:")
+print(confusion_matrix(y_test_py, y_pred_py, labels=["Bad", "Good"]))
+print("\nReporte de clasificación:")
+print(classification_report(y_test_py, y_pred_py, labels=["Bad", "Good"]))
+```
+
+```{python metricas-python}
+metricas_py = pd.DataFrame({
+    "metrica": ["accuracy", "precision_Bad", "recall_Bad", "f1_Bad", "roc_auc"],
+    "valor": [
+        accuracy_score(y_test_py, y_pred_py),
+        precision_score(y_test_py, y_pred_py, pos_label="Bad"),
+        recall_score(y_test_py, y_pred_py, pos_label="Bad"),
+        f1_score(y_test_py, y_pred_py, pos_label="Bad"),
+        roc_auc_score((y_test_py == "Bad").astype(int), y_prob_py)
+    ]
+})
+
+metricas_py
+```
+
+:::
+
+**Interpretación.**  
+La matriz de confusión muestra cuatro cantidades: aciertos de `Bad`, errores donde un `Bad` se clasifica como `Good`, aciertos de `Good` y errores donde un `Good` se clasifica como `Bad`. En un problema de riesgo, el error más peligroso suele ser clasificar como `Good` a alguien que realmente es `Bad`. Por eso el `recall_Bad` es especialmente importante: mide qué proporción de los clientes problemáticos detecta el modelo.
+
+# 12. Curva ROC
+
+La curva ROC muestra el equilibrio entre sensibilidad y falsos positivos para distintos umbrales de decisión.
+
+::: {.panel-tabset}
+
+## R
+
+```{r curva-roc-r}
+roc_obj <- roc(
+  response = test[[objetivo]],
+  predictor = pred_prob[[clase_positiva]],
+  levels = c("Good", "Bad")
+)
+
+plot(roc_obj, main = paste("Curva ROC -", mejor_nombre))
+auc(roc_obj)
+```
+
+## Python
+
+```{python curva-roc-python}
+RocCurveDisplay.from_predictions(
+    (y_test_py == "Bad").astype(int),
+    y_prob_py
+)
+plt.title(f"Curva ROC - {mejor_nombre_py}")
+plt.show()
+
+print("AUC:", round(roc_auc_score((y_test_py == "Bad").astype(int), y_prob_py), 4))
+```
+
+:::
+
+**Interpretación.**  
+La curva ROC permite ver si el modelo separa bien las dos clases a distintos umbrales. Si la curva está cerca de la diagonal, el modelo apenas distingue entre `Bad` y `Good`. Si la curva se acerca a la esquina superior izquierda, el modelo separa bien. El AUC resume esa curva en un único número.
+
+# 13. Visualización de fronteras: lineal, radial y polinomial
+
+Los datos reales tienen muchas variables, por lo que no se puede dibujar directamente la frontera del SVM. Para entender visualmente los kernels, generamos un problema 2D sintético.
+
+::: {.panel-tabset}
+
+## R
+
+```{r datos-visuales-r}
+set.seed(123)
+
+n_vis <- 400
+x1 <- rnorm(n_vis)
+x2 <- rnorm(n_vis)
+ruido <- rnorm(n_vis, sd = 0.30)
+
+clase <- ifelse(x1^2 + x2^2 + ruido > 1.25, "Exterior", "Interior")
+
+datos_vis <- tibble(
+  x1 = x1,
+  x2 = x2,
+  clase = factor(clase, levels = c("Interior", "Exterior"))
+)
+
+ggplot(datos_vis, aes(x = x1, y = x2, color = clase)) +
+  geom_point(alpha = 0.8) +
+  labs(
+    title = "Datos sintéticos 2D",
+    x = "x1",
+    y = "x2"
+  ) +
+  theme_minimal()
+```
+
+```{r entrenar-visuales-r}
+modelo_vis_lineal <- e1071::svm(clase ~ x1 + x2, data = datos_vis, kernel = "linear", cost = 1, scale = TRUE)
+modelo_vis_radial <- e1071::svm(clase ~ x1 + x2, data = datos_vis, kernel = "radial", cost = 1, gamma = 1, scale = TRUE)
+modelo_vis_poly <- e1071::svm(clase ~ x1 + x2, data = datos_vis, kernel = "polynomial", cost = 1, gamma = 1, degree = 3, coef0 = 1, scale = TRUE)
+```
+
+```{r funcion-frontera-r}
+graficar_frontera_svm <- function(modelo, datos, titulo) {
+  x1_seq <- seq(min(datos$x1) - 0.5, max(datos$x1) + 0.5, length.out = 250)
+  x2_seq <- seq(min(datos$x2) - 0.5, max(datos$x2) + 0.5, length.out = 250)
+
+  grid <- expand.grid(x1 = x1_seq, x2 = x2_seq)
+  grid$pred <- predict(modelo, newdata = grid)
+
+  ggplot() +
+    geom_tile(data = grid, aes(x = x1, y = x2, fill = pred), alpha = 0.25) +
+    geom_contour(
+      data = grid %>% mutate(pred_num = as.numeric(pred)),
+      aes(x = x1, y = x2, z = pred_num),
+      breaks = 1.5,
+      linewidth = 0.8
+    ) +
+    geom_point(data = datos, aes(x = x1, y = x2, color = clase), alpha = 0.85) +
+    labs(
+      title = titulo,
+      x = "x1",
+      y = "x2",
+      fill = "Región predicha",
+      color = "Clase real"
+    ) +
+    theme_minimal()
+}
+```
+
+```{r frontera-lineal-r}
+graficar_frontera_svm(modelo_vis_lineal, datos_vis, "Frontera de decisión - SVM lineal")
+```
+
+```{r frontera-radial-r}
+graficar_frontera_svm(modelo_vis_radial, datos_vis, "Frontera de decisión - SVM radial")
+```
+
+```{r frontera-polinomial-r}
+graficar_frontera_svm(modelo_vis_poly, datos_vis, "Frontera de decisión - SVM polinomial")
+```
+
+## Python
+
+```{python datos-visuales-python}
+np.random.seed(123)
+
+X_vis_py, y_vis_num_py = make_circles(n_samples=400, noise=0.18, factor=0.45, random_state=123)
+y_vis_py = np.where(y_vis_num_py == 1, "Interior", "Exterior")
+
+plt.figure(figsize=(6, 5))
+plt.scatter(X_vis_py[:, 0], X_vis_py[:, 1], c=(y_vis_py == "Interior").astype(int), alpha=0.8)
+plt.title("Datos sintéticos 2D")
+plt.xlabel("x1")
+plt.ylabel("x2")
+plt.show()
+```
+
+```{python entrenar-visuales-python}
+modelos_vis_py = {
+    "SVM lineal": Pipeline([
+        ("scaler", StandardScaler()),
+        ("svm", SVC(kernel="linear", C=1))
+    ]),
+    "SVM radial": Pipeline([
+        ("scaler", StandardScaler()),
+        ("svm", SVC(kernel="rbf", C=1, gamma=1))
+    ]),
+    "SVM polinomial": Pipeline([
+        ("scaler", StandardScaler()),
+        ("svm", SVC(kernel="poly", C=1, gamma=1, degree=3, coef0=1))
+    ])
+}
+
+for nombre, modelo in modelos_vis_py.items():
+    modelo.fit(X_vis_py, y_vis_py)
+```
+
+```{python funcion-frontera-python}
+def graficar_frontera_python(modelo, X, y, titulo):
+    x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
+    y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
+
+    xx, yy = np.meshgrid(
+        np.linspace(x_min, x_max, 300),
+        np.linspace(y_min, y_max, 300)
+    )
+
+    grid = np.c_[xx.ravel(), yy.ravel()]
+    pred = modelo.predict(grid)
+    pred_num = (pred == "Interior").astype(int).reshape(xx.shape)
+
+    plt.figure(figsize=(6, 5))
+    plt.contourf(xx, yy, pred_num, alpha=0.25)
+    plt.contour(xx, yy, pred_num, levels=[0.5])
+    plt.scatter(X[:, 0], X[:, 1], c=(y == "Interior").astype(int), alpha=0.85)
+    plt.title(titulo)
+    plt.xlabel("x1")
+    plt.ylabel("x2")
+    plt.show()
+```
+
+```{python frontera-lineal-python}
+graficar_frontera_python(modelos_vis_py["SVM lineal"], X_vis_py, y_vis_py, "Frontera de decisión - SVM lineal")
+```
+
+```{python frontera-radial-python}
+graficar_frontera_python(modelos_vis_py["SVM radial"], X_vis_py, y_vis_py, "Frontera de decisión - SVM radial")
+```
+
+```{python frontera-polinomial-python}
+graficar_frontera_python(modelos_vis_py["SVM polinomial"], X_vis_py, y_vis_py, "Frontera de decisión - SVM polinomial")
+```
+
+:::
+
+**Interpretación.**  
+El gráfico lineal intenta separar los puntos con una frontera recta. Cuando las clases tienen forma circular, el lineal no puede adaptarse bien. El radial sí puede crear una frontera curva alrededor de una región. El polinomial también puede curvar la frontera, pero normalmente de forma menos local que el radial. Esta visualización explica por qué los kernels son útiles: transforman implícitamente el espacio para separar patrones que no son lineales en las variables originales.
+
+# 14. Predicción de un nuevo registro
+
+Finalmente, usamos el modelo entrenado para predecir un único cliente nuevo.
+
+::: {.panel-tabset}
+
+## R
+
+```{r prediccion-nuevo-r}
+nuevo_registro <- test[1, , drop = FALSE]
+clase_real <- nuevo_registro[[objetivo]]
+nuevo_registro[[objetivo]] <- NULL
+
+pred_nuevo_clase <- predict(mejor_modelo, newdata = nuevo_registro)
+pred_nuevo_prob <- predict(mejor_modelo, newdata = nuevo_registro, type = "prob")
+
+cat("Clase real:", as.character(clase_real), "\n")
+cat("Clase predicha:", as.character(pred_nuevo_clase), "\n")
+print(pred_nuevo_prob)
+```
+
+## Python
+
+```{python prediccion-nuevo-python}
+nuevo_registro_py = X_test_py.iloc[[0]]
+clase_real_py = y_test_py.iloc[0]
+
+pred_nuevo_clase_py = mejor_modelo_py.predict(nuevo_registro_py)[0]
+pred_nuevo_prob_py = mejor_modelo_py.predict_proba(nuevo_registro_py)[0]
+
+prob_df_py = pd.DataFrame({
+    "clase": mejor_modelo_py.classes_,
+    "probabilidad": pred_nuevo_prob_py
+})
+
+print("Clase real:", clase_real_py)
+print("Clase predicha:", pred_nuevo_clase_py)
+prob_df_py
+```
+
+:::
+
+**Interpretación.**  
+La predicción individual devuelve dos cosas: la clase final y la probabilidad estimada para cada clase. Si la probabilidad de `Bad` es alta, el cliente sería considerado de riesgo. Si las probabilidades están muy cerca, el modelo está inseguro y podría ser razonable revisar manualmente el caso o cambiar el umbral de decisión.
+
+# 15. Conclusión
+
+Un SVM es un modelo potente para clasificación, especialmente cuando se aplica correctamente el escalado y se prueban distintos kernels.
+
+Resumen práctico:
+
+- El **SVM lineal** es simple, rápido e interpretable como frontera recta.
+- El **SVM radial** suele ser el más flexible y efectivo cuando la separación no es lineal.
+- El **SVM polinomial** permite relaciones curvas, pero puede ser más delicado de ajustar.
+- La comparación debe hacerse con validación cruzada y después confirmarse en test.
+- En problemas de riesgo, no basta con mirar accuracy: hay que mirar especialmente recall, precision, F1 y ROC AUC para la clase problemática.
