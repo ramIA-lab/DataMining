@@ -48,17 +48,17 @@ number-sections: true
 
 ## Decisions Trees, Bagging and Ensamble Methods
 
-[Decisions Trees](docs/material/07_DecisionTrees_Bagging_Boosting/Decision_Tree.html)
+[Decisions Trees](material/07_DecisionTrees_Bagging_Boosting/Decision_Tree.html)
 
-[Random Forest](docs/material/07_DecisionTrees_Bagging_Boosting/Random_Forest.html)
+[Random Forest](material/07_DecisionTrees_Bagging_Boosting/Random_Forest.html)
 
-[Bagging Methods](docs/material/07_DecisionTrees_Bagging_Boosting/XGBoost.html)
+[Bagging Methods](material/07_DecisionTrees_Bagging_Boosting/XGBoost.html)
 
 ## Discriminant models and Non Parametric Discriminant
 
-[Naives Bayes y k-Nearest Neighbour (KNN)](docs/material/08_Discriminant _models_Non_Parametric/KnnNB.html)
+[Naives Bayes y k-Nearest Neighbour (KNN)](material/08_Discriminant _models_Non_Parametric/KnnNB.html)
 
-[Linear Discriminant Analysis (LDA) y Cuadratic Discriminant Analysis (QDA)](docs/material/08_Discriminant _models_Non_Parametric/LDA_QDA.html)
+[Linear Discriminant Analysis (LDA) y Cuadratic Discriminant Analysis (QDA)](material/08_Discriminant _models_Non_Parametric/LDA_QDA.html)
 
 ## Support Vector Machine (SVM)
 
