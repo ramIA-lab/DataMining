@@ -1,17 +1,22 @@
 ---
-title: "Árboles de Decisión"
+title: "Árboles de decisión"
 author: Dante Conti, Sergi Ramirez, (c) IDEAI
-date: "`r Sys.Date()`"
-date-modified: "`r Sys.Date()`"
-toc: true
-# language: es
-number-sections: true
-format: 
-  html: 
-    theme: cerulean
-editor: visual
-#execute: 
-#  freeze: auto
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: show
+    code-summary: "Mostrar código"
+    embed-resources: true
+    code-tools: true
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: false
 ---
 
 # Descripción del problema

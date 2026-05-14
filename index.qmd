@@ -50,9 +50,9 @@ number-sections: true
 
 [Decisions Trees](docs/material/07_DecisionTrees_Bagging_Boosting/Decision_Tree.html)
 
-[Random Forest](docs/material/07_DecisionTrees_Bagging_Boosting/)
+[Random Forest](docs/material/07_DecisionTrees_Bagging_Boosting/Random_Forest.html)
 
-[Bagging Methods]()
+[Bagging Methods](docs/material/07_DecisionTrees_Bagging_Boosting/XGBoost.html)
 
 ## Discriminant models and Non Parametric Discriminant
 

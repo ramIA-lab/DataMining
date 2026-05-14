@@ -1,0 +1,1253 @@
+---
+title: "Random Forest"
+author: "Dante Conti, Sergi Ramirez, (c) IDEAI"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: show
+    code-summary: "Mostrar código"
+    embed-resources: true
+    code-tools: true
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+# Descripción del problema
+
+En este documento se estudia el algoritmo **Random Forest** aplicado a un problema de **clasificación supervisada**. El objetivo será predecir el nivel de renta del entorno de una vivienda de Barcelona (`RENTA`) a partir de características del inmueble, del edificio y de su localización.
+
+La base de datos procede de anuncios de vivienda de Idealista y se ha enriquecido con información de renta media por hogar/persona a nivel de sección censal. A partir de la renta media por hogar se construye una variable categórica de tres niveles:
+
+- **Baja**: renta media por hogar inferior a 30.000 €.
+- **Media**: renta media por hogar entre 30.000 € y 50.000 €.
+- **Alta**: renta media por hogar superior a 50.000 €.
+
+Por tanto, el problema se puede formular como:
+
+
+$$Y = f(X_1, X_2, \ldots, X_p) + \varepsilon$$
+
+donde:
+
+- $Y$ es la variable objetivo `RENTA`.
+- $(X_1, X_2, \ldots, X_p)$ son las variables explicativas del inmueble.
+- $f$ es una función no lineal aprendida mediante un conjunto de árboles de decisión.
+
+# Introducción teórica a Random Forest
+
+## De un árbol de decisión a un bosque aleatorio
+
+Un **árbol de decisión** construye reglas del tipo:
+
+> Si `DISTANCE_TO_CITY_CENTER < 2.5` y `HASLIFT = Sí`, entonces clasificar como `RENTA = Alta`.
+
+El problema de un único árbol es que suele tener **alta varianza**: pequeñas variaciones en los datos de entrenamiento pueden generar árboles bastante diferentes. Esto puede provocar **sobreajuste**, es decir, un modelo que memoriza demasiado bien el conjunto de entrenamiento pero generaliza peor en datos nuevos.
+
+**Random Forest** reduce este problema entrenando muchos árboles distintos y combinando sus predicciones. En clasificación, cada árbol vota una clase y el bosque devuelve la clase más votada.
+
+$$\hat{y}_{RF} = \operatorname{mode}\{\hat{y}_1, \hat{y}_2, \ldots, \hat{y}_B\}$$
+
+donde:
+
+- $B$ es el número de árboles del bosque.
+- $\hat{y}_b$ es la predicción del árbol $b$.
+- $\operatorname{mode}$ representa la clase más frecuente entre los votos.
+
+## Dos fuentes de aleatoriedad
+
+Random Forest introduce aleatoriedad de dos formas:
+
+1. **Bootstrap de observaciones**: cada árbol se entrena con una muestra aleatoria con reemplazo del conjunto de entrenamiento.
+2. **Selección aleatoria de variables en cada división**: en cada nodo, el árbol no evalúa todas las variables, sino solamente un subconjunto aleatorio de tamaño `mtry` en R o `max_features` en Python.
+
+Esto hace que los árboles sean menos correlacionados entre sí. Cuanto menor sea la correlación entre árboles, más beneficiosa será la agregación.
+
+## Ventajas principales
+
+Random Forest es uno de los algoritmos clásicos más utilizados porque:
+
+- suele ofrecer buen rendimiento predictivo sin requerir demasiada configuración inicial;
+- captura relaciones no lineales;
+- captura interacciones entre variables;
+- funciona bien con variables numéricas y categóricas previamente tratadas;
+- proporciona medidas de **importancia de variables**;
+- permite extraer árboles individuales para interpretar reglas concretas;
+- puede complementarse con herramientas de interpretabilidad como **SHAP values**.
+
+## Limitaciones
+
+También tiene limitaciones importantes:
+
+- es menos interpretable que un único árbol;
+- la importancia basada en impureza puede estar sesgada hacia variables con muchos posibles puntos de corte;
+- puede ser costoso computacionalmente si se usan muchos árboles;
+- no extrapola bien fuera del rango observado en los datos;
+- en clasificación desbalanceada puede favorecer la clase mayoritaria si no se ajustan pesos o métricas adecuadas.
+
+# Carga de datos
+
+El siguiente bloque reproduce la carga de datos usada en el ejemplo de árboles de decisión. La versión final de la base de datos se carga directamente desde GitHub.
+
+```{r}
+#| label: cargar-datos-final
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+path <- 'https://raw.githubusercontent.com/ramIA-lab/MLforEducation/refs/heads/main/material/trees_ensambleMethods/idealista18_BCN_conRenta.csv'
+BCN <- read.csv2(path)
+```
+
+```{r}
+#| label: cargar-paquetes-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(caret)
+library(randomForest)
+library(ranger)
+library(vip)
+library(pdp)
+library(iml)
+library(rpart.plot)
+library(reshape2)
+```
+
+# Preprocesamiento de los datos
+
+El preprocesamiento tiene tres objetivos principales:
+
+1. eliminar columnas identificadoras, geométricas o que no se quieren usar como predictores;
+2. transformar variables binarias de 0/1 a etiquetas interpretables (`No`/`Si`);
+3. construir la variable objetivo `RENTA` a partir de la renta media por hogar.
+
+```{r}
+#| label: preprocessing-R
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+BCN <- BCN %>%
+  select(-X, -PRICE, -LONGITUDE, -LATITUDE, -geometry, -CONSTRUCTIONYEAR,
+         -ASSETID, -PERIOD, -CUSEC, -CSEC, -CMUN, -CPRO, -CCA, -CUDIS, -CLAU2,
+         -NPRO, -NCA, -CNUT0, -CNUT1, -CNUT2, -CNUT3, -NMUN, -Shape_Leng,
+         -Shape_Area, -geometry, -CUMUN, -CADASTRALQUALITYID) %>%
+  mutate(
+    across(
+      .cols = starts_with(c("HAS", "IS")),
+      .fns = ~ case_when(. == 0 ~ "No", . == 1 ~ "Si"),
+      .names = "{.col}"),
+    AMENITYID = case_when(
+      AMENITYID == 1 ~ "SinMuebleSinCocina",
+      AMENITYID == 2 ~ "CocinaSinMuebles",
+      AMENITYID == 3 ~ "CocinaMuebles"),
+    FLATLOCATIONID = case_when(
+      FLATLOCATIONID == 1 ~ "exterior",
+      FLATLOCATIONID == 2 ~ "interior",
+      .default = "noInfo"),
+    BUILTTYPEID_1 = case_when(
+      BUILTTYPEID_1 == 0 ~ "noObraNueva",
+      BUILTTYPEID_1 == 1 ~ "obraNueva"),
+    BUILTTYPEID_2 = case_when(
+      BUILTTYPEID_2 == 0 ~ "noRestaurar",
+      BUILTTYPEID_2 == 1 ~ "Restaurar"),
+    BUILTTYPEID_3 = case_when(
+      BUILTTYPEID_3 == 0 ~ "noSegundaMano",
+      BUILTTYPEID_3 == 1 ~ "SegundaMano"),
+    FLOORCLEAN = replace_na(FLOORCLEAN, 0),
+    CDIS = case_when(
+      CDIS == 1 ~ "Ciutat-Vella",
+      CDIS == 2 ~ "Eixample",
+      CDIS == 3 ~ "Sants-Montjuic",
+      CDIS == 4 ~ "Les Corts",
+      CDIS == 5 ~ "Sarrià-Sant Gervasi",
+      CDIS == 6 ~ "Gràcia",
+      CDIS == 7 ~ "Horta-Guinardó",
+      CDIS == 8 ~ "Nou Barris",
+      CDIS == 9 ~ "Sant Andreu",
+      CDIS == 10 ~ "Sant Martí"),
+    RENTA = case_when(
+      Renta.media.por.hogar < 30000 ~ "Baja",
+      Renta.media.por.hogar >= 30000 & Renta.media.por.hogar <= 50000 ~ "Media",
+      Renta.media.por.hogar > 50000 ~ "Alta"
+    )
+  ) %>%
+  select(-Renta.media.por.hogar, -Renta.media.por.persona) %>%
+  mutate(RENTA = as.factor(RENTA)) %>%
+  na.omit()
+```
+
+# Análisis descriptivo
+
+Antes de entrenar el modelo conviene revisar la estructura de los datos, el tamaño de las clases y la distribución de algunas variables relevantes.
+
+```{r}
+#| label: descriptiva-basica
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+dim(BCN)
+str(BCN)
+table(BCN$RENTA)
+prop.table(table(BCN$RENTA))
+```
+
+```{r}
+#| label: grafico-variable-objetivo
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+ggplot(BCN, aes(x = RENTA, fill = RENTA)) +
+  geom_bar(show.legend = FALSE) +
+  labs(
+    title = "Distribución de la variable objetivo",
+    x = "Nivel de renta",
+    y = "Número de observaciones"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+#| label: descriptiva-numericas
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+BCN %>%
+  select(where(is.numeric)) %>%
+  summary()
+```
+
+# Separación entrenamiento/test
+
+Separamos los datos en dos conjuntos:
+
+- **train**: datos usados para entrenar el modelo;
+- **test**: datos reservados para evaluar la capacidad de generalización.
+
+La partición se hace de forma estratificada para conservar aproximadamente la proporción de clases en ambos subconjuntos.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: gestion-datos-R
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+set.seed(1994)
+
+index <- caret::createDataPartition(BCN$RENTA, p = 0.8, list = FALSE)
+rtrain <- BCN %>% slice(index)
+rtest  <- BCN %>% slice(-index)
+
+prop.table(table(rtrain$RENTA))
+prop.table(table(rtest$RENTA))
+```
+
+## Python
+
+```{python}
+#| label: conversor-r-py
+#| echo: false
+#| warning: false
+#| message: false
+#| error: false
+
+pyBCN = r.BCN.copy()
+```
+
+```{python}
+#| label: preprocessing-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+import pandas as pd
+import numpy as np
+
+# Eliminamos filas con posibles valores perdidos
+pyBCN = pyBCN.dropna().copy()
+
+# Variable objetivo
+y = pyBCN["RENTA"].astype(str)
+X = pyBCN.drop(columns=["RENTA"])
+
+# One-hot encoding para variables categóricas.
+# A diferencia de LabelEncoder, one-hot evita imponer un orden artificial entre categorías.
+X = pd.get_dummies(X, drop_first=False)
+
+print(X.shape)
+print(y.value_counts(normalize=True))
+```
+
+```{python}
+#| label: gestion-datos-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.model_selection import train_test_split
+
+pyX_train, pyX_test, pyy_train, pyy_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=1994,
+    stratify=y
+)
+
+print(pyX_train.shape, pyX_test.shape)
+```
+:::
+
+# Modelo Random Forest
+
+## Entrenamiento básico
+
+Un primer modelo se puede entrenar con parámetros razonables. En R se usa `randomForest`; en Python se usa `RandomForestClassifier` de `scikit-learn`.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: random-forest-basico-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+set.seed(1994)
+
+rf_basico <- randomForest(
+  RENTA ~ .,
+  data = rtrain,
+  ntree = 500,
+  importance = TRUE
+)
+
+rf_basico
+```
+
+## Python
+
+```{python}
+#| label: random-forest-basico-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.ensemble import RandomForestClassifier
+
+rf_basico_py = RandomForestClassifier(
+    n_estimators=500,
+    random_state=1994,
+    n_jobs=-1,
+    class_weight="balanced"
+)
+
+rf_basico_py.fit(pyX_train, pyy_train)
+rf_basico_py
+```
+:::
+
+## Predicción y matriz de confusión
+
+La evaluación principal se realiza sobre el conjunto de test. La matriz de confusión permite identificar qué clases se predicen correctamente y qué clases se confunden entre sí.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: prediccion-rf-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+pred_train_rf <- predict(rf_basico, rtrain)
+pred_test_rf  <- predict(rf_basico, rtest)
+
+caret::confusionMatrix(pred_train_rf, rtrain$RENTA)
+caret::confusionMatrix(pred_test_rf, rtest$RENTA)
+```
+
+```{r}
+#| label: plot-confusion-rf-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+CM <- caret::confusionMatrix(pred_test_rf, rtest$RENTA)
+CM_df <- as.data.frame(CM$table)
+
+plot_cm <- ggplot(CM_df, aes(x = Reference, y = Prediction, fill = Freq)) +
+  geom_tile() +
+  geom_text(aes(label = Freq), size = 5) +
+  scale_fill_gradient(low = "white", high = "#0077C8") +
+  labs(
+    title = "Matriz de confusión - Random Forest",
+    x = "Clase real",
+    y = "Clase predicha"
+  ) +
+  theme_minimal()
+
+plot_cm
+```
+
+## Python
+
+```{python}
+#| label: prediccion-rf-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+py_pred_train = rf_basico_py.predict(pyX_train)
+py_pred_test = rf_basico_py.predict(pyX_test)
+
+print("Accuracy train:", round(accuracy_score(pyy_train, py_pred_train), 4))
+print("Accuracy test:", round(accuracy_score(pyy_test, py_pred_test), 4))
+print("\nClassification report test:\n")
+print(classification_report(pyy_test, py_pred_test))
+```
+
+```{python}
+#| label: plot-confusion-rf-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import ConfusionMatrixDisplay
+
+cm = confusion_matrix(pyy_test, py_pred_test, labels=rf_basico_py.classes_)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=rf_basico_py.classes_)
+disp.plot(values_format="d")
+plt.title("Matriz de confusión - Random Forest")
+plt.show()
+```
+:::
+
+# Validación cruzada
+
+La validación cruzada permite estimar de forma más estable el rendimiento del modelo. En lugar de depender de una única partición train/test, se divide el entrenamiento en varios folds.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: crossvalidation-rf-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+trControl <- trainControl(
+  method = "cv",
+  number = 5,
+  classProbs = TRUE,
+  summaryFunction = multiClassSummary,
+  savePredictions = "final"
+)
+
+set.seed(1994)
+rf_cv <- train(
+  RENTA ~ .,
+  data = rtrain,
+  method = "rf",
+  metric = "Accuracy",
+  trControl = trControl,
+  ntree = 300
+)
+
+rf_cv
+```
+
+```{r}
+#| label: plot-crossvalidation-rf-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+ggplot(rf_cv) +
+  labs(title = "Validación cruzada de Random Forest") +
+  theme_minimal()
+```
+
+## Python
+
+```{python}
+#| label: crossvalidation-rf-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=1994)
+
+rf_cv_py = RandomForestClassifier(
+    n_estimators=300,
+    random_state=1994,
+    n_jobs=-1,
+    class_weight="balanced"
+)
+
+scores = cross_val_score(
+    rf_cv_py,
+    pyX_train,
+    pyy_train,
+    cv=cv,
+    scoring="accuracy",
+    n_jobs=-1
+)
+
+print("Accuracy por fold:", np.round(scores, 4))
+print("Accuracy medio:", round(scores.mean(), 4))
+print("Desviación típica:", round(scores.std(), 4))
+```
+:::
+
+# Ajuste de hiperparámetros
+
+Los hiperparámetros más importantes en Random Forest son:
+
+- `ntree` / `n_estimators`: número de árboles.
+- `mtry` / `max_features`: número de variables candidatas en cada división.
+- `min.node.size` / `min_samples_leaf`: tamaño mínimo de los nodos terminales.
+- `max.depth` / `max_depth`: profundidad máxima de cada árbol.
+
+Un bosque con muchos árboles reduce la varianza, pero aumenta el coste computacional. El parámetro más crítico suele ser `mtry` o `max_features`, porque controla la diversidad entre árboles.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: hyperparam-rf-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+set.seed(1994)
+
+rf_grid <- expand.grid(
+  mtry = c(3, 5, 8, 12)
+)
+
+rf_tuned <- train(
+  RENTA ~ .,
+  data = rtrain,
+  method = "rf",
+  metric = "Accuracy",
+  trControl = trControl,
+  tuneGrid = rf_grid,
+  ntree = 500
+)
+
+rf_tuned
+rf_tuned$bestTune
+```
+
+```{r}
+#| label: plot-hyperparam-rf-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+ggplot(rf_tuned) +
+  labs(title = "Tuning del parámetro mtry") +
+  theme_minimal()
+```
+
+## Python
+
+```{python}
+#| label: hyperparam-rf-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    "n_estimators": [300, 500],
+    "max_features": ["sqrt", "log2", None],
+    "min_samples_leaf": [1, 5, 10],
+    "max_depth": [None, 8, 15]
+}
+
+rf_grid_py = GridSearchCV(
+    estimator=RandomForestClassifier(
+        random_state=1994,
+        n_jobs=-1,
+        class_weight="balanced"
+    ),
+    param_grid=param_grid,
+    cv=cv,
+    scoring="accuracy",
+    n_jobs=-1
+)
+
+rf_grid_py.fit(pyX_train, pyy_train)
+
+print("Mejores parámetros:", rf_grid_py.best_params_)
+print("Mejor accuracy CV:", round(rf_grid_py.best_score_, 4))
+```
+:::
+
+# Importancia de variables
+
+La importancia de variables responde a la pregunta:
+
+> ¿Qué variables han contribuido más al poder predictivo del modelo?
+
+En Random Forest hay varias formas de medir importancia:
+
+1. **Mean Decrease Gini / impureza**: mide cuánto reduce una variable la impureza de los nodos en promedio.
+2. **Permutation importance**: mide cuánto empeora el modelo si se permuta aleatoriamente una variable.
+3. **SHAP values**: distribuye la predicción de cada observación entre las variables, proporcionando interpretabilidad local y global.
+
+## Matriz de variables importantes en R
+
+En `randomForest`, al activar `importance = TRUE`, se obtiene una matriz de importancia. Para clasificación multiclase, pueden aparecer columnas específicas por clase y medidas globales como `MeanDecreaseAccuracy` y `MeanDecreaseGini`.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: matriz-importancia-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+imp_matrix <- as.data.frame(rf_basico$importance)
+imp_matrix$Variable <- rownames(imp_matrix)
+head(imp_matrix[order(-imp_matrix$MeanDecreaseGini), ], 15)
+```
+
+```{r}
+#| label: plot-importancia-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+imp_top <- imp_matrix %>%
+  arrange(desc(MeanDecreaseGini)) %>%
+  slice(1:20) %>%
+  mutate(Variable = reorder(Variable, MeanDecreaseGini))
+
+ggplot(imp_top, aes(x = Variable, y = MeanDecreaseGini)) +
+  geom_col(fill = "#0077C8") +
+  coord_flip() +
+  labs(
+    title = "Top 20 variables importantes - Mean Decrease Gini",
+    x = "Variable",
+    y = "Importancia"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+#| label: varimpplot-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+varImpPlot(rf_basico, n.var = 20, main = "Importancia de variables - Random Forest")
+```
+
+## Python
+
+```{python}
+#| label: matriz-importancia-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+importances = rf_basico_py.feature_importances_
+importance_df = pd.DataFrame({
+    "Variable": pyX_train.columns,
+    "Importance": importances
+}).sort_values("Importance", ascending=False)
+
+print(importance_df.head(20))
+```
+
+```{python}
+#| label: plot-importancia-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+top_imp = importance_df.head(20).sort_values("Importance")
+
+plt.figure(figsize=(8, 8))
+plt.barh(top_imp["Variable"], top_imp["Importance"])
+plt.xlabel("Importancia")
+plt.title("Top 20 variables importantes - Random Forest")
+plt.tight_layout()
+plt.show()
+```
+:::
+
+## Importancia por permutación
+
+La importancia por permutación es más intuitiva que la importancia por impureza. El procedimiento es:
+
+1. calcular el rendimiento del modelo original;
+2. permutar aleatoriamente una variable;
+3. volver a calcular el rendimiento;
+4. medir cuánto cae la métrica.
+
+Si al permutar una variable el rendimiento cae mucho, esa variable era importante.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: permutation-importance-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+set.seed(1994)
+
+rf_ranger <- ranger(
+  RENTA ~ .,
+  data = rtrain,
+  num.trees = 500,
+  importance = "permutation",
+  probability = TRUE,
+  seed = 1994
+)
+
+vip(rf_ranger, num_features = 20) +
+  labs(title = "Importancia por permutación - ranger") +
+  theme_minimal()
+```
+
+## Python
+
+```{python}
+#| label: permutation-importance-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.inspection import permutation_importance
+
+perm = permutation_importance(
+    rf_basico_py,
+    pyX_test,
+    pyy_test,
+    n_repeats=10,
+    random_state=1994,
+    n_jobs=-1,
+    scoring="accuracy"
+)
+
+perm_df = pd.DataFrame({
+    "Variable": pyX_test.columns,
+    "ImportanceMean": perm.importances_mean,
+    "ImportanceStd": perm.importances_std
+}).sort_values("ImportanceMean", ascending=False)
+
+print(perm_df.head(20))
+```
+
+```{python}
+#| label: plot-permutation-importance-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+perm_top = perm_df.head(20).sort_values("ImportanceMean")
+
+plt.figure(figsize=(8, 8))
+plt.barh(perm_top["Variable"], perm_top["ImportanceMean"])
+plt.xlabel("Caída media de accuracy")
+plt.title("Top 20 variables - Importancia por permutación")
+plt.tight_layout()
+plt.show()
+```
+:::
+
+# Extracción de uno de los árboles del bosque
+
+Aunque Random Forest es un modelo de conjunto, internamente está formado por muchos árboles individuales. Extraer uno de ellos ayuda a entender la lógica local de algunas reglas, aunque no debe confundirse con la explicación completa del bosque.
+
+## Interpretación conceptual
+
+Un árbol individual del bosque:
+
+- se ha entrenado con una muestra bootstrap;
+- ha usado subconjuntos aleatorios de variables en cada división;
+- representa solo una parte del comportamiento total del modelo;
+- puede ser visualizado como un árbol de decisión clásico.
+
+Por tanto, extraer un árbol sirve para explicar el mecanismo interno, no para sustituir la interpretación global del Random Forest.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: extraer-arbol-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Extraemos el árbol número 1 del Random Forest.
+# getTree devuelve la estructura interna del árbol.
+arbol_1 <- getTree(rf_basico, k = 1, labelVar = TRUE)
+head(arbol_1, 20)
+```
+
+```{r}
+#| label: entrenar-arbol-equivalente-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Para visualizar un árbol de forma más clara, entrenamos un árbol pequeño auxiliar.
+# Este árbol NO es el Random Forest completo, sino una representación interpretativa sencilla.
+library(rpart)
+
+set.seed(1994)
+arbol_auxiliar <- rpart(
+  RENTA ~ .,
+  data = rtrain,
+  control = rpart.control(maxdepth = 3, minbucket = 50, cp = 0.001)
+)
+
+rpart.plot(arbol_auxiliar, main = "Árbol auxiliar para interpretación")
+```
+
+## Python
+
+```{python}
+#| label: extraer-arbol-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.tree import plot_tree, export_text
+
+# Extraemos el primer árbol del bosque
+one_tree = rf_basico_py.estimators_[0]
+
+print("Profundidad del árbol:", one_tree.get_depth())
+print("Número de hojas:", one_tree.get_n_leaves())
+```
+
+```{python}
+#| label: texto-arbol-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Exportamos solamente los primeros niveles para que sea legible
+rules = export_text(
+    one_tree,
+    feature_names=list(pyX_train.columns),
+    max_depth=3
+)
+
+print(rules)
+```
+
+```{python}
+#| label: plot-arbol-extraido-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+plt.figure(figsize=(18, 10))
+plot_tree(
+    one_tree,
+    feature_names=list(pyX_train.columns),
+    class_names=list(rf_basico_py.classes_),
+    max_depth=3,
+    filled=True,
+    rounded=True,
+    fontsize=8
+)
+plt.title("Primer árbol extraído del Random Forest. Se muestran solo 3 niveles")
+plt.show()
+```
+:::
+
+# Interpretación mediante Partial Dependence Plots
+
+Los **Partial Dependence Plots** muestran cómo cambia la predicción media del modelo cuando modificamos una variable, manteniendo el resto de variables según su distribución observada.
+
+Sirven para responder preguntas como:
+
+> ¿Cómo cambia la probabilidad de renta alta cuando aumenta la distancia al centro?
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: pdp-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Seleccionamos una variable numérica importante.
+# Si DISTANCE_TO_CITY_CENTER está disponible, suele ser una buena candidata.
+partial_rf <- partial(
+  rf_basico,
+  pred.var = "DISTANCE_TO_CITY_CENTER",
+  train = rtrain,
+  which.class = "Alta",
+  prob = TRUE
+)
+
+autoplot(partial_rf) +
+  labs(
+    title = "Partial Dependence Plot",
+    subtitle = "Efecto medio de DISTANCE_TO_CITY_CENTER sobre la probabilidad de RENTA Alta",
+    x = "Distancia al centro",
+    y = "Probabilidad media predicha"
+  ) +
+  theme_minimal()
+```
+
+## Python
+
+```{python}
+#| label: pdp-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.inspection import PartialDependenceDisplay
+
+# Elegimos una variable si existe tras el one-hot encoding
+candidate_var = "DISTANCE_TO_CITY_CENTER"
+
+if candidate_var in pyX_train.columns:
+    PartialDependenceDisplay.from_estimator(
+        rf_basico_py,
+        pyX_train,
+        features=[candidate_var],
+        target="Alta"
+    )
+    plt.title("Partial Dependence Plot - DISTANCE_TO_CITY_CENTER")
+    plt.show()
+else:
+    print(f"La variable {candidate_var} no está disponible en pyX_train.")
+```
+:::
+
+# Interpretación mediante SHAP values
+
+## ¿Qué son los SHAP values?
+
+Los **SHAP values** son una técnica de interpretabilidad basada en teoría de juegos. La idea es repartir la predicción de un modelo entre las variables explicativas.
+
+Para una observación concreta, la predicción puede expresarse de forma aproximada como:
+
+$$\hat{f}(x) = \phi_0 + \phi_1 + \phi_2 + \cdots + \phi_p$$
+
+donde:
+
+- $\phi_0$ es el valor base del modelo;
+- $\phi_j$ es la contribución de la variable $j$;
+- si $\phi_j > 0$, esa variable empuja la predicción hacia arriba para una clase concreta;
+- si $\phi_j < 0$ , esa variable empuja la predicción hacia abajo para esa clase concreta.
+
+En clasificación multiclase, los SHAP values se calculan por clase. Por ejemplo, podemos interpretar qué variables empujan la predicción hacia `RENTA = Alta`.
+
+## SHAP global
+
+La interpretación global resume qué variables tienen mayor impacto medio sobre las predicciones del modelo.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: shap-r-preparacion
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+
+library(iml)
+library(future)
+
+future::plan(future::sequential)
+options(future.globals.maxSize = 2 * 1024^3)
+
+# Para SHAP en R usamos una muestra pequeña.
+# Así evitamos que iml copie objetos enormes internamente.
+set.seed(1994)
+
+X_train_r <- rtrain %>% select(-RENTA)
+y_train_r <- rtrain$RENTA
+
+idx_shap_r <- sample(
+  seq_len(nrow(X_train_r)),
+  size = min(300, nrow(X_train_r))
+)
+
+X_shap_r <- X_train_r[idx_shap_r, , drop = FALSE]
+y_shap_r <- y_train_r[idx_shap_r]
+
+predict_fun_alta <- function(model, newdata) {
+  predict(model, newdata, type = "prob")[, "Alta"]
+}
+
+predictor_alta <- Predictor$new(
+  model = rf_basico,
+  data = X_shap_r,
+  y = as.numeric(y_shap_r == "Alta"),
+  predict.function = predict_fun_alta,
+  type = "prob"
+)
+```
+
+```{r}
+#| label: shap-r-global
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# FeatureImp no es SHAP estrictamente, pero da una lectura global complementaria
+# basada en pérdida por permutación para la clase Alta.
+set.seed(1994)
+
+effect_global <- FeatureImp$new(
+  predictor_alta,
+  loss = "ce",
+  n.repetitions = 3
+)
+
+plot(effect_global) +
+  labs(title = "Importancia global por permutación para la clase Alta")
+```
+
+```{r}
+#| label: shap-r-local
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# SHAP local para una observación concreta.
+# Elegimos la primera observación del conjunto de test.
+set.seed(1994)
+shap_obs_1 <- Shapley$new(
+  predictor_alta,
+  x.interest = rtest[1, setdiff(names(rtest), "RENTA"), drop = FALSE],
+  sample.size = 100
+)
+
+plot(shap_obs_1) +
+  labs(title = "SHAP local para una vivienda - Clase Alta")
+```
+
+## Python
+
+```{python}
+#| label: shap-python
+#| echo: true
+#| eval: false
+#| warning: false
+#| message: false
+#| error: false
+
+# Si no tienes shap instalado, ejecuta previamente:
+# pip install shap
+
+import shap
+
+# Para acelerar el cálculo, usamos una muestra del conjunto de test.
+X_shap = pyX_test.sample(min(300, len(pyX_test)), random_state=1994)
+
+explainer = shap.TreeExplainer(rf_basico_py)
+shap_values = explainer.shap_values(X_shap)
+
+# En clasificación multiclase, shap_values suele ser una lista:
+# una matriz de SHAP values por cada clase.
+print(rf_basico_py.classes_)
+```
+
+```{python}
+#| label: shap-summary-python
+#| echo: true
+#| eval: false
+#| warning: false
+#| message: false
+#| error: false
+
+# Seleccionamos la clase Alta
+class_index = list(rf_basico_py.classes_).index("Alta")
+
+shap.summary_plot(
+    shap_values[class_index],
+    X_shap,
+    plot_type="dot",
+    show=True
+)
+```
+
+```{python}
+#| label: shap-bar-python
+#| echo: true
+#| eval: false
+#| warning: false
+#| message: false
+#| error: false
+
+shap.summary_plot(
+    shap_values[class_index],
+    X_shap,
+    plot_type="bar",
+    show=True
+)
+```
+
+```{python}
+#| label: shap-local-python
+#| echo: true
+#| eval: false
+#| warning: false
+#| message: false
+#| error: false
+
+# Interpretación local de una observación concreta.
+obs_id = 0
+
+shap.force_plot(
+    explainer.expected_value[class_index],
+    shap_values[class_index][obs_id, :],
+    X_shap.iloc[obs_id, :],
+    matplotlib=True
+)
+```
+:::
+
+## Cómo leer un gráfico SHAP summary plot
+
+En el gráfico SHAP de puntos:
+
+- cada punto representa una observación;
+- el eje X representa el impacto SHAP sobre la predicción;
+- valores positivos empujan hacia la clase analizada;
+- valores negativos alejan de la clase analizada;
+- el color representa el valor de la variable: valores altos frente a valores bajos;
+- las variables aparecen ordenadas por importancia global media.
+
+Ejemplo de interpretación para la clase `Alta`:
+
+> Si `DISTANCE_TO_CITY_CENTER` aparece con puntos rojos a la izquierda, significaría que valores altos de distancia al centro reducen la probabilidad de renta alta. Si aparecen a la derecha, significaría que la aumentan.
+
+# Comparación entre árbol individual y Random Forest
+
+| Criterio | Árbol de decisión | Random Forest |
+|---|---|---|
+| Interpretabilidad | Muy alta | Media |
+| Rendimiento predictivo | Medio | Alto |
+| Riesgo de sobreajuste | Alto | Menor |
+| Estabilidad | Baja | Alta |
+| Coste computacional | Bajo | Medio/alto |
+| Importancia de variables | Sí | Sí, más robusta |
+| Extracción de reglas | Directa | Parcial, árbol por árbol |
+
+La idea fundamental es que Random Forest sacrifica parte de la interpretabilidad directa de un único árbol a cambio de mayor estabilidad y mejor rendimiento predictivo.
+
+# Buenas prácticas
+
+Al usar Random Forest conviene:
+
+1. reservar siempre un conjunto de test;
+2. usar validación cruzada para comparar configuraciones;
+3. revisar matriz de confusión, no solo accuracy;
+4. analizar si hay clases desbalanceadas;
+5. comparar importancia por impureza y por permutación;
+6. usar SHAP para interpretación local y global;
+7. no interpretar un solo árbol como si fuera todo el bosque;
+8. documentar los hiperparámetros finales.
+
+# Conclusiones
+
+En este documento se ha construido un flujo completo de modelización con Random Forest en R y Python. Se han cubierto las fases principales:
+
+- carga y preprocesamiento de datos;
+- análisis descriptivo inicial;
+- partición train/test;
+- entrenamiento de Random Forest;
+- evaluación mediante matriz de confusión y métricas de clasificación;
+- validación cruzada;
+- ajuste de hiperparámetros;
+- matriz y gráficos de importancia de variables;
+- extracción de un árbol individual del bosque;
+- interpretación mediante Partial Dependence Plots;
+- interpretación local y global mediante SHAP values.
+
+Random Forest es especialmente útil cuando se busca un modelo robusto y potente, pero sigue siendo necesario acompañarlo de técnicas de interpretación para justificar sus predicciones y entender qué variables están guiando las decisiones del modelo.
+
+# Sesión
+
+```{r}
+#| label: session-info
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+sessionInfo()
+```

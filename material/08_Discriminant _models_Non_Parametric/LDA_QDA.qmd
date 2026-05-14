@@ -67,15 +67,15 @@ El **análisis discriminante** es una familia de métodos supervisados de clasif
 
 En este caso queremos predecir:
 
-\[
+$$
 Y \in \{1, 2, 3\}
-\]
+$$
 
 usando un vector de variables predictoras:
 
-\[
+$$
 X = (X_1, X_2, \ldots, X_p)
-\]
+$$
 
 La pregunta central es:
 
@@ -87,14 +87,14 @@ LDA asume que las variables predictoras siguen una distribución normal multivar
 
 De forma simplificada:
 
-\[
+$$
 X \mid Y = k \sim \mathcal{N}(\mu_k, \Sigma)
-\]
+$$
 
 Donde:
 
-- \(\mu_k\) es el vector de medias del grupo \(k\).
-- \(\Sigma\) es la matriz de covarianzas común para todos los grupos.
+- $\mu_k$ es el vector de medias del grupo $k$.
+- $\Sigma$ es la matriz de covarianzas común para todos los grupos.
 
 La consecuencia práctica es que las fronteras de decisión entre clases son **lineales**. Por eso el método se llama análisis discriminante **lineal**.
 
@@ -102,14 +102,14 @@ La consecuencia práctica es que las fronteras de decisión entre clases son **l
 
 QDA relaja una de las hipótesis fuertes de LDA. En QDA se permite que cada clase tenga su propia matriz de covarianzas:
 
-\[
+$$
 X \mid Y = k \sim \mathcal{N}(\mu_k, \Sigma_k)
-\]
+$$
 
 Donde:
 
-- \(\mu_k\) es el vector de medias del grupo \(k\).
-- \(\Sigma_k\) es la matriz de covarianzas específica del grupo \(k\).
+- $\mu_k$ es el vector de medias del grupo $k$.
+- $\Sigma_k$ es la matriz de covarianzas específica del grupo $k$.
 
 La consecuencia práctica es que las fronteras de decisión pueden ser **cuadráticas**. QDA es más flexible que LDA, pero también necesita más datos para estimar correctamente más parámetros.
 
@@ -462,9 +462,9 @@ LDA no solo clasifica. También construye nuevas variables llamadas **funciones 
 
 Como hay tres clases, LDA puede construir como máximo dos funciones discriminantes:
 
-\[
+$$
 K - 1 = 3 - 1 = 2
-\]
+$$
 
 ::: panel-tabset
 ## R

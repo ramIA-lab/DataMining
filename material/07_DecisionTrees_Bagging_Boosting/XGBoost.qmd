@@ -1,0 +1,1704 @@
+---
+title: "XGBoost"
+author: "Dante Conti, Sergi Ramirez, (c) IDEAI"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: show
+    code-summary: "Mostrar código"
+    embed-resources: true
+    code-tools: true
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+# Descripción del problema
+
+En este documento se estudia el algoritmo **XGBoost** aplicado a un problema de **clasificación supervisada multiclase**. El objetivo será predecir el nivel de renta del entorno de una vivienda de Barcelona (`RENTA`) a partir de características del inmueble, del edificio y de su localización.
+
+La base de datos procede de anuncios de vivienda de Idealista y se ha enriquecido con información de renta media por hogar/persona a nivel de sección censal. A partir de la renta media por hogar se construye una variable categórica de tres niveles:
+
+- **Baja**: renta media por hogar inferior a 30.000 €.
+- **Media**: renta media por hogar entre 30.000 € y 50.000 €.
+- **Alta**: renta media por hogar superior a 50.000 €.
+
+Por tanto, el problema se puede formular como:
+
+$$Y = f(X_1, X_2, \ldots, X_p) + \varepsilon$$
+
+donde:
+
+- $Y$ es la variable objetivo `RENTA`.
+- $X_1, X_2, \ldots, X_p$ son las variables explicativas.
+- $f$ es una función no lineal aprendida mediante una suma secuencial de árboles.
+
+XGBoost no construye un único árbol, ni muchos árboles independientes como Random Forest. XGBoost construye árboles de forma **secuencial**: cada nuevo árbol intenta corregir los errores cometidos por el conjunto de árboles anterior.
+
+# Introducción teórica a XGBoost
+
+## De árboles individuales a boosting
+
+Un árbol de decisión aprende reglas del tipo:
+
+> Si `CDIS = Sarrià-Sant Gervasi` y `DISTANCE_TO_CITY_CENTER < 3`, entonces la renta probablemente es `Alta`.
+
+Un único árbol suele ser fácil de interpretar, pero puede ser inestable. Random Forest reduce esa inestabilidad entrenando muchos árboles en paralelo y agregando sus votos. XGBoost usa otra lógica: entrena árboles pequeños de forma secuencial, donde cada árbol nuevo se concentra en los errores que todavía quedan por corregir.
+
+La predicción final se expresa como una suma de árboles:
+
+$$\hat{y}_i = \sum_{m=1}^{M} \eta f_m(x_i)$$
+
+donde:
+
+- $M$ es el número de árboles.
+- $f_m$ es el árbol añadido en la iteración $m$.
+- $\eta$ es la tasa de aprendizaje o `learning_rate`.
+- $x_i$ representa las variables explicativas del individuo $i$.
+
+La idea básica es:
+
+1. Se empieza con una predicción inicial.
+2. Se calcula el error del modelo.
+3. Se entrena un nuevo árbol para reducir ese error.
+4. Se añade el árbol al modelo con un peso pequeño.
+5. Se repite el proceso muchas veces.
+
+## Diferencia entre Random Forest y XGBoost
+
+| Aspecto | Random Forest | XGBoost |
+|---|---|---|
+| Construcción de árboles | Paralela | Secuencial |
+| Objetivo de cada árbol | Votar de forma independiente | Corregir errores anteriores |
+| Tipo de ensamble | Bagging | Boosting |
+| Control del sobreajuste | Promedio de muchos árboles | Regularización, shrinkage, profundidad, submuestreo |
+| Interpretabilidad | Importancia de variables y árboles individuales | Importancia, árboles individuales y SHAP |
+| Riesgo principal | Puede ser menos preciso si la señal es compleja | Puede sobreajustar si se ajusta mal |
+
+## Función objetivo de XGBoost
+
+XGBoost optimiza una función objetivo formada por dos partes:
+
+$$Obj = \sum_{i=1}^{n} L(y_i, \hat{y}_i) + \sum_{m=1}^{M} \Omega(f_m)$$
+
+
+La primera parte mide el error de predicción:
+
+$$
+\sum_{i=1}^{n} L(y_i, \hat{y}_i)
+$$
+
+La segunda parte penaliza la complejidad de los árboles:
+
+$$
+\sum_{m=1}^{M} \Omega(f_m)
+$$
+
+Esto es muy importante porque XGBoost no solo intenta ajustar bien los datos, sino que también intenta evitar árboles excesivamente complejos.
+
+Una forma habitual de escribir la penalización de complejidad es:
+
+$$
+\Omega(f) = \gamma T + \frac{1}{2}\lambda \sum_{j=1}^{T} w_j^2
+$$
+
+donde:
+
+- $T$ es el número de hojas del árbol.
+- $w_j$ es el peso asignado a la hoja $j$.
+- $\gamma$ penaliza crear nuevas hojas.
+- $\lambda$ penaliza pesos demasiado grandes.
+
+## Parámetros principales
+
+Los parámetros más importantes que se usarán durante el documento son:
+
+- `nrounds` / `n_estimators`: número de árboles.
+- `eta` / `learning_rate`: peso de cada árbol nuevo.
+- `max_depth`: profundidad máxima de cada árbol.
+- `subsample`: proporción de observaciones usadas en cada iteración.
+- `colsample_bytree`: proporción de variables usadas por árbol.
+- `lambda` / `reg_lambda`: regularización L2.
+- `alpha` / `reg_alpha`: regularización L1.
+- `objective`: función de pérdida que se quiere optimizar.
+- `eval_metric`: métrica usada para monitorizar el entrenamiento.
+
+## Ventajas principales
+
+XGBoost es uno de los algoritmos más utilizados en problemas tabulares porque:
+
+- captura no linealidades;
+- captura interacciones entre variables;
+- suele dar muy buen rendimiento predictivo;
+- permite regularizar el modelo;
+- permite hacer validación temprana mediante `early_stopping`;
+- ofrece medidas de importancia de variables;
+- permite extraer árboles concretos del modelo;
+- se integra muy bien con SHAP para interpretación local y global.
+
+## Limitaciones
+
+También tiene limitaciones:
+
+- requiere más ajuste de hiperparámetros que un árbol simple;
+- puede sobreajustar si se usan demasiados árboles o árboles muy profundos;
+- necesita codificar variables categóricas si se usa una matriz numérica clásica;
+- es menos interpretable que un árbol individual;
+- su interpretación mediante importancia de variables puede depender de la métrica usada: `gain`, `cover`, `frequency`, etc.
+
+# Carga de datos
+
+El siguiente bloque carga la misma base de datos usada en los ejemplos de árboles y Random Forest.
+
+```{r}
+#| label: cargar-datos-final
+#| echo: true
+#| eval: true
+#| warning: false
+#| message: false
+#| error: false
+
+path <- 'https://raw.githubusercontent.com/ramIA-lab/MLforEducation/refs/heads/main/material/trees_ensambleMethods/idealista18_BCN_conRenta.csv'
+BCN <- read.csv2(path)
+```
+
+```{r}
+#| label: cargar-paquetes-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+paquetes_necesarios <- c(
+  "dplyr", "tidyr", "ggplot2", "caret", "xgboost", "pdp"
+)
+
+paquetes_faltantes <- paquetes_necesarios[
+  !vapply(paquetes_necesarios, requireNamespace, logical(1), quietly = TRUE)
+]
+
+if (length(paquetes_faltantes) > 0) {
+  install.packages(paquetes_faltantes, repos = "https://cloud.r-project.org")
+}
+
+invisible(lapply(paquetes_necesarios, library, character.only = TRUE))
+```
+```{python}
+#| label: cargar-paquetes-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+import importlib.util
+import subprocess
+import sys
+
+paquetes_python = {
+    "pandas": "pandas",
+    "numpy": "numpy",
+    "sklearn": "scikit-learn",
+    "xgboost": "xgboost",
+    "matplotlib": "matplotlib",
+    "shap": "shap"
+}
+
+for modulo, paquete in paquetes_python.items():
+    if importlib.util.find_spec(modulo) is None:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", paquete])
+```
+
+
+# Preprocesamiento de los datos
+
+El preprocesamiento tiene cuatro objetivos:
+
+1. eliminar identificadores, geometrías y columnas que no se usarán como predictores;
+2. transformar variables binarias de 0/1 a etiquetas interpretables;
+3. crear la variable objetivo `RENTA`;
+4. preparar una matriz numérica, porque XGBoost trabaja de forma natural con matrices numéricas.
+
+```{r}
+#| label: preprocessing-R
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+columnas_a_eliminar <- c(
+  "X", "PRICE", "LONGITUDE", "LATITUDE", "geometry", "CONSTRUCTIONYEAR",
+  "ASSETID", "PERIOD", "CUSEC", "CSEC", "CMUN", "CPRO", "CCA", "CUDIS",
+  "CLAU2", "NPRO", "NCA", "CNUT0", "CNUT1", "CNUT2", "CNUT3", "NMUN",
+  "Shape_Leng", "Shape_Area", "CUMUN", "CADASTRALQUALITYID"
+)
+
+BCN <- BCN %>%
+  select(-any_of(columnas_a_eliminar)) %>%
+  mutate(
+    across(
+      .cols = matches("^(HAS|IS)"),
+      .fns = ~ case_when(
+        . == 0 ~ "No",
+        . == 1 ~ "Si",
+        TRUE ~ as.character(.)
+      ),
+      .names = "{.col}"
+    ),
+    AMENITYID = case_when(
+      AMENITYID == 1 ~ "SinMuebleSinCocina",
+      AMENITYID == 2 ~ "CocinaSinMuebles",
+      AMENITYID == 3 ~ "CocinaMuebles",
+      TRUE ~ "noInfo"
+    ),
+    FLATLOCATIONID = case_when(
+      FLATLOCATIONID == 1 ~ "exterior",
+      FLATLOCATIONID == 2 ~ "interior",
+      TRUE ~ "noInfo"
+    ),
+    BUILTTYPEID_1 = case_when(
+      BUILTTYPEID_1 == 0 ~ "noObraNueva",
+      BUILTTYPEID_1 == 1 ~ "obraNueva",
+      TRUE ~ "noInfo"
+    ),
+    BUILTTYPEID_2 = case_when(
+      BUILTTYPEID_2 == 0 ~ "noRestaurar",
+      BUILTTYPEID_2 == 1 ~ "Restaurar",
+      TRUE ~ "noInfo"
+    ),
+    BUILTTYPEID_3 = case_when(
+      BUILTTYPEID_3 == 0 ~ "noSegundaMano",
+      BUILTTYPEID_3 == 1 ~ "SegundaMano",
+      TRUE ~ "noInfo"
+    ),
+    FLOORCLEAN = replace_na(FLOORCLEAN, 0),
+    CDIS = case_when(
+      CDIS == 1 ~ "Ciutat-Vella",
+      CDIS == 2 ~ "Eixample",
+      CDIS == 3 ~ "Sants-Montjuic",
+      CDIS == 4 ~ "Les Corts",
+      CDIS == 5 ~ "Sarrià-Sant Gervasi",
+      CDIS == 6 ~ "Gràcia",
+      CDIS == 7 ~ "Horta-Guinardó",
+      CDIS == 8 ~ "Nou Barris",
+      CDIS == 9 ~ "Sant Andreu",
+      CDIS == 10 ~ "Sant Martí",
+      TRUE ~ "noInfo"
+    ),
+    RENTA = case_when(
+      Renta.media.por.hogar < 30000 ~ "Baja",
+      Renta.media.por.hogar >= 30000 & Renta.media.por.hogar <= 50000 ~ "Media",
+      Renta.media.por.hogar > 50000 ~ "Alta",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(-any_of(c("Renta.media.por.hogar", "Renta.media.por.persona"))) %>%
+  mutate(RENTA = factor(RENTA, levels = c("Baja", "Media", "Alta"))) %>%
+  na.omit()
+```
+
+# Análisis descriptivo
+
+Antes de entrenar un modelo de boosting conviene revisar la variable objetivo y algunas variables explicativas. En clasificación multiclase es especialmente importante mirar si las clases están equilibradas.
+
+```{r}
+#| label: descriptiva-basica
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+dim(BCN)
+str(BCN)
+table(BCN$RENTA)
+prop.table(table(BCN$RENTA))
+```
+
+```{r}
+#| label: grafico-variable-objetivo
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+ggplot(BCN, aes(x = RENTA, fill = RENTA)) +
+  geom_bar(show.legend = FALSE) +
+  labs(
+    title = "Distribución de la variable objetivo",
+    x = "Nivel de renta",
+    y = "Número de observaciones"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+#| label: grafico-distancias-renta
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+ggplot(BCN, aes(x = RENTA, y = DISTANCE_TO_CITY_CENTER, fill = RENTA)) +
+  geom_boxplot(show.legend = FALSE, alpha = 0.8) +
+  labs(
+    title = "Distancia al centro según nivel de renta",
+    x = "Nivel de renta",
+    y = "Distancia al centro de la ciudad"
+  ) +
+  theme_minimal()
+```
+
+# Separación entrenamiento/test
+
+Separamos los datos en entrenamiento y test de forma estratificada.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: particion-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+library(dplyr)
+
+set.seed(1994)
+
+index <- caret::createDataPartition(BCN$RENTA, p = 0.8, list = FALSE)
+rtrain <- BCN %>% dplyr::slice(index)
+rtest  <- BCN %>% dplyr::slice(-index)
+
+prop.table(table(rtrain$RENTA))
+prop.table(table(rtest$RENTA))
+```
+
+## Python
+
+```{python}
+#| label: conversor-r-py
+#| echo: false
+#| warning: false
+#| message: false
+#| error: false
+
+pyBCN = r.BCN.copy()
+```
+
+```{python}
+#| label: preprocessing-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+import pandas as pd
+import numpy as np
+
+pyBCN = pyBCN.dropna().copy()
+
+y = pyBCN["RENTA"].astype(str)
+X = pyBCN.drop(columns=["RENTA"])
+
+X = pd.get_dummies(X, drop_first=False)
+
+print(X.shape)
+print(y.value_counts(normalize=True))
+```
+
+```{python}
+#| label: particion-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.model_selection import train_test_split
+
+pyX_train, pyX_test, pyy_train, pyy_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=1994,
+    stratify=y
+)
+
+print(pyX_train.shape, pyX_test.shape)
+```
+:::
+
+# Preparación específica para XGBoost
+
+XGBoost necesita que la variable objetivo esté codificada como números. En clasificación multiclase, si hay tres clases, las etiquetas deben estar codificadas como `0`, `1` y `2`.
+
+En R usaremos `model.matrix()` para convertir variables categóricas a variables dummy. En Python usaremos `pd.get_dummies()` y `LabelEncoder`.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: matriz-xgboost-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# dummyVars se ajusta SOLO con train y después se aplica a test.
+# Así evitamos que train y test tengan columnas dummy diferentes.
+dummy_model_r <- caret::dummyVars(RENTA ~ ., data = rtrain, fullRank = FALSE)
+
+x_train <- predict(dummy_model_r, newdata = rtrain)
+x_test  <- predict(dummy_model_r, newdata = rtest)
+
+x_train <- as.matrix(x_train)
+x_test  <- as.matrix(x_test)
+
+y_train <- as.numeric(rtrain$RENTA) - 1
+y_test  <- as.numeric(rtest$RENTA) - 1
+
+num_class <- length(levels(rtrain$RENTA))
+clases <- levels(rtrain$RENTA)
+
+dtrain <- xgb.DMatrix(data = x_train, label = y_train)
+dtest  <- xgb.DMatrix(data = x_test, label = y_test)
+
+num_class
+head(y_train)
+```
+
+## Python
+
+```{python}
+#| label: matriz-xgboost-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.preprocessing import LabelEncoder
+
+le = LabelEncoder()
+pyy_train_enc = le.fit_transform(pyy_train)
+pyy_test_enc = le.transform(pyy_test)
+
+print(dict(zip(le.classes_, range(len(le.classes_)))))
+```
+:::
+
+# Entrenamiento de un primer modelo XGBoost
+
+## Modelo básico
+
+Empezamos con un modelo razonable, sin una búsqueda exhaustiva de hiperparámetros. El objetivo de este primer modelo es entender el flujo completo: entrenar, predecir, evaluar e interpretar.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: xgboost-basico-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+set.seed(1994)
+
+params_basicos <- list(
+  objective = "multi:softprob",
+  eval_metric = "mlogloss",
+  num_class = num_class,
+  eta = 0.05,
+  max_depth = 4,
+  subsample = 0.8,
+  colsample_bytree = 0.8,
+  lambda = 1,
+  alpha = 0
+)
+
+xgb_basico <- xgb.train(
+  params = params_basicos,
+  data = dtrain,
+  nrounds = 200,
+  watchlist = list(train = dtrain, test = dtest),
+  verbose = 0
+)
+
+xgb_basico
+```
+
+## Python
+
+```{python}
+#| label: xgboost-basico-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from xgboost import XGBClassifier
+
+xgb_basico_py = XGBClassifier(
+    objective="multi:softprob",
+    num_class=len(le.classes_),
+    n_estimators=200,
+    learning_rate=0.1,
+    max_depth=4,
+    subsample=0.8,
+    colsample_bytree=0.8,
+    reg_lambda=1,
+    reg_alpha=0,
+    eval_metric="mlogloss",
+    random_state=1994,
+    n_jobs=-1
+)
+
+xgb_basico_py.fit(pyX_train, pyy_train_enc)
+```
+:::
+
+# Evaluación del modelo
+
+En clasificación multiclase no basta con mirar la accuracy. Conviene analizar:
+
+- matriz de confusión;
+- accuracy global;
+- sensibilidad/recall por clase;
+- precisión por clase;
+- F1-score por clase;
+- log-loss multiclase;
+- probabilidades predichas.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: predicciones-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+pred_prob_r <- predict(xgb_basico, dtest)
+pred_prob_r <- matrix(pred_prob_r, ncol = num_class, byrow = TRUE)
+colnames(pred_prob_r) <- clases
+
+pred_class_r <- max.col(pred_prob_r) - 1
+pred_factor_r <- factor(clases[pred_class_r + 1], levels = clases)
+real_factor_r <- factor(clases[y_test + 1], levels = clases)
+
+caret::confusionMatrix(pred_factor_r, real_factor_r)
+```
+
+```{r}
+#| label: matriz-confusion-r-grafico
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+cm_r <- table(Real = real_factor_r, Predicho = pred_factor_r)
+cm_r_df <- as.data.frame(cm_r)
+
+ggplot(cm_r_df, aes(x = Predicho, y = Real, fill = Freq)) +
+  geom_tile() +
+  geom_text(aes(label = Freq), color = "white", size = 5) +
+  labs(
+    title = "Matriz de confusión - XGBoost en R",
+    x = "Clase predicha",
+    y = "Clase real"
+  ) +
+  theme_minimal()
+```
+
+## Python
+
+```{python}
+#| label: predicciones-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, log_loss
+
+py_prob = xgb_basico_py.predict_proba(pyX_test)
+py_pred_enc = np.argmax(py_prob, axis=1)
+py_pred = le.inverse_transform(py_pred_enc)
+
+print("Accuracy:", round(accuracy_score(pyy_test, py_pred), 4))
+print("Log-loss:", round(log_loss(pyy_test_enc, py_prob), 4))
+print(classification_report(pyy_test, py_pred))
+```
+
+```{python}
+#| label: matriz-confusion-python-grafico
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import ConfusionMatrixDisplay
+
+cm = confusion_matrix(pyy_test, py_pred, labels=le.classes_)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=le.classes_)
+disp.plot(values_format="d")
+plt.title("Matriz de confusión - XGBoost en Python")
+plt.show()
+```
+:::
+
+# Early stopping
+
+Una de las ventajas prácticas de XGBoost es que permite usar **early stopping**. La idea es entrenar muchos árboles como máximo, pero detener el entrenamiento cuando el rendimiento en validación deja de mejorar.
+
+Esto evita elegir manualmente el número exacto de árboles. Si el error de validación mejora hasta la ronda 87 y después empieza a empeorar, el modelo se queda con la mejor ronda encontrada.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: xgboost-early-stopping-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+set.seed(1994)
+
+xgb_es <- xgb.train(
+  params = params_basicos,
+  data = dtrain,
+  nrounds = 1000,
+  watchlist = list(train = dtrain, test = dtest),
+  early_stopping_rounds = 30,
+  verbose = 1
+)
+
+best_iteration <- xgb_es$best_iteration
+best_score <- xgb_es$best_score
+
+cat("Mejor iteración:", best_iteration, "\n")
+cat("Mejor score:", best_score, "\n")
+```
+
+```{r}
+#| label: curva-aprendizaje-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+eval_log <- xgb_es$evaluation_log
+
+ggplot(eval_log, aes(x = iter)) +
+  geom_line(aes(y = train_mlogloss, color = "Train")) +
+  geom_line(aes(y = test_mlogloss, color = "Test")) +
+  labs(
+    title = "Curva de aprendizaje con early stopping",
+    x = "Número de árboles",
+    y = "Multiclass log-loss",
+    color = "Conjunto"
+  ) +
+  theme_minimal()
+```
+
+## Python
+
+```{python}
+#| label: xgboost-early-stopping-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+pyX_tr, pyX_val, pyy_tr, pyy_val = train_test_split(
+    pyX_train,
+    pyy_train_enc,
+    test_size=0.2,
+    random_state=1994,
+    stratify=pyy_train_enc
+)
+
+xgb_es_py = XGBClassifier(
+    objective="multi:softprob",
+    num_class=len(le.classes_),
+    n_estimators=1000,
+    learning_rate=0.1,
+    max_depth=4,
+    subsample=0.8,
+    colsample_bytree=0.8,
+    reg_lambda=1,
+    reg_alpha=0,
+    eval_metric="mlogloss",
+    random_state=1994,
+    n_jobs=-1,
+    early_stopping_rounds=30
+)
+
+try:
+    xgb_es_py.fit(
+        pyX_tr,
+        pyy_tr,
+        eval_set=[(pyX_tr, pyy_tr), (pyX_val, pyy_val)],
+        verbose=False
+    )
+except TypeError:
+    # Compatibilidad con versiones antiguas de xgboost.
+    xgb_es_py.set_params(early_stopping_rounds=None)
+    xgb_es_py.fit(
+        pyX_tr,
+        pyy_tr,
+        eval_set=[(pyX_tr, pyy_tr), (pyX_val, pyy_val)],
+        early_stopping_rounds=30,
+        verbose=False
+    )
+
+print("Mejor iteración:", getattr(xgb_es_py, "best_iteration", None))
+print("Mejor score:", getattr(xgb_es_py, "best_score", None))
+```
+
+```{python}
+#| label: curva-aprendizaje-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+results = xgb_es_py.evals_result()
+
+plt.figure(figsize=(8, 5))
+plt.plot(results["validation_0"]["mlogloss"], label="Train")
+plt.plot(results["validation_1"]["mlogloss"], label="Validación")
+plt.xlabel("Número de árboles")
+plt.ylabel("Multiclass log-loss")
+plt.title("Curva de aprendizaje con early stopping")
+plt.legend()
+plt.show()
+```
+:::
+
+# Ajuste de hiperparámetros
+
+XGBoost tiene muchos hiperparámetros. No conviene ajustarlos todos a la vez. Una estrategia razonable es empezar con los más influyentes:
+
+- `max_depth`: controla la complejidad de cada árbol.
+- `eta` / `learning_rate`: controla cuánto aporta cada árbol.
+- `subsample`: introduce aleatoriedad en observaciones.
+- `colsample_bytree`: introduce aleatoriedad en variables.
+- `min_child_weight`: evita particiones con muy poca información.
+- `gamma`: exige una mejora mínima para crear una nueva partición.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: xgboost-caret-tuning
+#| echo: true
+#| warning: false
+#| message: false
+
+library(caret)
+library(ggplot2)
+
+head(modelLookup("xgbTree"), 4)
+
+# se determina la semilla aleatoria
+set.seed(101)
+
+control <- trainControl(
+  method = "cv",
+  number = 10,
+  classProbs = TRUE,
+  summaryFunction = defaultSummary,
+  savePredictions = "final",
+  verboseIter = TRUE,
+  allowParallel = FALSE
+)
+
+grid_xgb <- expand.grid(
+  nrounds = c(100, 200),
+  max_depth = c(3, 4),
+  eta = c(0.05, 0.1),
+  gamma = 0,
+  colsample_bytree = 0.8,
+  min_child_weight = 1,
+  subsample = 0.8
+)  
+
+# se entrena el modelo
+xgb_caret <- train(
+  RENTA ~ .,
+  data = rtrain,
+  method = "xgbTree",
+  metric = "Accuracy",
+  trControl = control,
+  tuneGrid = grid_xgb
+)
+                                
+```
+
+
+```{r}
+#| label: xgboost-caret-tuning2
+#| echo: true
+#| warning: false
+#| message: false
+
+xgb_caret
+plot(xgb_caret)
+```
+
+## Python
+
+```{python}
+#| label: tuning-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
+
+param_grid = {
+    "n_estimators": [100, 200],
+    "max_depth": [3, 5],
+    "learning_rate": [0.05, 0.1],
+    "subsample": [0.8],
+    "colsample_bytree": [0.8],
+    "min_child_weight": [1, 5]
+}
+
+base_xgb = XGBClassifier(
+    objective="multi:softprob",
+    num_class=len(le.classes_),
+    eval_metric="mlogloss",
+    random_state=1994,
+    n_jobs=-1
+)
+
+cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=1994)
+
+grid_search = GridSearchCV(
+    estimator=base_xgb,
+    param_grid=param_grid,
+    scoring="accuracy",
+    cv=cv,
+    n_jobs=1,
+    verbose=0
+)
+
+grid_search.fit(pyX_train, pyy_train_enc)
+
+print(grid_search.best_params_)
+print(round(grid_search.best_score_, 4))
+```
+:::
+
+# Importancia de variables
+
+XGBoost ofrece varias formas de medir la importancia de variables. Las más habituales son:
+
+- **Gain**: mejora media de la función objetivo al usar una variable en una partición. Suele ser la más informativa.
+- **Cover**: cantidad media de observaciones afectadas por las particiones donde aparece una variable.
+- **Frequency**: número de veces que una variable aparece en los árboles.
+
+Es importante no confundir importancia con causalidad. Una variable puede ser importante porque está correlacionada con otras, porque segmenta bien los datos o porque captura diferencias espaciales/sociales, pero eso no significa necesariamente que cause directamente la renta.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: importancia-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+importance_matrix <- xgb.importance(
+  feature_names = colnames(x_train),
+  model = xgb_es
+)
+
+head(importance_matrix, 20)
+```
+
+```{r}
+#| label: importancia-r-grafico
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+xgb.plot.importance(
+  importance_matrix = importance_matrix[1:20, ],
+  measure = "Gain",
+  rel_to_first = TRUE,
+  xlab = "Importancia relativa"
+)
+```
+
+```{r}
+#| label: matriz-importancia-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+importance_matrix %>%
+  select(Feature, Gain, Cover, Frequency) %>%
+  head(25)
+```
+
+## Python
+
+```{python}
+#| label: importancia-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+importances = xgb_es_py.feature_importances_
+imp_df = pd.DataFrame({
+    "variable": pyX_train.columns,
+    "importance": importances
+}).sort_values("importance", ascending=False)
+
+imp_df.head(20)
+```
+
+```{python}
+#| label: importancia-python-grafico
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+top_imp = imp_df.head(20).sort_values("importance")
+
+plt.figure(figsize=(8, 7))
+plt.barh(top_imp["variable"], top_imp["importance"])
+plt.xlabel("Importancia")
+plt.title("Top 20 variables importantes - XGBoost")
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: importancia-python-tipos
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+booster = xgb_es_py.get_booster()
+
+importance_gain = booster.get_score(importance_type="gain")
+importance_cover = booster.get_score(importance_type="cover")
+importance_weight = booster.get_score(importance_type="weight")
+
+importance_types = pd.DataFrame({
+    "variable": list(set(list(importance_gain.keys()) + list(importance_cover.keys()) + list(importance_weight.keys()))),
+})
+
+importance_types["gain"] = importance_types["variable"].map(importance_gain).fillna(0)
+importance_types["cover"] = importance_types["variable"].map(importance_cover).fillna(0)
+importance_types["frequency"] = importance_types["variable"].map(importance_weight).fillna(0)
+
+importance_types.sort_values("gain", ascending=False).head(25)
+```
+:::
+
+## Interpretación de la matriz de importancia
+
+La matriz de importancia debe leerse de forma comparativa:
+
+- Una variable con alto `Gain` ha producido particiones muy útiles para reducir el error.
+- Una variable con alto `Frequency` aparece muchas veces, pero no necesariamente es la más decisiva.
+- Una variable con alto `Cover` afecta a muchas observaciones.
+
+Ejemplo de lectura:
+
+> Si `CDIS_Sarrià-Sant Gervasi` aparece con alto `Gain`, significa que pertenecer a ese distrito ayuda mucho al modelo a separar clases de renta. Si `DISTANCE_TO_CITY_CENTER` también aparece arriba, significa que la localización espacial tiene un papel fuerte en la predicción.
+
+# Extracción y visualización de uno de los árboles
+
+Aunque XGBoost es un modelo de muchos árboles, se puede extraer un árbol individual. Esto sirve para entender una pequeña parte del ensamble, no todo el modelo completo.
+
+Un árbol individual puede responder preguntas como:
+
+- ¿Qué variable usa en la primera partición?
+- ¿Qué umbrales aparecen?
+- ¿Qué hojas finales genera?
+- ¿Qué peso asigna a cada hoja?
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: extraer-arbol-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+arbol_1 <- xgb.model.dt.tree(
+  feature_names = colnames(x_train),
+  model = xgb_es,
+  trees = 0
+)
+
+head(arbol_1, 20)
+```
+
+```{r}
+#| label: plot-arbol-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  xgb.plot.tree(
+    feature_names = colnames(x_train),
+    model = xgb_es,
+    trees = 0
+  )
+} else {
+  message("Para visualizar el árbol instala DiagrammeR: install.packages('DiagrammeR')")
+}
+```
+
+## Python
+
+```{python}
+#| label: extraer-arbol-python-texto
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Estructura del primer árbol en formato texto
+first_tree = booster.get_dump(with_stats=True)[0]
+print(first_tree[:3000])
+```
+
+```{python}
+#| label: plot-arbol-python
+#| echo: false
+#| warning: false
+#| message: false
+#| error: false
+
+from xgboost import plot_tree
+
+plt.figure(figsize=(18, 10))
+plot_tree(xgb_es_py, num_trees=0, rankdir="LR")
+plt.title("Primer árbol del modelo XGBoost")
+plt.show()
+```
+:::
+
+## Cómo interpretar el árbol extraído
+
+Un nodo interno tiene la forma:
+
+$$\text{variable} < \text{umbral}$$
+
+Si la condición se cumple, la observación va hacia una rama. Si no se cumple, va hacia la otra. Al final se llega a una hoja con un valor. En boosting, ese valor no es directamente una clase, sino una contribución parcial a la predicción final.
+
+En clasificación multiclase, XGBoost suele construir árboles asociados a las clases. Por eso, un árbol aislado solo explica una parte concreta de la predicción. La predicción final combina muchos árboles.
+
+# Dependencia parcial
+
+La **dependencia parcial** muestra cómo cambia la predicción media del modelo cuando una variable cambia y el resto de variables se mantiene según su distribución observada.
+
+Esto ayuda a responder preguntas como:
+
+> ¿Qué ocurre con la probabilidad de renta alta cuando aumenta la distancia al centro?
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: pdp-r-funcion
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Función de predicción robusta para PDP.
+# El paquete pdp puede pasar newdata sin la variable objetivo.
+# Como dummy_model_r fue entrenado con una fórmula RENTA ~ ., aquí añadimos
+# una columna RENTA ficticia si no existe para evitar el error:
+# "Variable(s) 'RENTA' are not in newdata".
+pred_fun_alta <- function(object, newdata) {
+
+  newdata <- as.data.frame(newdata)
+
+  if (!"RENTA" %in% names(newdata)) {
+    newdata$RENTA <- factor(clases[1], levels = clases)
+  } else {
+    newdata$RENTA <- factor(newdata$RENTA, levels = clases)
+  }
+
+  mat <- predict(dummy_model_r, newdata = newdata)
+  mat <- as.matrix(mat)
+
+  # Asegurar que las columnas tienen exactamente el mismo orden que en entrenamiento.
+  columnas_faltantes <- setdiff(colnames(x_train), colnames(mat))
+  if (length(columnas_faltantes) > 0) {
+    faltantes <- matrix(
+      0,
+      nrow = nrow(mat),
+      ncol = length(columnas_faltantes),
+      dimnames = list(NULL, columnas_faltantes)
+    )
+    mat <- cbind(mat, faltantes)
+  }
+
+  mat <- mat[, colnames(x_train), drop = FALSE]
+
+  pred <- predict(object, xgb.DMatrix(mat))
+  pred <- matrix(pred, ncol = num_class, byrow = TRUE)
+  pred[, which(clases == "Alta")]
+}
+
+pdp_alta <- pdp::partial(
+  object = xgb_es,
+  pred.var = "DISTANCE_TO_CITY_CENTER",
+  train = rtrain,
+  pred.fun = pred_fun_alta,
+  grid.resolution = 20,
+  progress = FALSE
+)
+
+plot(pdp_alta) +
+  labs(
+    title = "Dependencia parcial de DISTANCE_TO_CITY_CENTER",
+    y = "Probabilidad media predicha de RENTA Alta"
+  ) +
+  theme_minimal()
+```
+
+## Python
+
+```{python}
+#| label: pdp-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+from sklearn.inspection import PartialDependenceDisplay
+
+feature_name = "DISTANCE_TO_CITY_CENTER"
+feature_index = list(pyX_train.columns).index(feature_name)
+
+PartialDependenceDisplay.from_estimator(
+    xgb_es_py,
+    pyX_test,
+    [feature_index],
+    target=list(le.classes_).index("Alta")
+)
+plt.title("Dependencia parcial de DISTANCE_TO_CITY_CENTER para RENTA Alta")
+plt.show()
+```
+:::
+
+# Interpretación mediante SHAP values
+
+## Qué son los SHAP values
+
+Los **SHAP values** son una herramienta de interpretabilidad basada en teoría de juegos. La idea es repartir la predicción de un modelo entre las variables explicativas.
+
+Para una observación concreta, se puede escribir:
+
+$$\text{predicción} = \text{valor base} + \sum_{j=1}^{p} \phi_j$$
+
+donde:
+
+- `valor base` es la predicción media del modelo;
+- $\phi_j$ es la contribución de la variable $j$;
+- una contribución positiva empuja la predicción hacia arriba;
+- una contribución negativa empuja la predicción hacia abajo.
+
+En clasificación multiclase, SHAP puede calcular contribuciones para cada clase. Por ejemplo, una variable puede aumentar la probabilidad de `Alta` y reducir la de `Baja`.
+
+## Por qué SHAP es especialmente útil en XGBoost
+
+XGBoost suele tener un rendimiento alto, pero es difícil interpretar directamente cientos de árboles. SHAP permite obtener:
+
+- interpretación global del modelo;
+- ranking de variables relevantes;
+- dirección del efecto de cada variable;
+- explicación individual de una predicción;
+- detección de relaciones no lineales.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: shap-r-calculo
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Para simplificar, se calculan SHAP values sobre una muestra.
+set.seed(1994)
+idx_shap <- sample(seq_len(nrow(x_test)), size = min(1000, nrow(x_test)))
+X_shap_r <- x_test[idx_shap, ]
+
+shap_values_r <- predict(
+  xgb_es,
+  X_shap_r,
+  predcontrib = TRUE
+)
+
+# En multiclase, XGBoost devuelve contribuciones por clase.
+dim(shap_values_r)
+```
+
+```{r}
+#| label: shap-r-preparar-clase-alta
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# SHAPforxgboost trabaja cómodamente en problemas binarios/regresión.
+# En multiclase, según la versión de xgboost, predict(..., predcontrib = TRUE)
+# puede devolver:
+#   1) una matriz: observaciones x [clases * (variables + BIAS)]
+#   2) un array 3D: observaciones x (variables + BIAS) x clases
+# Este bloque soporta ambos formatos y evita errores de dimensiones.
+
+feature_names_r <- colnames(x_train)
+num_features <- length(feature_names_r) + 1 # +1 por BIAS
+
+# Usamos la clase "Alta" si existe. Si no existe, usamos la última clase.
+clase_alta_id <- match("Alta", clases)
+if (is.na(clase_alta_id)) {
+  clase_alta_id <- length(clases)
+  message("No existe la clase 'Alta'. Se usa la clase: ", clases[clase_alta_id])
+}
+
+# Aseguramos formato numérico.
+if (is.list(shap_values_r)) {
+  # Algunas versiones devuelven lista por clase.
+  shap_alta <- as.matrix(shap_values_r[[clase_alta_id]])
+} else if (length(dim(shap_values_r)) == 3) {
+  # Formato: observaciones x variables_con_bias x clases.
+  shap_alta <- as.matrix(shap_values_r[, , clase_alta_id])
+} else {
+  # Formato matriz o vector.
+  shap_values_mat <- as.matrix(shap_values_r)
+
+  # Si solo hay una observación, as.matrix() puede dejar una sola columna.
+  # Reparamos el caso vectorial cuando la longitud encaja con el número esperado.
+  if (ncol(shap_values_mat) == 1 && length(shap_values_r) %% num_features == 0) {
+    shap_values_mat <- matrix(
+      as.numeric(shap_values_r),
+      ncol = num_features * num_class,
+      byrow = TRUE
+    )
+  }
+
+  if (ncol(shap_values_mat) == num_features) {
+    # Caso binario/regresión: ya viene un único bloque.
+    shap_alta <- shap_values_mat
+  } else {
+    # Caso multiclase: extraemos el bloque de la clase seleccionada.
+    cols_alta <- ((clase_alta_id - 1) * num_features + 1):(clase_alta_id * num_features)
+    cols_alta <- cols_alta[cols_alta <= ncol(shap_values_mat)]
+    shap_alta <- shap_values_mat[, cols_alta, drop = FALSE]
+  }
+}
+
+# Normalizamos nombres de columnas.
+if (ncol(shap_alta) >= num_features) {
+  shap_alta <- shap_alta[, seq_len(num_features), drop = FALSE]
+  colnames(shap_alta) <- c(feature_names_r, "BIAS")
+} else if (ncol(shap_alta) == length(feature_names_r)) {
+  colnames(shap_alta) <- feature_names_r
+} else {
+  stop("El objeto SHAP no tiene el número esperado de columnas. Revisa dim(shap_values_r).")
+}
+
+shap_feature_cols <- intersect(feature_names_r, colnames(shap_alta))
+
+shap_long_alta <- shap_alta[, shap_feature_cols, drop = FALSE] %>%
+  as.data.frame() %>%
+  mutate(id = row_number()) %>%
+  pivot_longer(-id, names_to = "variable", values_to = "shap")
+
+shap_importance_alta <- shap_long_alta %>%
+  group_by(variable) %>%
+  summarise(mean_abs_shap = mean(abs(shap), na.rm = TRUE), .groups = "drop") %>%
+  arrange(desc(mean_abs_shap))
+
+head(shap_importance_alta, 20)
+```
+
+```{r}
+#| label: shap-r-barplot-alta
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+shap_importance_alta %>%
+  slice_head(n = 20) %>%
+  mutate(variable = reorder(variable, mean_abs_shap)) %>%
+  ggplot(aes(x = mean_abs_shap, y = variable)) +
+  geom_col() +
+  labs(
+    title = "Importancia SHAP media absoluta para la clase Alta",
+    x = "Media de |SHAP value|",
+    y = "Variable"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+#| label: shap-r-distribucion-alta
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+top_vars_shap <- shap_importance_alta %>%
+  slice_head(n = 10) %>%
+  pull(variable)
+
+shap_long_alta %>%
+  filter(variable %in% top_vars_shap) %>%
+  ggplot(aes(x = shap, y = reorder(variable, abs(shap), FUN = median))) +
+  geom_boxplot() +
+  labs(
+    title = "Distribución de SHAP values para la clase Alta",
+    x = "SHAP value",
+    y = "Variable"
+  ) +
+  theme_minimal()
+```
+
+## Python
+
+```{python}
+#| label: shap-python-calculo
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+import shap
+
+# Muestra para evitar cálculos pesados
+sample_shap = pyX_test.sample(n=min(1000, len(pyX_test)), random_state=1994)
+
+explainer = shap.TreeExplainer(xgb_es_py)
+shap_values = explainer.shap_values(sample_shap)
+
+# Según la versión de shap/xgboost, puede devolver lista por clase o array 3D.
+type(shap_values)
+```
+
+```{python}
+#| label: shap-python-summary
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+class_alta_index = list(le.classes_).index("Alta")
+
+if isinstance(shap_values, list):
+    shap_alta_py = shap_values[class_alta_index]
+else:
+    # Formato frecuente: observaciones x variables x clases
+    shap_alta_py = shap_values[:, :, class_alta_index]
+
+shap.summary_plot(shap_alta_py, sample_shap, show=False)
+plt.title("SHAP summary plot para la clase Alta")
+plt.show()
+```
+
+```{python}
+#| label: shap-python-barplot
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+mean_abs_shap = np.abs(shap_alta_py).mean(axis=0)
+shap_importance_py = pd.DataFrame({
+    "variable": sample_shap.columns,
+    "mean_abs_shap": mean_abs_shap
+}).sort_values("mean_abs_shap", ascending=False)
+
+shap_importance_py.head(20)
+```
+
+```{python}
+#| label: shap-python-barplot-grafico
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+top_shap = shap_importance_py.head(20).sort_values("mean_abs_shap")
+
+plt.figure(figsize=(8, 7))
+plt.barh(top_shap["variable"], top_shap["mean_abs_shap"])
+plt.xlabel("Media de |SHAP value|")
+plt.title("Importancia SHAP para la clase Alta")
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: shap-python-waterfall
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# Explicación individual de una observación concreta.
+obs_id = 0
+
+expected_value = explainer.expected_value
+if isinstance(expected_value, list):
+    base_value = expected_value[class_alta_index]
+elif isinstance(expected_value, np.ndarray):
+    base_value = expected_value[class_alta_index] if expected_value.ndim == 1 else expected_value[0, class_alta_index]
+else:
+    base_value = expected_value
+
+exp = shap.Explanation(
+    values=shap_alta_py[obs_id],
+    base_values=base_value,
+    data=sample_shap.iloc[obs_id].values,
+    feature_names=sample_shap.columns
+)
+
+shap.plots.waterfall(exp, max_display=15, show=False)
+plt.title("Explicación local SHAP de una vivienda para RENTA Alta")
+plt.show()
+```
+:::
+
+## Cómo interpretar los gráficos SHAP
+
+El gráfico de barras SHAP muestra las variables que más contribuyen, en promedio, a las predicciones del modelo. A diferencia de la importancia interna de XGBoost, SHAP mide contribuciones sobre predicciones.
+
+El `summary_plot` combina dos ideas:
+
+- eje vertical: variables ordenadas por importancia;
+- eje horizontal: contribución SHAP;
+- color: valor de la variable.
+
+Lectura típica:
+
+- valores SHAP positivos para la clase `Alta` empujan la predicción hacia `RENTA = Alta`;
+- valores SHAP negativos para la clase `Alta` alejan la predicción de `RENTA = Alta`;
+- si los puntos rojos de una variable aparecen a la derecha, valores altos de esa variable aumentan la probabilidad de renta alta;
+- si aparecen a la izquierda, valores altos reducen la probabilidad de renta alta.
+
+# Comparación con un árbol individual
+
+Para entender por qué XGBoost puede mejorar a un árbol simple, es útil recordar:
+
+- un árbol individual aprende una única estructura de decisión;
+- XGBoost aprende muchas estructuras pequeñas;
+- cada árbol añade una corrección;
+- el modelo final puede representar relaciones más complejas.
+
+Sin embargo, esta mejora predictiva se paga con menor interpretabilidad directa. Por eso se combinan tres niveles de interpretación:
+
+1. **Importancia de variables**: visión global rápida.
+2. **Extracción de árboles**: visión estructural parcial.
+3. **SHAP values**: explicación global y local de las predicciones.
+
+# Predicción sobre nuevas observaciones
+
+Una vez entrenado el modelo, podemos generar predicciones sobre nuevas viviendas. En un caso real, esta parte se conectaría con un formulario, una API o una aplicación web.
+
+::: panel-tabset
+## R
+
+```{r}
+#| label: prediccion-nuevo-r
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+# IMPORTANTE:
+# dummy_model_r fue creado con la fórmula RENTA ~ .
+# Por eso predict.dummyVars() exige que newdata tenga también la columna RENTA,
+# aunque después esa columna NO se usa como predictor.
+
+nuevo_registro <- rtest[1, , drop = FALSE]
+
+# Función segura para transformar un único registro con dummyVars.
+# Evita el error:
+# "contrasts can be applied only to factors with 2 or more levels".
+# La idea es añadir temporalmente una fila de referencia del entrenamiento para
+# que model.matrix() vea todos los niveles categóricos necesarios.
+predecir_dummies_seguro <- function(dummy_model, newdata, referencia_train, columnas_entrenamiento) {
+
+  columnas_necesarias <- colnames(referencia_train)
+
+  # Si falta alguna columna, se rellena con el valor de referencia del train.
+  faltan <- setdiff(columnas_necesarias, colnames(newdata))
+  if (length(faltan) > 0) {
+    for (col in faltan) {
+      newdata[[col]] <- referencia_train[[col]][1]
+    }
+  }
+
+  newdata <- newdata[, columnas_necesarias, drop = FALSE]
+
+  # Mantener exactamente los niveles/clases del entrenamiento.
+  for (col in columnas_necesarias) {
+    if (is.factor(referencia_train[[col]])) {
+      newdata[[col]] <- factor(as.character(newdata[[col]]), levels = levels(referencia_train[[col]]))
+    } else if (inherits(referencia_train[[col]], "Date")) {
+      newdata[[col]] <- as.Date(newdata[[col]])
+    } else if (is.numeric(referencia_train[[col]])) {
+      newdata[[col]] <- as.numeric(newdata[[col]])
+    } else if (is.integer(referencia_train[[col]])) {
+      newdata[[col]] <- as.integer(newdata[[col]])
+    } else {
+      newdata[[col]] <- as.character(newdata[[col]])
+    }
+  }
+
+  # Usamos TODO el train como referencia, no solo una fila.
+  # Motivo: si una variable categórica tiene el mismo nivel en la fila de referencia
+  # y en el nuevo registro, model.matrix() sigue viendo un único nivel y lanza:
+  # "contrasts can be applied only to factors with 2 or more levels".
+  # Al añadir todo el entrenamiento, cada factor conserva sus niveles reales.
+  n_nuevo <- nrow(newdata)
+  datos_tmp <- rbind(referencia_train, newdata)
+
+  mat_tmp <- predict(dummy_model, newdata = datos_tmp)
+  mat_tmp <- as.matrix(mat_tmp)
+
+  # Nos quedamos solo con las últimas filas, que corresponden al nuevo registro.
+  mat <- tail(mat_tmp, n_nuevo)
+  mat <- as.matrix(mat)
+
+  # Alinear columnas con x_train.
+  columnas_faltantes <- setdiff(columnas_entrenamiento, colnames(mat))
+  if (length(columnas_faltantes) > 0) {
+    faltantes_mat <- matrix(0, nrow = nrow(mat), ncol = length(columnas_faltantes))
+    colnames(faltantes_mat) <- columnas_faltantes
+    mat <- cbind(mat, faltantes_mat)
+  }
+
+  columnas_extra <- setdiff(colnames(mat), columnas_entrenamiento)
+  if (length(columnas_extra) > 0) {
+    mat <- mat[, setdiff(colnames(mat), columnas_extra), drop = FALSE]
+  }
+
+  mat <- mat[, columnas_entrenamiento, drop = FALSE]
+  return(mat)
+}
+
+nuevo_mat <- predecir_dummies_seguro(
+  dummy_model = dummy_model_r,
+  newdata = nuevo_registro,
+  referencia_train = rtrain,
+  columnas_entrenamiento = colnames(x_train)
+)
+
+nuevo_prob <- predict(xgb_es, xgboost::xgb.DMatrix(nuevo_mat))
+nuevo_prob <- matrix(nuevo_prob, ncol = num_class, byrow = TRUE)
+colnames(nuevo_prob) <- clases
+
+nuevo_prob
+clases[which.max(nuevo_prob[1, ])]
+```
+
+## Python
+
+```{python}
+#| label: prediccion-nuevo-python
+#| echo: true
+#| warning: false
+#| message: false
+#| error: false
+
+nuevo_registro_py = pyX_test.iloc[[0]]
+prob_nuevo_py = xgb_es_py.predict_proba(nuevo_registro_py)
+pred_nuevo_py = le.inverse_transform(np.argmax(prob_nuevo_py, axis=1))
+
+pd.DataFrame(prob_nuevo_py, columns=le.classes_)
+print("Clase predicha:", pred_nuevo_py[0])
+```
+:::
+
+# Buenas prácticas al usar XGBoost
+
+## Evitar sobreajuste
+
+Para reducir sobreajuste:
+
+- usar `early_stopping_rounds`;
+- reducir `max_depth`;
+- reducir `learning_rate` y aumentar `n_estimators`;
+- usar `subsample < 1`;
+- usar `colsample_bytree < 1`;
+- aumentar `lambda` o `alpha`;
+- usar validación cruzada.
+
+## Evaluar con métricas adecuadas
+
+Si las clases están desbalanceadas, la accuracy puede ser engañosa. En ese caso conviene mirar:
+
+- macro F1;
+- balanced accuracy;
+- recall por clase;
+- matriz de confusión;
+- log-loss si importan las probabilidades.
+
+## Interpretar con cautela
+
+Las importancias y SHAP values ayudan a entender el modelo, pero no demuestran causalidad. Si una variable como distrito aparece como muy relevante, puede estar actuando como proxy de renta, localización, calidad urbana, oferta inmobiliaria u otras variables no observadas.
+
+# Resumen final
+
+En este documento se ha construido un flujo completo de XGBoost en R y Python:
+
+1. carga y limpieza de datos;
+2. creación de la variable objetivo `RENTA`;
+3. codificación de variables categóricas;
+4. partición train/test;
+5. entrenamiento de XGBoost;
+6. evaluación mediante matriz de confusión y métricas de clasificación;
+7. uso de early stopping;
+8. ajuste básico de hiperparámetros;
+9. matriz de importancia de variables;
+10. extracción de un árbol individual;
+11. dependencia parcial;
+12. interpretación mediante SHAP values;
+13. predicción sobre nuevas observaciones.
+
+La conclusión principal es que XGBoost es un modelo muy potente para datos tabulares, especialmente cuando existen relaciones no lineales e interacciones entre variables. No obstante, debe acompañarse siempre de validación, control del sobreajuste e interpretación rigurosa.
+
+# Bibliografía y recursos recomendados
+
+- Chen, T., & Guestrin, C. (2016). *XGBoost: A Scalable Tree Boosting System*. Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining.
+- Friedman, J. H. (2001). *Greedy Function Approximation: A Gradient Boosting Machine*. Annals of Statistics.
+- Lundberg, S. M., & Lee, S.-I. (2017). *A Unified Approach to Interpreting Model Predictions*. Advances in Neural Information Processing Systems.
+- Documentación oficial de `xgboost` para R y Python.
+- Documentación de `shap` para interpretación de modelos de árboles.
